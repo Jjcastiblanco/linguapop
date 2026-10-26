@@ -1,0 +1,61 @@
+name: Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy-staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Comprobar credenciales de Cloudflare
+        id: credenciales
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::Faltan los secretos CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID: no se despliega."
+            echo "listas=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "listas=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.credenciales.outputs.listas == 'true'
+      - uses: pnpm/action-setup@v6
+        if: steps.credenciales.outputs.listas == 'true'
+      - uses: actions/setup-node@v7
+        if: steps.credenciales.outputs.listas == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.credenciales.outputs.listas == 'true'
+      - run: pnpm --filter @linguapop/app build
+        if: steps.credenciales.outputs.listas == 'true'
+
+      # Las credenciales solo se exponen a los dos pasos de wrangler.
+      - name: Crear el proyecto de Pages si no existe
+        if: steps.credenciales.outputs.listas == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm dlx wrangler@4.152.0 pages project create linguapop-staging --production-branch main || echo "El proyecto ya existe"
+
+      - name: Publicar la web de staging
+        if: steps.credenciales.outputs.listas == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm dlx wrangler@4.152.0 pages deploy apps/app/dist --project-name linguapop-staging --branch main
