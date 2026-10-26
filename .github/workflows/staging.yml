@@ -44,6 +44,13 @@ jobs:
         if: steps.credenciales.outputs.listas == 'true'
       - run: pnpm --filter @linguapop/app build
         if: steps.credenciales.outputs.listas == 'true'
+      - name: Armar el sitio (app nueva y versión heredada)
+        if: steps.credenciales.outputs.listas == 'true'
+        run: |
+          mkdir site
+          cp -r apps/app/dist/. site/
+          cp -r legacy site/legacy
+          printf '/legacy /legacy/linguapop.html 302\n/legacy/ /legacy/linguapop.html 302\n' > site/_redirects
 
       # Las credenciales solo se exponen a los pasos que hablan con Cloudflare.
       - name: Comprobar el acceso a Cloudflare Pages
@@ -78,4 +85,4 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm dlx wrangler@4.152.0 pages deploy apps/app/dist --project-name linguapop-staging --branch main
+        run: pnpm dlx wrangler@4.152.0 pages deploy site --project-name linguapop-staging --branch main

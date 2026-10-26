@@ -24,9 +24,12 @@ packages/domain/    # reglas del juego en TypeScript puro
 packages/content/   # esquemas y contenido
 apps/app/           # app React (web y Android)
 apps/admin/         # panel de administración de contenido
-linguapop.html      # versión heredada, se retira al alcanzar paridad
+legacy/             # copia sin cambios de la versión heredada (PWA de un solo archivo)
+linguapop.html      # versión heredada original, se retira al alcanzar paridad
 ```
 
 ## Staging
 
 Cada cambio que entra a `main` publica la web (`apps/app`) en Cloudflare Pages, en el proyecto `linguapop-staging`, mediante `.github/workflows/staging.yml`. Necesita dos secretos del repositorio en GitHub: `CLOUDFLARE_API_TOKEN` (permiso _Cloudflare Pages: Edit_) y `CLOUDFLARE_ACCOUNT_ID`. Sin ellos el flujo avisa y no despliega.
+
+La web de staging también sirve la versión heredada en `/legacy/` (se abre en `/legacy/linguapop.html`) hasta que la app nueva alcance paridad.
