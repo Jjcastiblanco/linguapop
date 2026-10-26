@@ -155,7 +155,7 @@ La flecha de dependencia nunca apunta hacia `apps/`. `domain` nunca importa de `
 | --- | --- |
 | Node.js | 24 LTS |
 | pnpm | 10.x |
-| TypeScript | 6.x |
+| TypeScript | 6.0.x (la 7 existe; typescript-eslint acepta menos de 6.1) |
 | React | 19.x |
 | Vite | 8.x |
 | Capacitor (core, CLI, Android) | 8.x |
@@ -163,7 +163,7 @@ La flecha de dependencia nunca apunta hacia `apps/`. `domain` nunca importa de `
 | Gradle / Android Gradle Plugin | 8.14.3 / 8.13.0 |
 | Zod | 4.x |
 | Zustand | 5.x |
-| Vitest | 4.1.x |
+| Vitest | 5.x |
 | @supabase/supabase-js | 2.x |
 | Supabase (plan gratis) | Postgres, Auth, RLS, Realtime, Edge Functions |
 | GitHub Actions (runner) | ubuntu-latest |
