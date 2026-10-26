@@ -1,0 +1,64 @@
+# Épicas de LinguaPop en orden de construcción (una por fase del plan de migración).
+
+[[epic]]
+id = 1
+slug = "epic-cimientos"
+title = "Cimientos del monorepo y la entrega"
+description = "El monorepo existe con Node 24, pnpm y las reglas de imports del dominio; la integración continua está en verde y despliega la web de staging; los tres entornos de Supabase existen."
+covers = ["R13"]
+
+[[epic]]
+id = 2
+slug = "epic-dominio-y-contenido"
+title = "Dominio y contenido con pruebas"
+description = "El contenido de los arreglos de linguapop.html está en JSON validado por los esquemas, y los motores de lección y llamada, la comparación de texto, la puntuación y la racha funcionan con pruebas automáticas en verde."
+covers = ["R12"]
+after = [{ epic = 1, needs = "el monorepo y la integración continua" }]
+
+[[epic]]
+id = 3
+slug = "epic-app-web"
+title = "App web con paridad funcional"
+description = "La app React ofrece en el navegador, como PWA y sin backend, todo lo que hace linguapop.html usando el dominio y el contenido semilla, incluidas las llamadas con Nova."
+covers = ["R1", "R4"]
+after = [{ epic = 2, needs = "el dominio y el contenido semilla validado" }]
+
+[[epic]]
+id = 4
+slug = "epic-android-temprano"
+title = "APK con voz en un celular real"
+description = "Un celular Android instala el APK de depuración compilado por integración continua y completa una lección con escuchar y hablar, y toda ruta de voz tiene salida sin voz."
+covers = ["R2", "R3"]
+after = [{ epic = 3, needs = "la app web con su raíz de composición" }]
+
+[[epic]]
+id = 5
+slug = "epic-backend-y-cuentas"
+title = "Backend, cuentas y sincronización"
+description = "Una persona inicia sesión en dos dispositivos y ve el mismo progreso; lo hecho sin red se sincroniza sin duplicar XP; el progreso heredado se importa y la cuenta se puede borrar."
+covers = ["R7", "R8", "R9", "R11"]
+after = [{ epic = 3, needs = "la app con su raíz de composición para enchufar adaptadores" }]
+
+[[epic]]
+id = 6
+slug = "epic-administracion"
+title = "Panel de administración y publicación"
+description = "Un autor edita contenido y un publicador lo publica desde el panel; un celular ya instalado muestra el cambio en su siguiente apertura sin reinstalar, y el contenido inválido no se publica."
+covers = ["R5", "R6"]
+after = [{ epic = 5, needs = "cuentas, roles y lectura de contenido remoto" }]
+
+[[epic]]
+id = 7
+slug = "epic-liga-real"
+title = "Liga con usuarios reales"
+description = "Dos usuarios reales aparecen en la misma tabla semanal, completada con bots marcados, con XP semanal calculado y limitado por el servidor."
+covers = ["R10"]
+after = [{ epic = 5, needs = "los eventos de progreso guardados en el servidor" }]
+
+[[epic]]
+id = 8
+slug = "epic-endurecer"
+title = "Continuidad, APK firmado y Nova con IA opcional"
+description = "Los exportes cifrados y el ping de actividad están activos y probados con una restauración, el APK de versión firmado se instala, y la conversación libre con IA de Nova funciona opcionalmente a través del servidor."
+covers = ["R14", "R4"]
+after = [{ epic = 4, needs = "el APK de depuración y su compilación" }, { epic = 7, needs = "la base de datos y la liga en producción" }]

@@ -1,0 +1,23 @@
+# Dependencias y compilaciones
+node_modules/
+dist/
+build/
+.pnpm-store/
+*.log
+.DS_Store
+
+# Android (APK, keystores y secretos nunca al repositorio)
+android/app/build/
+*.keystore
+*.jks
+.env
+.env.*
+!.env.example
+
+# Herramientas de agentes (locales, no hacen falta en el repositorio público)
+.agent/
+.agents/
+.claude/
+.opencode/
+_bmad/
+skills-lock.json

@@ -1,0 +1,78 @@
+# Historias de epic-cimientos en orden de construcción.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Repositorio en GitHub y herramientas locales"
+description = "Sube Node a 24 con nvm, instala pnpm, inicia esta carpeta como repositorio git, crea el repositorio público en GitHub y protege la rama principal."
+verify = "En una terminal nueva `node -v` da 24.x y `pnpm -v` responde; el repositorio público existe en GitHub con un primer commit y la rama principal protegida."
+covers = ["R1", "R3"]
+after = []
+hitl = true # una persona instala Node, crea la cuenta y el repositorio
+risk = "low"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Monorepo pnpm con paquetes y apps vacíos"
+description = "Crea el espacio de trabajo pnpm con `packages/domain`, `packages/content`, `apps/app` y `apps/admin` vacíos, TypeScript, Prettier y Vitest con una prueba mínima."
+verify = "Desde un clon limpio, `pnpm install && pnpm -r build && pnpm test` termina sin errores con Node 24."
+covers = ["R1"]
+after = [1]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Regla de imports que protege el dominio"
+description = "Configura ESLint con `no-restricted-imports` para que `packages/domain` no importe React, el DOM, Capacitor, Supabase ni `apps/*`, y para que las apps no se importen entre sí."
+verify = "Un archivo de prueba en `packages/domain` que importa `react` hace fallar `pnpm lint`; al quitarlo, `pnpm lint` pasa."
+covers = ["R2"]
+after = [2]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Integración continua en cada cambio"
+description = "Crea el flujo de GitHub Actions que corre lint, pruebas y compilación en cada pull request y lo marca como comprobación obligatoria de la rama principal."
+verify = "Un pull request con un fallo de lint no se puede fusionar; el mismo pull request corregido queda en verde y se fusiona."
+covers = ["R3"]
+after = [1, 3]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Web de staging en Cloudflare Pages"
+description = "Conecta el repositorio a Cloudflare Pages, compila `apps/app` con una página base y publica la web de staging automáticamente desde la rama principal."
+verify = "Tras fusionar un cambio en la rama principal, la página base aparece en la URL pública de staging con ese cambio."
+covers = ["R4"]
+after = [4]
+hitl = true # una persona crea la cuenta de Cloudflare y autoriza el repositorio
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Copia heredada servida en legacy"
+description = "Copia `linguapop.html` con su `sw.js`, `manifest.webmanifest` e íconos sin cambios a `legacy/` y la publica en la web de staging."
+verify = "Los archivos de `legacy/` tienen la misma suma de verificación que los originales y `linguapop.html` se abre y funciona en la ruta `/legacy/` de staging."
+covers = ["R4"]
+after = [5]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 7
+type = "story"
+title = "Entornos de Supabase: local, staging y producción"
+description = "Inicializa `supabase/` con la CLI, levanta el entorno local, crea los proyectos gratuitos de staging y producción y aplica una migración vacía a ambos desde el repositorio, guardando las claves como secretos."
+verify = "`supabase start` corre en local y el comando de migraciones aplica una migración vacía a staging y a producción; el repositorio no contiene claves secretas."
+covers = ["R5"]
+after = [2]
+hitl = true # una persona crea la cuenta y los proyectos de Supabase
+risk = "medium"
