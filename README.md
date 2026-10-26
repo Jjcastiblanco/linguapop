@@ -33,3 +33,15 @@ linguapop.html      # versión heredada original, se retira al alcanzar paridad
 Cada cambio que entra a `main` publica la web (`apps/app`) en Cloudflare Pages, en el proyecto `linguapop-staging`, mediante `.github/workflows/staging.yml`. Necesita dos secretos del repositorio en GitHub: `CLOUDFLARE_API_TOKEN` (permiso _Cloudflare Pages: Edit_) y `CLOUDFLARE_ACCOUNT_ID`. Sin ellos el flujo avisa y no despliega.
 
 La web de staging también sirve la versión heredada en `/legacy/` (se abre en `/legacy/linguapop.html`) hasta que la app nueva alcance paridad.
+
+## Supabase
+
+Entornos: local (CLI de Supabase con Docker), `staging` y `production` (dos proyectos gratuitos). El esquema vive en `supabase/migrations/`; no se edita desde el panel.
+
+```bash
+pnpm db:start   # levanta Supabase en local (requiere Docker en ejecución)
+pnpm db:reset   # recrea la base local aplicando todas las migraciones
+pnpm db:stop
+```
+
+`.github/workflows/migraciones.yml` aplica las migraciones a `staging` en cada cambio de `main`, y a `production` solo a mano. Cada entorno de GitHub (`staging` y `production`) necesita los secretos `SUPABASE_ACCESS_TOKEN` y `SUPABASE_DB_PASSWORD` y la variable `SUPABASE_PROJECT_REF` (identificador del proyecto). Sin ellos el flujo avisa y no aplica nada.
