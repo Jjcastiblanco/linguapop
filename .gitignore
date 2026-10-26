@@ -21,3 +21,6 @@ android/app/build/
 .opencode/
 _bmad/
 skills-lock.json
+
+# Archivos del proceso de construcción (planes, épicas, arquitectura): solo locales
+_bmad-output/
