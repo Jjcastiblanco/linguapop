@@ -23,6 +23,5 @@ packages/domain/    # reglas del juego en TypeScript puro
 packages/content/   # esquemas y contenido
 apps/app/           # app React (web y Android)
 apps/admin/         # panel de administración de contenido
-_bmad-output/       # arquitectura, plan y épicas
 linguapop.html      # versión heredada, se retira al alcanzar paridad
 ```
