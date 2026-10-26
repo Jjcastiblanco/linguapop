@@ -45,13 +45,33 @@ jobs:
       - run: pnpm --filter @linguapop/app build
         if: steps.credenciales.outputs.listas == 'true'
 
-      # Las credenciales solo se exponen a los dos pasos de wrangler.
-      - name: Crear el proyecto de Pages si no existe
+      # Las credenciales solo se exponen a los pasos que hablan con Cloudflare.
+      - name: Comprobar el acceso a Cloudflare Pages
+        id: pages
         if: steps.credenciales.outputs.listas == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm dlx wrangler@4.152.0 pages project create linguapop-staging --production-branch main || echo "El proyecto ya existe"
+        run: |
+          respuesta=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects")
+          if [ "$(echo "$respuesta" | jq -r '.success // false')" != "true" ]; then
+            motivo=$(echo "$respuesta" | jq -r '[.errors[]?.message] | join("; ")')
+            echo "::error::Cloudflare rechazó el acceso a Pages (${motivo:-sin detalle}). El token necesita el permiso Cuenta > Cloudflare Pages > Editar sobre esta cuenta, y CLOUDFLARE_ACCOUNT_ID debe ser el de esa cuenta."
+            exit 1
+          fi
+          if echo "$respuesta" | jq -e '.result[]? | select(.name == "linguapop-staging")' > /dev/null; then
+            echo "existe=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "existe=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Crear el proyecto de Pages
+        if: steps.pages.outputs.existe == 'false'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm dlx wrangler@4.152.0 pages project create linguapop-staging --production-branch main
 
       - name: Publicar la web de staging
         if: steps.credenciales.outputs.listas == 'true'
