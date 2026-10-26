@@ -1,0 +1,8 @@
+node_modules
+dist
+pnpm-lock.yaml
+_bmad-output
+linguapop.html
+sw.js
+manifest.webmanifest
+icons
