@@ -5,4 +5,10 @@ export type { LocalStore } from './local-store';
 export type { ProgressSink } from './progress-sink';
 export type { Random } from './random';
 export type { Sound, SoundEffect } from './sound';
-export type { ListenResult, SpeakOptions, Speech, SpeechCapabilities } from './speech';
+export type {
+  ListenOptions,
+  ListenResult,
+  SpeakOptions,
+  Speech,
+  SpeechCapabilities,
+} from './speech';
