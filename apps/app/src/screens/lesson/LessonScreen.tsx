@@ -14,6 +14,7 @@ import { Fox } from '../../mascots';
 import { Modal } from '../../ui/Modal';
 import { FeedbackPanel } from './FeedbackPanel';
 import styles from './LessonScreen.module.css';
+import { LessonResult } from './LessonResult';
 import { ExerciseView } from './exercises/ExerciseView';
 
 const HINTS = {
@@ -92,20 +93,10 @@ export function LessonScreen() {
   }
   if (!lesson) return null;
 
-  if (lesson.phase === 'finished') {
-    const summary = lesson.summary;
+  if (lesson.phase === 'finished' && lesson.summary) {
     return (
       <div className={styles.screen}>
-        <div className={`${styles.body} ${styles.center}`}>
-          <Fox mood={summary?.outOfHearts ? 'sad' : 'celebrate'} className={styles.centerFox} />
-          <h2>
-            {summary?.outOfHearts ? t('lesson.finished.nohearts') : t('lesson.finished.title')}
-          </h2>
-          <p>⚡ {summary?.score.xp ?? 0} XP</p>
-          <button type="button" className={styles.action} onClick={leave}>
-            {t('lesson.finished.continue')}
-          </button>
-        </div>
+        <LessonResult lesson={lesson} summary={lesson.summary} unit={unit} onContinue={leave} />
       </div>
     );
   }

@@ -1,0 +1,109 @@
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.fox {
+  width: 170px;
+}
+
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.badge {
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #3b2a00;
+  font-weight: 900;
+}
+
+.unit {
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: var(--ok-bg);
+  color: var(--ok-d);
+  font-weight: 900;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+  margin: 6px 0;
+}
+
+.stat {
+  margin: 0;
+  padding: 10px 8px;
+  border-radius: 16px;
+  border: 2px solid var(--line);
+  background: var(--card);
+}
+
+.stat dt {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat dd {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.xp dd {
+  color: var(--brand);
+}
+.acc dd {
+  color: var(--ok);
+}
+.time dd {
+  color: var(--blue);
+}
+.gems dd {
+  color: var(--purple);
+}
+
+.streak {
+  margin: 0;
+  font-weight: 900;
+  color: var(--brand-d);
+}
+
+.action {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  margin-top: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--brand);
+  box-shadow: 0 5px 0 var(--brand-d);
+}
+
+.action:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--brand-d);
+}
