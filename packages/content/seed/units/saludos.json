@@ -1,0 +1,320 @@
+{
+  "id": "u-saludos",
+  "name": "Saludos",
+  "emoji": "👋",
+  "color": "#ff8a1f",
+  "colorDark": "#c76200",
+  "description": "Presentarte y saludar",
+  "exercises": [
+    {
+      "id": "u-saludos-e01",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"Hola\"?",
+      "options": [
+        {
+          "emoji": "👋",
+          "text": "Hello"
+        },
+        {
+          "emoji": "🌙",
+          "text": "Good night"
+        },
+        {
+          "emoji": "😔",
+          "text": "Sorry"
+        },
+        {
+          "emoji": "🙏",
+          "text": "Please"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Hello\" es el saludo más común en inglés."
+    },
+    {
+      "id": "u-saludos-e02",
+      "type": "order",
+      "es": "Me llamo Ana",
+      "en": "My name is Ana",
+      "extraWords": ["am", "the"],
+      "tip": "En inglés se dice \"mi nombre es\": My name is…"
+    },
+    {
+      "id": "u-saludos-e03",
+      "type": "write",
+      "es": "Buenos días",
+      "en": "Good morning",
+      "alternatives": [],
+      "tip": "\"Morning\" se usa hasta el mediodía."
+    },
+    {
+      "id": "u-saludos-e04",
+      "type": "listen",
+      "en": "Nice to meet you",
+      "es": "Mucho gusto"
+    },
+    {
+      "id": "u-saludos-e05",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"Buenas noches\"?",
+      "options": [
+        {
+          "emoji": "🌙",
+          "text": "Good night"
+        },
+        {
+          "emoji": "☀️",
+          "text": "Good morning"
+        },
+        {
+          "emoji": "🌆",
+          "text": "Good afternoon"
+        },
+        {
+          "emoji": "👋",
+          "text": "Goodbye"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Good night\" se usa al despedirse por la noche."
+    },
+    {
+      "id": "u-saludos-e06",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Hola",
+          "en": "Hello"
+        },
+        {
+          "es": "Adiós",
+          "en": "Goodbye"
+        },
+        {
+          "es": "Gracias",
+          "en": "Thank you"
+        },
+        {
+          "es": "Por favor",
+          "en": "Please"
+        }
+      ]
+    },
+    {
+      "id": "u-saludos-e07",
+      "type": "order",
+      "es": "¿Cómo estás?",
+      "en": "How are you",
+      "extraWords": ["is", "do"],
+      "tip": "Pregunta clásica para saludar: How are you?"
+    },
+    {
+      "id": "u-saludos-e08",
+      "type": "speak",
+      "en": "I am fine, thank you",
+      "es": "Estoy bien, gracias"
+    },
+    {
+      "id": "u-saludos-e09",
+      "type": "write",
+      "es": "Mucho gusto",
+      "en": "Nice to meet you",
+      "alternatives": ["Pleased to meet you"],
+      "tip": "Se dice al conocer a alguien."
+    },
+    {
+      "id": "u-saludos-e10",
+      "type": "mc",
+      "prompt": "¿Qué significa \"I am fine\"?",
+      "options": [
+        {
+          "emoji": "😊",
+          "text": "Estoy bien"
+        },
+        {
+          "emoji": "😢",
+          "text": "Estoy triste"
+        },
+        {
+          "emoji": "😴",
+          "text": "Tengo sueño"
+        },
+        {
+          "emoji": "🤒",
+          "text": "Estoy enfermo"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Fine\" significa \"bien\"."
+    },
+    {
+      "id": "u-saludos-e11",
+      "type": "listen",
+      "en": "Good afternoon",
+      "es": "Buenas tardes"
+    },
+    {
+      "id": "u-saludos-e12",
+      "type": "order",
+      "es": "Soy de España",
+      "en": "I am from Spain",
+      "extraWords": ["is", "at"],
+      "tip": "\"I am from\" + país indica tu origen."
+    },
+    {
+      "id": "u-saludos-e13",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"Lo siento\"?",
+      "options": [
+        {
+          "emoji": "😔",
+          "text": "I am sorry"
+        },
+        {
+          "emoji": "🙏",
+          "text": "Please"
+        },
+        {
+          "emoji": "🎉",
+          "text": "Congratulations"
+        },
+        {
+          "emoji": "👋",
+          "text": "See you"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Sorry\" sirve para pedir disculpas."
+    },
+    {
+      "id": "u-saludos-e14",
+      "type": "write",
+      "es": "Hasta luego",
+      "en": "See you later",
+      "alternatives": [],
+      "tip": "\"See you later\" literalmente: \"te veo más tarde\"."
+    },
+    {
+      "id": "u-saludos-e15",
+      "type": "speak",
+      "en": "Nice to meet you",
+      "es": "Mucho gusto"
+    },
+    {
+      "id": "u-saludos-e16",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Mañana",
+          "en": "Morning"
+        },
+        {
+          "es": "Noche",
+          "en": "Night"
+        },
+        {
+          "es": "Amigo",
+          "en": "Friend"
+        },
+        {
+          "es": "Nombre",
+          "en": "Name"
+        }
+      ]
+    },
+    {
+      "id": "u-saludos-e17",
+      "type": "listen",
+      "en": "What is your name",
+      "es": "¿Cómo te llamas?"
+    },
+    {
+      "id": "u-saludos-e18",
+      "type": "order",
+      "es": "Hasta mañana",
+      "en": "See you tomorrow",
+      "extraWords": ["today", "late"],
+      "tip": "\"Tomorrow\" = mañana."
+    },
+    {
+      "id": "u-saludos-e19",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"Gracias\"?",
+      "options": [
+        {
+          "emoji": "🙏",
+          "text": "Thank you"
+        },
+        {
+          "emoji": "😔",
+          "text": "Sorry"
+        },
+        {
+          "emoji": "👋",
+          "text": "Hello"
+        },
+        {
+          "emoji": "❓",
+          "text": "Why"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Thank you\" o simplemente \"Thanks\"."
+    },
+    {
+      "id": "u-saludos-e20",
+      "type": "write",
+      "es": "¿Cómo te llamas?",
+      "en": "What is your name",
+      "alternatives": ["What's your name", "What are you called"],
+      "tip": "Literalmente: \"¿Cuál es tu nombre?\""
+    }
+  ],
+  "lessons": [
+    {
+      "id": "u-saludos-l1",
+      "exerciseIds": [
+        "u-saludos-e01",
+        "u-saludos-e02",
+        "u-saludos-e03",
+        "u-saludos-e04",
+        "u-saludos-e05",
+        "u-saludos-e06",
+        "u-saludos-e07",
+        "u-saludos-e08",
+        "u-saludos-e09",
+        "u-saludos-e10"
+      ]
+    },
+    {
+      "id": "u-saludos-l2",
+      "exerciseIds": [
+        "u-saludos-e08",
+        "u-saludos-e09",
+        "u-saludos-e10",
+        "u-saludos-e11",
+        "u-saludos-e12",
+        "u-saludos-e13",
+        "u-saludos-e14",
+        "u-saludos-e15",
+        "u-saludos-e16",
+        "u-saludos-e17"
+      ]
+    },
+    {
+      "id": "u-saludos-l3",
+      "exerciseIds": [
+        "u-saludos-e15",
+        "u-saludos-e16",
+        "u-saludos-e17",
+        "u-saludos-e18",
+        "u-saludos-e19",
+        "u-saludos-e20",
+        "u-saludos-e01",
+        "u-saludos-e02",
+        "u-saludos-e03",
+        "u-saludos-e04"
+      ]
+    }
+  ]
+}
