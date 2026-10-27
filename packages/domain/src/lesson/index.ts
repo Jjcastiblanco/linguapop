@@ -1,6 +1,7 @@
 export {
   currentExercise,
   lessonProgress,
+  remainingSec,
   startLesson,
   stepLesson,
   type LessonConfig,

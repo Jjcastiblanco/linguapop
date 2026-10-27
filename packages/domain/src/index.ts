@@ -2,6 +2,7 @@ export * from './events';
 export * from './exercises';
 export * from './lesson';
 export type * from './ports';
+export * from './practice';
 export * from './progress';
 export { shuffle } from './random';
 export * from './scoring';
