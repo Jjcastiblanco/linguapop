@@ -1,17 +1,25 @@
-import { PACKAGE_NAME as CONTENT } from '@linguapop/content';
-import { PACKAGE_NAME as DOMAIN } from '@linguapop/domain';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { createBrowserRouter } from 'react-router';
+import { RouterProvider } from 'react-router/dom';
+import { createComposition } from './composition';
+import { AppProvider, createServices } from './composition/context';
+import { appRoutes } from './routes';
+import './styles/theme.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('No se encontró el elemento #root');
 
-createRoot(root).render(
-  <StrictMode>
-    <h1>LinguaPop</h1>
-    <p>En construcción.</p>
-    <small>
-      {DOMAIN} · {CONTENT}
-    </small>
-  </StrictMode>,
-);
+const services = createServices(createComposition());
+const router = createBrowserRouter(appRoutes);
+
+// Se leen las preferencias y el progreso guardados antes de mostrar nada.
+void Promise.all([services.ui.getState().load(), services.progress.getState().load()]).then(() => {
+  createRoot(root).render(
+    <StrictMode>
+      <AppProvider services={services}>
+        <RouterProvider router={router} />
+      </AppProvider>
+    </StrictMode>,
+  );
+});

@@ -1,0 +1,41 @@
+.nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  background: var(--card);
+  border-top: 2px solid var(--line);
+  z-index: 30;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.item {
+  flex: 1;
+  padding: 8px 0 7px;
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-decoration: none;
+}
+
+.icon {
+  font-size: 23px;
+  filter: grayscale(1);
+  opacity: 0.7;
+  transition: 0.2s;
+}
+
+.active {
+  color: var(--brand);
+}
+
+.active .icon {
+  filter: none;
+  opacity: 1;
+  transform: translateY(-2px) scale(1.1);
+}
