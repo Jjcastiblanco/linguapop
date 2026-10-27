@@ -26,6 +26,7 @@ export type ProgressStore = StoreApi<ProgressStoreState>;
 
 export function createProgressStore(c: Composition): ProgressStore {
   let lastMs = 0;
+  let queue: Promise<void> = Promise.resolve();
   /** Cada evento recibe un instante propio y creciente, así el orden de guardado se conserva al plegar. */
   const stamp = () => (lastMs = Math.max(c.clock.now(), lastMs + 1));
 
@@ -42,13 +43,19 @@ export function createProgressStore(c: Composition): ProgressStore {
         await get().record([{ type: 'settings_changed@1', payload: { timeZone: c.timeZone } }]);
       }
     },
-    async record(pending) {
+    record(pending) {
+      // Los instantes se asignan ya, en orden de llamada; el guardado va en cola para que dos
+      // registros seguidos no pisen el estado del otro.
       const nuevos = pending.map((p) =>
         completeEvent(p, { id: c.newId(), nowMs: stamp(), contentVersion: c.contentVersion }),
       );
-      for (const e of nuevos) await c.progressSink.append(e);
-      const events = [...get().events, ...nuevos];
-      set({ events, progress: foldEvents(events, c.progressContext) });
+      const guardado = queue.then(async () => {
+        for (const e of nuevos) await c.progressSink.append(e);
+        const events = [...get().events, ...nuevos];
+        set({ events, progress: foldEvents(events, c.progressContext) });
+      });
+      queue = guardado.catch(() => undefined);
+      return guardado;
     },
     async reset() {
       await c.progressSink.clear();

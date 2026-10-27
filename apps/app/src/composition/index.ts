@@ -30,7 +30,7 @@ export type Composition = {
 };
 
 export type CompositionOverrides = Partial<
-  Pick<Composition, 'clock' | 'random' | 'timeZone' | 'newId' | 'speech' | 'sound'>
+  Pick<Composition, 'clock' | 'random' | 'timeZone' | 'newId' | 'speech' | 'sound' | 'course'>
 > & {
   storage?: StorageLike | null;
 };
@@ -46,17 +46,18 @@ function deviceTimeZone(): string {
 /** Raíz de composición (AD-10): el único lugar que elige adaptadores concretos para esta plataforma. */
 export function createComposition(overrides: CompositionOverrides = {}): Composition {
   const store = createLocalStore(overrides.storage);
-  const units = seedCourse.units.map((u) => ({ id: u.id, lessonIds: u.lessons.map((l) => l.id) }));
+  const course = overrides.course ?? seedCourse;
+  const units = course.units.map((u) => ({ id: u.id, lessonIds: u.lessons.map((l) => l.id) }));
   return {
     clock: overrides.clock ?? { now: () => Date.now() },
     random: overrides.random ?? { next: () => Math.random() },
     store,
     progressSink: createLocalProgressSink(store),
-    content: { load: async () => seedCourse },
-    course: seedCourse,
+    content: { load: async () => course },
+    course,
     speech: overrides.speech ?? createWebSpeech(),
     sound: overrides.sound ?? createWebSound(),
-    progressContext: { units, achievements: seedCourse.achievements },
+    progressContext: { units, achievements: course.achievements },
     timeZone: overrides.timeZone ?? deviceTimeZone(),
     contentVersion: 0,
     newId: overrides.newId ?? (() => crypto.randomUUID()),

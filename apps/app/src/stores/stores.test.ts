@@ -133,3 +133,49 @@ describe('almacén de preferencias', () => {
     });
   });
 });
+
+describe('almacén de progreso: registros simultáneos', () => {
+  it('dos registros sin esperar al primero no pierden eventos y conservan el orden', async () => {
+    const { progress } = await arrancar(memoria(), { clock: relojFalso() });
+    const a = progress
+      .getState()
+      .record([{ type: 'settings_changed@1', payload: { plan: 'free' } }]);
+    const b = progress.getState().record([
+      {
+        type: 'exercise_answered@1',
+        payload: { exerciseId: 'u-saludos-e01', correct: false, mode: 'lesson' },
+      },
+    ]);
+    const c = progress.getState().record([
+      {
+        type: 'exercise_answered@1',
+        payload: { exerciseId: 'u-saludos-e02', correct: false, mode: 'lesson' },
+      },
+    ]);
+    await Promise.all([a, b, c]);
+    expect(progress.getState().events.map((e) => e.type)).toEqual([
+      'settings_changed@1',
+      'exercise_answered@1',
+      'exercise_answered@1',
+    ]);
+    expect(progress.getState().progress.hearts).toBe(3);
+  });
+
+  it('un fallo al guardar no impide los registros siguientes', async () => {
+    const m = memoria();
+    const services = await arrancar(m, { clock: relojFalso() });
+    const original = m.storage.setItem;
+    m.storage.setItem = () => {
+      throw new Error('cuota');
+    };
+    // el almacenamiento local cae a memoria, así que registrar sigue funcionando
+    await services.progress
+      .getState()
+      .record([{ type: 'purchase@1', payload: { item: 'hearts', costGems: 30 } }]);
+    m.storage.setItem = original;
+    await services.progress
+      .getState()
+      .record([{ type: 'settings_changed@1', payload: { plan: 'free' } }]);
+    expect(services.progress.getState().events).toHaveLength(2);
+  });
+});
