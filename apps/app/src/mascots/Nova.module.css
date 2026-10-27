@@ -1,0 +1,142 @@
+/* Cada expresión muestra su boca y mueve cejas y pupilas; al hablar la boca se abre y se cierra. */
+.nova {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+
+.mouth {
+  display: none;
+}
+
+.nova[data-expr='neutral'] .mNeutral,
+.nova[data-expr='think'] .mNeutral {
+  display: block;
+}
+
+.nova[data-expr='smirk'] .mSmirk {
+  display: block;
+}
+
+.nova[data-expr='happy'] .mSmile {
+  display: block;
+}
+
+.nova[data-expr='surprised'] .mOpen {
+  display: block;
+}
+
+.nova.talking .mouth {
+  display: none;
+}
+
+.nova.talking .mTalk {
+  display: block;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: talk 0.22s infinite alternate ease-in-out;
+}
+
+.eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 4.5s infinite;
+}
+
+.brow {
+  transition: transform 0.35s;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.nova[data-expr='smirk'] .browR {
+  transform: translateY(-5px) rotate(-8deg);
+}
+
+.nova[data-expr='smirk'] .browL {
+  transform: translateY(1px) rotate(4deg);
+}
+
+.nova[data-expr='happy'] .brow {
+  transform: translateY(-3px);
+}
+
+.nova[data-expr='surprised'] .brow {
+  transform: translateY(-9px);
+}
+
+.nova[data-expr='think'] .browR {
+  transform: translateY(-8px) rotate(-10deg);
+}
+
+.pupil {
+  transition: transform 0.3s;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.nova[data-expr='think'] .pupil {
+  transform: translate(5px, -3px);
+}
+
+.nova[data-expr='surprised'] .pupil {
+  transform: scale(0.8);
+}
+
+.bob {
+  animation: novabob 4s infinite ease-in-out;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.hairback {
+  animation: hairsway 5s infinite ease-in-out;
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+}
+
+@keyframes talk {
+  from {
+    transform: scaleY(0.25) scaleX(0.85);
+  }
+  to {
+    transform: scaleY(1.1) scaleX(1.05);
+  }
+}
+
+@keyframes blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes novabob {
+  50% {
+    transform: translateY(-4px) rotate(0.6deg);
+  }
+}
+
+@keyframes hairsway {
+  50% {
+    transform: skewX(1.5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nova.talking .mTalk,
+  .eyes,
+  .bob,
+  .hairback {
+    animation: none;
+  }
+  .brow,
+  .pupil {
+    transition: none;
+  }
+}

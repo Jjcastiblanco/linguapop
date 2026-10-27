@@ -1,6 +1,7 @@
 import { currentHearts, dayKey, visibleStreak } from '@linguapop/domain';
 import { useProgress, useServices } from '../composition/context';
 import { t } from '../i18n';
+import { Fox } from '../mascots';
 import styles from './TopBar.module.css';
 
 /** Barra superior: marca, racha, gemas, vidas y cambio de tema. */
@@ -15,7 +16,7 @@ export function TopBar({ dark }: { dark: boolean }) {
   return (
     <header className={styles.bar}>
       <div className={styles.logo}>
-        <span aria-hidden="true">🦊</span>
+        <Fox mood="idle" width={28} decorative />
         {t('app.name')}
         {pro && <span className={styles.pro}>{t('app.pro')}</span>}
       </div>
