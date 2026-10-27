@@ -1,0 +1,320 @@
+{
+  "id": "u-viajes",
+  "name": "Viajes",
+  "emoji": "✈️",
+  "color": "#2f8cff",
+  "colorDark": "#1a63c4",
+  "description": "Moverte por el mundo",
+  "exercises": [
+    {
+      "id": "u-viajes-e01",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"aeropuerto\"?",
+      "options": [
+        {
+          "emoji": "✈️",
+          "text": "Airport"
+        },
+        {
+          "emoji": "🚉",
+          "text": "Train station"
+        },
+        {
+          "emoji": "🏨",
+          "text": "Hotel"
+        },
+        {
+          "emoji": "🏖️",
+          "text": "Beach"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Airport\": air + port."
+    },
+    {
+      "id": "u-viajes-e02",
+      "type": "order",
+      "es": "¿Dónde está el hotel?",
+      "en": "Where is the hotel",
+      "extraWords": ["what", "are"],
+      "tip": "\"Where is\" = ¿dónde está?"
+    },
+    {
+      "id": "u-viajes-e03",
+      "type": "write",
+      "es": "Un billete de ida",
+      "en": "A one-way ticket",
+      "alternatives": ["One way ticket", "A one way ticket"],
+      "tip": "\"One-way\" = solo ida."
+    },
+    {
+      "id": "u-viajes-e04",
+      "type": "listen",
+      "en": "Where is the bus station",
+      "es": "¿Dónde está la estación de autobuses?"
+    },
+    {
+      "id": "u-viajes-e05",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"playa\"?",
+      "options": [
+        {
+          "emoji": "🏖️",
+          "text": "Beach"
+        },
+        {
+          "emoji": "⛰️",
+          "text": "Mountain"
+        },
+        {
+          "emoji": "🏙️",
+          "text": "City"
+        },
+        {
+          "emoji": "🌲",
+          "text": "Forest"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Beach\" se pronuncia /biːtʃ/."
+    },
+    {
+      "id": "u-viajes-e06",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Maleta",
+          "en": "Suitcase"
+        },
+        {
+          "es": "Pasaporte",
+          "en": "Passport"
+        },
+        {
+          "es": "Mapa",
+          "en": "Map"
+        },
+        {
+          "es": "Billete",
+          "en": "Ticket"
+        }
+      ]
+    },
+    {
+      "id": "u-viajes-e07",
+      "type": "order",
+      "es": "Quiero reservar una habitación",
+      "en": "I want to book a room",
+      "extraWords": ["buy", "the"],
+      "tip": "\"Book\" también significa reservar."
+    },
+    {
+      "id": "u-viajes-e08",
+      "type": "speak",
+      "en": "How much is the ticket",
+      "es": "¿Cuánto cuesta el billete?"
+    },
+    {
+      "id": "u-viajes-e09",
+      "type": "write",
+      "es": "Gira a la izquierda",
+      "en": "Turn left",
+      "alternatives": [],
+      "tip": "\"Left\" = izquierda; \"right\" = derecha."
+    },
+    {
+      "id": "u-viajes-e10",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"tren\"?",
+      "options": [
+        {
+          "emoji": "🚆",
+          "text": "Train"
+        },
+        {
+          "emoji": "🚌",
+          "text": "Bus"
+        },
+        {
+          "emoji": "🚕",
+          "text": "Taxi"
+        },
+        {
+          "emoji": "🚲",
+          "text": "Bicycle"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Train\" = tren."
+    },
+    {
+      "id": "u-viajes-e11",
+      "type": "listen",
+      "en": "Turn right at the corner",
+      "es": "Gira a la derecha en la esquina"
+    },
+    {
+      "id": "u-viajes-e12",
+      "type": "order",
+      "es": "El tren sale a las ocho",
+      "en": "The train leaves at eight",
+      "extraWords": ["nine", "arrives"],
+      "tip": "\"At\" + hora: at eight."
+    },
+    {
+      "id": "u-viajes-e13",
+      "type": "mc",
+      "prompt": "¿Qué significa \"I am lost\"?",
+      "options": [
+        {
+          "emoji": "🧭",
+          "text": "Estoy perdido"
+        },
+        {
+          "emoji": "😴",
+          "text": "Estoy cansado"
+        },
+        {
+          "emoji": "🍽️",
+          "text": "Tengo hambre"
+        },
+        {
+          "emoji": "😊",
+          "text": "Estoy feliz"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Lost\" = perdido."
+    },
+    {
+      "id": "u-viajes-e14",
+      "type": "write",
+      "es": "¿Cuánto cuesta?",
+      "en": "How much is it",
+      "alternatives": ["How much does it cost"],
+      "tip": "Ambas formas se usan en tiendas."
+    },
+    {
+      "id": "u-viajes-e15",
+      "type": "speak",
+      "en": "I would like a taxi, please",
+      "es": "Quisiera un taxi, por favor"
+    },
+    {
+      "id": "u-viajes-e16",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Coche",
+          "en": "Car"
+        },
+        {
+          "es": "Barco",
+          "en": "Boat"
+        },
+        {
+          "es": "Calle",
+          "en": "Street"
+        },
+        {
+          "es": "Vuelo",
+          "en": "Flight"
+        }
+      ]
+    },
+    {
+      "id": "u-viajes-e17",
+      "type": "listen",
+      "en": "Is this seat free",
+      "es": "¿Está libre este asiento?"
+    },
+    {
+      "id": "u-viajes-e18",
+      "type": "order",
+      "es": "Vamos a la playa mañana",
+      "en": "We are going to the beach tomorrow",
+      "extraWords": ["was", "park"],
+      "tip": "\"Are going to\" expresa planes futuros."
+    },
+    {
+      "id": "u-viajes-e19",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"Bienvenido\"?",
+      "options": [
+        {
+          "emoji": "🎉",
+          "text": "Welcome"
+        },
+        {
+          "emoji": "👋",
+          "text": "Goodbye"
+        },
+        {
+          "emoji": "🙏",
+          "text": "Please"
+        },
+        {
+          "emoji": "😔",
+          "text": "Sorry"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Welcome\" = bienvenido."
+    },
+    {
+      "id": "u-viajes-e20",
+      "type": "write",
+      "es": "Mi vuelo llega a las tres",
+      "en": "My flight arrives at three",
+      "alternatives": [],
+      "tip": "\"Arrives\" lleva -s con \"my flight\" (it)."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "u-viajes-l1",
+      "exerciseIds": [
+        "u-viajes-e01",
+        "u-viajes-e02",
+        "u-viajes-e03",
+        "u-viajes-e04",
+        "u-viajes-e05",
+        "u-viajes-e06",
+        "u-viajes-e07",
+        "u-viajes-e08",
+        "u-viajes-e09",
+        "u-viajes-e10"
+      ]
+    },
+    {
+      "id": "u-viajes-l2",
+      "exerciseIds": [
+        "u-viajes-e08",
+        "u-viajes-e09",
+        "u-viajes-e10",
+        "u-viajes-e11",
+        "u-viajes-e12",
+        "u-viajes-e13",
+        "u-viajes-e14",
+        "u-viajes-e15",
+        "u-viajes-e16",
+        "u-viajes-e17"
+      ]
+    },
+    {
+      "id": "u-viajes-l3",
+      "exerciseIds": [
+        "u-viajes-e15",
+        "u-viajes-e16",
+        "u-viajes-e17",
+        "u-viajes-e18",
+        "u-viajes-e19",
+        "u-viajes-e20",
+        "u-viajes-e01",
+        "u-viajes-e02",
+        "u-viajes-e03",
+        "u-viajes-e04"
+      ]
+    }
+  ]
+}

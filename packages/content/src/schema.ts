@@ -193,7 +193,39 @@ export const CourseSchema = z
     achievements: z.array(AchievementSchema),
   })
   .superRefine((course, ctx) => {
-    const unitIds = new Set(course.units.map((u) => u.id));
+    const unitIds = new Set<string>();
+    course.units.forEach((u, i) => {
+      if (unitIds.has(u.id)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `id de unidad repetido: ${u.id}`,
+          path: ['units', i, 'id'],
+        });
+      }
+      unitIds.add(u.id);
+    });
+    const topicIds = new Set<string>();
+    course.dialogues.forEach((d, i) => {
+      if (topicIds.has(d.id)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `id de tema repetido: ${d.id}`,
+          path: ['dialogues', i, 'id'],
+        });
+      }
+      topicIds.add(d.id);
+    });
+    const achievementIds = new Set<string>();
+    course.achievements.forEach((a, i) => {
+      if (achievementIds.has(a.id)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `id de logro repetido: ${a.id}`,
+          path: ['achievements', i, 'id'],
+        });
+      }
+      achievementIds.add(a.id);
+    });
     course.dialogues.forEach((d, i) => {
       if (!unitIds.has(d.unitId)) {
         ctx.addIssue({

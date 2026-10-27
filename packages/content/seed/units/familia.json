@@ -1,0 +1,320 @@
+{
+  "id": "u-familia",
+  "name": "Familia",
+  "emoji": "👨‍👩‍👧",
+  "color": "#8b5cf6",
+  "colorDark": "#6234c9",
+  "description": "Hablar de tu familia",
+  "exercises": [
+    {
+      "id": "u-familia-e01",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"madre\"?",
+      "options": [
+        {
+          "emoji": "👩",
+          "text": "Mother"
+        },
+        {
+          "emoji": "👨",
+          "text": "Father"
+        },
+        {
+          "emoji": "👧",
+          "text": "Sister"
+        },
+        {
+          "emoji": "👦",
+          "text": "Brother"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Mother\" (o \"mom\")."
+    },
+    {
+      "id": "u-familia-e02",
+      "type": "order",
+      "es": "Tengo dos hermanos",
+      "en": "I have two brothers",
+      "extraWords": ["am", "sisters"],
+      "tip": "\"Have\" = tener; el plural lleva -s: brothers."
+    },
+    {
+      "id": "u-familia-e03",
+      "type": "write",
+      "es": "Mi padre",
+      "en": "My father",
+      "alternatives": ["My dad"],
+      "tip": "\"My\" = mi."
+    },
+    {
+      "id": "u-familia-e04",
+      "type": "listen",
+      "en": "This is my family",
+      "es": "Esta es mi familia"
+    },
+    {
+      "id": "u-familia-e05",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"abuela\"?",
+      "options": [
+        {
+          "emoji": "👵",
+          "text": "Grandmother"
+        },
+        {
+          "emoji": "👴",
+          "text": "Grandfather"
+        },
+        {
+          "emoji": "👩‍🦱",
+          "text": "Aunt"
+        },
+        {
+          "emoji": "👧",
+          "text": "Daughter"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Grandmother\" o \"grandma\"."
+    },
+    {
+      "id": "u-familia-e06",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Hermano",
+          "en": "Brother"
+        },
+        {
+          "es": "Hermana",
+          "en": "Sister"
+        },
+        {
+          "es": "Hijo",
+          "en": "Son"
+        },
+        {
+          "es": "Hija",
+          "en": "Daughter"
+        }
+      ]
+    },
+    {
+      "id": "u-familia-e07",
+      "type": "order",
+      "es": "Mi hermana es alta",
+      "en": "My sister is tall",
+      "extraWords": ["brother", "short"],
+      "tip": "El adjetivo va después del verbo: is tall."
+    },
+    {
+      "id": "u-familia-e08",
+      "type": "speak",
+      "en": "I love my family",
+      "es": "Amo a mi familia"
+    },
+    {
+      "id": "u-familia-e09",
+      "type": "write",
+      "es": "Mi madre es amable",
+      "en": "My mother is kind",
+      "alternatives": ["My mother is nice"],
+      "tip": "\"Kind\" = amable, bondadoso."
+    },
+    {
+      "id": "u-familia-e10",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"tío\"?",
+      "options": [
+        {
+          "emoji": "👨‍🦳",
+          "text": "Uncle"
+        },
+        {
+          "emoji": "👩‍🦱",
+          "text": "Aunt"
+        },
+        {
+          "emoji": "👦",
+          "text": "Cousin"
+        },
+        {
+          "emoji": "👴",
+          "text": "Grandfather"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Uncle\"; la tía es \"aunt\"."
+    },
+    {
+      "id": "u-familia-e11",
+      "type": "listen",
+      "en": "He is my brother",
+      "es": "Él es mi hermano"
+    },
+    {
+      "id": "u-familia-e12",
+      "type": "order",
+      "es": "Ella tiene una hija",
+      "en": "She has a daughter",
+      "extraWords": ["have", "son"],
+      "tip": "Con he/she/it, \"have\" cambia a \"has\"."
+    },
+    {
+      "id": "u-familia-e13",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"esposo\"?",
+      "options": [
+        {
+          "emoji": "🤵",
+          "text": "Husband"
+        },
+        {
+          "emoji": "👰",
+          "text": "Wife"
+        },
+        {
+          "emoji": "👶",
+          "text": "Baby"
+        },
+        {
+          "emoji": "🧒",
+          "text": "Child"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Husband\" = esposo; \"wife\" = esposa."
+    },
+    {
+      "id": "u-familia-e14",
+      "type": "write",
+      "es": "Mis abuelos viven aquí",
+      "en": "My grandparents live here",
+      "alternatives": [],
+      "tip": "\"Grandparents\" = abuelos (abuela + abuelo)."
+    },
+    {
+      "id": "u-familia-e15",
+      "type": "speak",
+      "en": "My brother is very funny",
+      "es": "Mi hermano es muy gracioso"
+    },
+    {
+      "id": "u-familia-e16",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Primo",
+          "en": "Cousin"
+        },
+        {
+          "es": "Bebé",
+          "en": "Baby"
+        },
+        {
+          "es": "Esposa",
+          "en": "Wife"
+        },
+        {
+          "es": "Niño",
+          "en": "Child"
+        }
+      ]
+    },
+    {
+      "id": "u-familia-e17",
+      "type": "listen",
+      "en": "How many people are in your family",
+      "es": "¿Cuántas personas hay en tu familia?"
+    },
+    {
+      "id": "u-familia-e18",
+      "type": "order",
+      "es": "Mi familia es grande",
+      "en": "My family is big",
+      "extraWords": ["small", "are"],
+      "tip": "Family es singular: \"is\"."
+    },
+    {
+      "id": "u-familia-e19",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"hijo\"?",
+      "options": [
+        {
+          "emoji": "👦",
+          "text": "Son"
+        },
+        {
+          "emoji": "👧",
+          "text": "Daughter"
+        },
+        {
+          "emoji": "👨",
+          "text": "Father"
+        },
+        {
+          "emoji": "👴",
+          "text": "Grandfather"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Son\" = hijo; \"daughter\" = hija."
+    },
+    {
+      "id": "u-familia-e20",
+      "type": "write",
+      "es": "Tengo una familia pequeña",
+      "en": "I have a small family",
+      "alternatives": [],
+      "tip": "\"Small\" = pequeño."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "u-familia-l1",
+      "exerciseIds": [
+        "u-familia-e01",
+        "u-familia-e02",
+        "u-familia-e03",
+        "u-familia-e04",
+        "u-familia-e05",
+        "u-familia-e06",
+        "u-familia-e07",
+        "u-familia-e08",
+        "u-familia-e09",
+        "u-familia-e10"
+      ]
+    },
+    {
+      "id": "u-familia-l2",
+      "exerciseIds": [
+        "u-familia-e08",
+        "u-familia-e09",
+        "u-familia-e10",
+        "u-familia-e11",
+        "u-familia-e12",
+        "u-familia-e13",
+        "u-familia-e14",
+        "u-familia-e15",
+        "u-familia-e16",
+        "u-familia-e17"
+      ]
+    },
+    {
+      "id": "u-familia-l3",
+      "exerciseIds": [
+        "u-familia-e15",
+        "u-familia-e16",
+        "u-familia-e17",
+        "u-familia-e18",
+        "u-familia-e19",
+        "u-familia-e20",
+        "u-familia-e01",
+        "u-familia-e02",
+        "u-familia-e03",
+        "u-familia-e04"
+      ]
+    }
+  ]
+}

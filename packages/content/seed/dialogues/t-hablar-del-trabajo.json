@@ -1,0 +1,127 @@
+{
+  "id": "t-hablar-del-trabajo",
+  "unitId": "u-trabajo",
+  "title": "Hablar del trabajo",
+  "emoji": "💼",
+  "intro": "Business hours. I'm Nova, your very patient colleague. Let's chat about work.",
+  "outro": "Great job today. Almost like a real colleague. Bye!",
+  "turns": [
+    {
+      "nova": "What do you do for work?",
+      "accepted": [
+        "i am a *",
+        "i am an *",
+        "i work as *",
+        "i work in *",
+        "i am *",
+        "i work at *",
+        "i am a student"
+      ],
+      "hint": "Di: \"I am a teacher.\"",
+      "comment": "Cool. Somebody has to do it."
+    },
+    {
+      "nova": "Where is your office?",
+      "accepted": [
+        "my office is *",
+        "it is in *",
+        "i work from home",
+        "i work at home",
+        "in *",
+        "my office is in *"
+      ],
+      "hint": "Di: \"My office is in the city.\"",
+      "comment": "Nice commute? Probably not."
+    },
+    {
+      "nova": "What time do you start work?",
+      "accepted": [
+        "i start at *",
+        "at *",
+        "i start work at *",
+        "i work from * to *",
+        "i start at nine",
+        "at nine"
+      ],
+      "hint": "Di: \"I start at nine.\"",
+      "comment": "Early bird. Respect.",
+      "requiredPattern": "(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)"
+    },
+    {
+      "nova": "Do you like your job?",
+      "accepted": [
+        "yes i like it",
+        "yes i love it",
+        "yes i do",
+        "no i do not",
+        "i like it",
+        "i love it",
+        "it is ok",
+        "it is good",
+        "not really",
+        "yes it is great",
+        "i like my job"
+      ],
+      "hint": "Di: \"Yes, I like my job.\"",
+      "comment": "Good for you. Truly."
+    },
+    {
+      "nova": "Do you have a good boss?",
+      "accepted": [
+        "yes my boss is *",
+        "my boss is *",
+        "yes i do",
+        "no i do not",
+        "yes",
+        "no",
+        "my boss is nice",
+        "my boss is kind"
+      ],
+      "hint": "Di: \"My boss is kind.\"",
+      "comment": "Lucky you. I only have myself."
+    },
+    {
+      "nova": "Do you work in a team or alone?",
+      "accepted": [
+        "i work in a team",
+        "i work alone",
+        "i work with *",
+        "in a team",
+        "alone",
+        "a team",
+        "i work in team"
+      ],
+      "hint": "Di: \"I work in a team.\"",
+      "comment": "Teamwork makes the dream work. Or so I hear."
+    },
+    {
+      "nova": "I have a meeting at ten. Can you help me?",
+      "accepted": [
+        "yes i can",
+        "yes of course",
+        "sure",
+        "of course",
+        "yes",
+        "yes i can help you",
+        "sure i can help",
+        "no i can not",
+        "i am sorry *"
+      ],
+      "hint": "Di: \"Yes, of course.\"",
+      "comment": "Great, you are hired. Unpaid, though."
+    },
+    {
+      "nova": "Great! Now say thank you for the help.",
+      "accepted": [
+        "thank you",
+        "thanks",
+        "thank you for the help",
+        "thank you for your help",
+        "thanks for your help",
+        "thanks for the help"
+      ],
+      "hint": "Di: \"Thank you for your help.\"",
+      "comment": "Anytime. Okay, maybe not anytime."
+    }
+  ]
+}
