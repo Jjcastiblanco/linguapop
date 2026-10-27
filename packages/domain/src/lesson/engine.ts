@@ -16,6 +16,8 @@ export type LessonConfig = {
   hearts: number;
   /** La lección ya estaba completada antes: da menos recompensa. */
   isReplay?: boolean;
+  /** Tiempo límite en segundos (desafío): al agotarse la sesión termina aunque queden ejercicios. */
+  timeLimitSec?: number;
 };
 
 export type LessonSummary = {
@@ -43,6 +45,8 @@ export type LessonState = {
 export type LessonInput =
   | { type: 'submit'; answer: Answer; nowMs: number }
   | { type: 'continue'; nowMs: number }
+  /** El tiempo avanza (solo importa con límite de tiempo). */
+  | { type: 'tick'; nowMs: number }
   | { type: 'abort' };
 
 /** Lo que el motor pide al exterior; el motor no ejecuta nada por sí mismo. */
@@ -89,6 +93,13 @@ export function currentExercise(state: LessonState): Exercise | undefined {
   return state.phase === 'answering' || state.phase === 'feedback'
     ? state.config.exercises[state.index]
     : undefined;
+}
+
+/** Segundos que quedan con límite de tiempo (nunca menos de 0); nulo si la sesión no tiene límite. */
+export function remainingSec(state: LessonState, nowMs: number): number | null {
+  const limit = state.config.timeLimitSec;
+  if (limit === undefined) return null;
+  return Math.max(0, Math.ceil((state.startedAtMs + limit * 1000 - nowMs) / 1000));
 }
 
 /** Avance de 0 a 1 para la barra de progreso (cuenta el ejercicio respondido). */
@@ -203,6 +214,8 @@ export function stepLesson(state: LessonState, input: LessonInput): LessonStep {
       return submit(state, input.answer);
     case 'continue':
       return advance(state, input.nowMs);
+    case 'tick':
+      return remainingSec(state, input.nowMs) === 0 ? finish(state, input.nowMs) : unchanged(state);
     case 'abort':
       return { state: { ...state, phase: 'aborted' }, effects: [] };
   }
