@@ -20,11 +20,10 @@ const AppContext = createContext<AppServices | null>(null);
 
 /** Crea los almacenes sobre una composición y los entrega a toda la app. */
 export function createServices(composition: Composition): AppServices {
-  return {
-    composition,
-    progress: createProgressStore(composition),
-    ui: createUiStore(composition.store),
-  };
+  const ui = createUiStore(composition.store);
+  // El sonido obedece a la preferencia del dispositivo.
+  composition.sound.setEnabledSource(() => ui.getState().sound);
+  return { composition, progress: createProgressStore(composition), ui };
 }
 
 export function AppProvider({

@@ -1,8 +1,10 @@
 import { seedCourse } from '@linguapop/content';
-import type { Clock, ContentSource, Random } from '@linguapop/domain';
+import type { Clock, ContentSource, Random, Speech } from '@linguapop/domain';
 import type { ProgressContext } from '@linguapop/domain';
 import { createLocalProgressSink, type LocalProgressSink } from './adapters/local-progress-sink';
 import { createLocalStore, type StorageLike, type WebLocalStore } from './adapters/local-store';
+import { createWebSound, type WebSound } from './adapters/web-sound';
+import { createWebSpeech } from './adapters/web-speech';
 
 /** Todo lo que la app necesita del exterior, ya conectado. Se crea una sola vez al arrancar. */
 export type Composition = {
@@ -11,6 +13,10 @@ export type Composition = {
   store: WebLocalStore;
   progressSink: LocalProgressSink;
   content: ContentSource;
+  /** Voz del navegador: habla y escucha, y dice cuándo no puede. */
+  speech: Speech;
+  /** Sonidos con Web Audio; respeta la preferencia de sonido del dispositivo. */
+  sound: WebSound;
   /** Estructura del contenido que el pliegue de eventos necesita. */
   progressContext: ProgressContext;
   /** Zona horaria del dispositivo, para decidir qué es "hoy". */
@@ -21,7 +27,7 @@ export type Composition = {
 };
 
 export type CompositionOverrides = Partial<
-  Pick<Composition, 'clock' | 'random' | 'timeZone' | 'newId'>
+  Pick<Composition, 'clock' | 'random' | 'timeZone' | 'newId' | 'speech' | 'sound'>
 > & {
   storage?: StorageLike | null;
 };
@@ -44,6 +50,8 @@ export function createComposition(overrides: CompositionOverrides = {}): Composi
     store,
     progressSink: createLocalProgressSink(store),
     content: { load: async () => seedCourse },
+    speech: overrides.speech ?? createWebSpeech(),
+    sound: overrides.sound ?? createWebSound(),
     progressContext: { units, achievements: seedCourse.achievements },
     timeZone: overrides.timeZone ?? deviceTimeZone(),
     contentVersion: 0,
