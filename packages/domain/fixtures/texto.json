@@ -1,0 +1,375 @@
+{
+  "origen": {
+    "archivo": "linguapop.html",
+    "commit": "5285d9729c2721b5e5eb22f900f1a2f16cd532b4",
+    "sha256": "b7c479fc473299c78bbac5df97aa1ab7e061ee32cda42f39a2bc7024a72fcbb8"
+  },
+  "normalizar": [
+    {
+      "entrada": "I'm fine",
+      "esperado": "i am fine"
+    },
+    {
+      "entrada": "It's a Dog!",
+      "esperado": "it is a dog"
+    },
+    {
+      "entrada": "She isn't here.",
+      "esperado": "she is not here"
+    },
+    {
+      "entrada": "Don't touch",
+      "esperado": "do not touch"
+    },
+    {
+      "entrada": "I can't go",
+      "esperado": "i can not go"
+    },
+    {
+      "entrada": "I cannot go",
+      "esperado": "i can not go"
+    },
+    {
+      "entrada": "We're happy",
+      "esperado": "we are happy"
+    },
+    {
+      "entrada": "I'll go",
+      "esperado": "i will go"
+    },
+    {
+      "entrada": "I've done",
+      "esperado": "i have done"
+    },
+    {
+      "entrada": "He'd come",
+      "esperado": "he would come"
+    },
+    {
+      "entrada": "What's your name?",
+      "esperado": "what is your name"
+    },
+    {
+      "entrada": "Let's go",
+      "esperado": "let us go"
+    },
+    {
+      "entrada": "Ñandú café",
+      "esperado": "nandu cafe"
+    },
+    {
+      "entrada": "Hello,   world",
+      "esperado": "hello world"
+    },
+    {
+      "entrada": "  SPACES  ",
+      "esperado": "spaces"
+    },
+    {
+      "entrada": "good-morning",
+      "esperado": "good morning"
+    },
+    {
+      "entrada": "Mr. O'Neil's car",
+      "esperado": "mr oneils car"
+    },
+    {
+      "entrada": "CAFÉ",
+      "esperado": "cafe"
+    },
+    {
+      "entrada": "",
+      "esperado": ""
+    },
+    {
+      "entrada": "1,000 people",
+      "esperado": "1 000 people"
+    },
+    {
+      "entrada": "you're",
+      "esperado": "you are"
+    },
+    {
+      "entrada": "That's it",
+      "esperado": "that is it"
+    },
+    {
+      "entrada": "Who's there?",
+      "esperado": "who is there"
+    },
+    {
+      "entrada": "won't",
+      "esperado": "will not"
+    },
+    {
+      "entrada": "mother's name",
+      "esperado": "mothers name"
+    },
+    {
+      "entrada": "i am from Spain.",
+      "esperado": "i am from spain"
+    }
+  ],
+  "similitud": [
+    {
+      "a": "I am fine thank you",
+      "b": "i am fine, thank you!",
+      "esperado": 1
+    },
+    {
+      "a": "hello",
+      "b": "helo",
+      "esperado": 0.8
+    },
+    {
+      "a": "good morning",
+      "b": "morning good",
+      "esperado": 1
+    },
+    {
+      "a": "my name is ana",
+      "b": "my name is anna",
+      "esperado": 0.933333
+    },
+    {
+      "a": "see you later",
+      "b": "see you",
+      "esperado": 0.8
+    },
+    {
+      "a": "",
+      "b": "hello",
+      "esperado": 0
+    },
+    {
+      "a": "thank you",
+      "b": "thanks",
+      "esperado": 0.555556
+    },
+    {
+      "a": "I would like a coffee",
+      "b": "I would like coffee",
+      "esperado": 0.904762
+    },
+    {
+      "a": "where is the station",
+      "b": "were is the station",
+      "esperado": 0.95
+    },
+    {
+      "a": "nice to meet you",
+      "b": "nice to meat you",
+      "esperado": 0.9375
+    },
+    {
+      "a": "abc",
+      "b": "xyz",
+      "esperado": 0
+    },
+    {
+      "a": "a b c",
+      "b": "c b a",
+      "esperado": 1
+    }
+  ],
+  "respuestasNova": [
+    {
+      "tema": "Presentarse",
+      "turno": 1,
+      "texto": "My name is Ana",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 1,
+      "texto": "I am Ana",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 1,
+      "texto": "I am tired",
+      "esperado": false
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 1,
+      "texto": "Call me Pepe",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 1,
+      "texto": "banana",
+      "esperado": false
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 1,
+      "texto": "well my name is Ana and I am happy",
+      "esperado": false
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 1,
+      "texto": "my name is anna",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 2,
+      "texto": "I'm fine thank you",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 2,
+      "texto": "fine thanks",
+      "esperado": false
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 2,
+      "texto": "I am very well",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 2,
+      "texto": "potato",
+      "esperado": false
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 4,
+      "texto": "I am twenty years old",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 4,
+      "texto": "I am fine",
+      "esperado": false
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 4,
+      "texto": "I am 25",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 5,
+      "texto": "I am a student",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 8,
+      "texto": "see you later",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 8,
+      "texto": "bye",
+      "esperado": true
+    },
+    {
+      "tema": "Presentarse",
+      "turno": 8,
+      "texto": "hello",
+      "esperado": false
+    },
+    {
+      "tema": "Pedir comida",
+      "turno": 1,
+      "texto": "a table for two please",
+      "esperado": true
+    },
+    {
+      "tema": "Pedir comida",
+      "turno": 1,
+      "texto": "two",
+      "esperado": true
+    },
+    {
+      "tema": "Pedir comida",
+      "turno": 7,
+      "texto": "the bill please",
+      "esperado": true
+    },
+    {
+      "tema": "Pedir comida",
+      "turno": 7,
+      "texto": "pizza",
+      "esperado": false
+    },
+    {
+      "tema": "Hablar de la familia",
+      "turno": 5,
+      "texto": "my family is big",
+      "esperado": true
+    },
+    {
+      "tema": "Hablar de la familia",
+      "turno": 5,
+      "texto": "I like pizza",
+      "esperado": false
+    },
+    {
+      "tema": "Hablar de la familia",
+      "turno": 5,
+      "texto": "it is blue",
+      "esperado": false
+    },
+    {
+      "tema": "Hablar de la familia",
+      "turno": 6,
+      "texto": "my brother is funny",
+      "esperado": true
+    },
+    {
+      "tema": "Planear un viaje",
+      "turno": 2,
+      "texto": "by plane",
+      "esperado": true
+    },
+    {
+      "tema": "Planear un viaje",
+      "turno": 4,
+      "texto": "five days",
+      "esperado": true
+    },
+    {
+      "tema": "Planear un viaje",
+      "turno": 4,
+      "texto": "for a week",
+      "esperado": true
+    },
+    {
+      "tema": "Planear un viaje",
+      "turno": 4,
+      "texto": "banana",
+      "esperado": false
+    },
+    {
+      "tema": "Hablar del trabajo",
+      "turno": 3,
+      "texto": "I start at nine",
+      "esperado": true
+    },
+    {
+      "tema": "Hablar del trabajo",
+      "turno": 3,
+      "texto": "I start at lunch",
+      "esperado": false
+    },
+    {
+      "tema": "Hablar del trabajo",
+      "turno": 7,
+      "texto": "yes of course",
+      "esperado": true
+    }
+  ]
+}
