@@ -16,6 +16,15 @@ import { FeedbackPanel } from './FeedbackPanel';
 import styles from './LessonScreen.module.css';
 import { ExerciseView } from './exercises/ExerciseView';
 
+const HINTS = {
+  mc: 'lesson.hint.mc',
+  order: 'lesson.hint.order',
+  write: 'lesson.hint.write',
+  match: 'lesson.hint.match',
+  listen: 'lesson.hint.listen',
+  speak: 'lesson.hint.speak',
+} as const;
+
 /** Pantalla de lección: ejercicios uno a uno sobre el motor del dominio, con feedback y salida confirmada. */
 export function LessonScreen() {
   const { unitId, lessonId } = useParams();
@@ -124,8 +133,9 @@ export function LessonScreen() {
         : t('lesson.fox.bad')
     : t(hintKey);
 
-  const check = () => {
-    if (lesson.phase === 'answering' && draft) sessionStore.getState().submit(draft);
+  const check = (answer?: Answer) => {
+    const toSend = answer ?? draft;
+    if (lesson.phase === 'answering' && toSend) sessionStore.getState().submit(toSend);
   };
   const next = () => {
     setDraft(null);
@@ -184,7 +194,7 @@ export function LessonScreen() {
           type="button"
           className={`${styles.action} ${feedback ? (feedback.result.ok ? styles.actionOk : styles.actionBad) : ''}`}
           disabled={!feedback && !draft}
-          onClick={feedback ? next : check}
+          onClick={feedback ? next : () => check()}
         >
           {feedback ? t('lesson.continue') : t('lesson.check')}
         </button>
