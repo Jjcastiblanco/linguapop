@@ -17,6 +17,8 @@ export const es = {
   'screen.leagues.title': 'Ligas',
   'screen.profile.title': 'Perfil',
   'screen.underConstruction': 'En construcción.',
+  'mascot.fox': 'Zorro de LinguaPop',
+  'mascot.nova': 'Nova',
 } as const;
 
 export type TextKey = keyof typeof es;
