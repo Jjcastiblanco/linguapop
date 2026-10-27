@@ -30,7 +30,7 @@ describe('barra superior', () => {
     const services = await crearServicios({ storage: memoria().storage, clock: relojFalso() });
     renderApp(services);
     expect(screen.getByText('LinguaPop')).toBeInTheDocument();
-    expect(screen.getByText('PRO')).toBeInTheDocument();
+    expect(within(screen.getByRole('banner')).getByText('PRO')).toBeInTheDocument();
     expect(barra()).toEqual({ racha: '0', gemas: '50', vidas: '∞' });
   });
 
@@ -40,7 +40,7 @@ describe('barra superior', () => {
       .getState()
       .record([{ type: 'settings_changed@1', payload: { plan: 'free' } }]);
     renderApp(services);
-    expect(screen.queryByText('PRO')).not.toBeInTheDocument();
+    expect(within(screen.getByRole('banner')).queryByText('PRO')).not.toBeInTheDocument();
     expect(barra().vidas).toBe('5');
   });
 
