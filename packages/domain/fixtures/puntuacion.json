@@ -1,0 +1,609 @@
+{
+  "origen": {
+    "archivo": "linguapop.html",
+    "commit": "5285d9729c2721b5e5eb22f900f1a2f16cd532b4",
+    "sha256": "b7c479fc473299c78bbac5df97aa1ab7e061ee32cda42f39a2bc7024a72fcbb8"
+  },
+  "escenarios": [
+    {
+      "nombre": "Lección perfecta, primera vez (unidad 1, lección 1)",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "lesson",
+        "correct": 10,
+        "wrong": 0,
+        "answered": 10
+      },
+      "esperado": {
+        "xp": 120,
+        "gems": 90,
+        "done": [1, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 1,
+          "correct": 10,
+          "total": 10,
+          "perfect": 1,
+          "timedBest": 0
+        },
+        "ach": ["first", "goal", "perfect", "xp100"],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Lección con 3 errores",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "lesson",
+        "correct": 7,
+        "wrong": 3,
+        "answered": 10
+      },
+      "esperado": {
+        "xp": 70,
+        "gems": 75,
+        "done": [1, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 1,
+          "correct": 7,
+          "total": 10,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": ["first", "goal"],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Lección repetida: mitad de XP y sin gemas",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [3, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "lesson",
+        "correct": 10,
+        "wrong": 0,
+        "answered": 10
+      },
+      "esperado": {
+        "xp": 60,
+        "gems": 80,
+        "done": [3, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 1,
+          "correct": 10,
+          "total": 10,
+          "perfect": 1,
+          "timedBest": 0
+        },
+        "ach": ["first", "goal", "perfect", "unit1"],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Tercera lección completa la unidad",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [2, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 2,
+        "outOfHearts": false,
+        "mode": "lesson",
+        "correct": 9,
+        "wrong": 1,
+        "answered": 10
+      },
+      "esperado": {
+        "xp": 90,
+        "gems": 80,
+        "done": [3, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 1,
+          "correct": 9,
+          "total": 10,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": ["first", "goal", "unit1"],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Repaso de errores",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "review",
+        "correct": 8,
+        "wrong": 2,
+        "answered": 10
+      },
+      "esperado": {
+        "xp": 40,
+        "gems": 57,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 1,
+          "correct": 8,
+          "total": 10,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": ["first"],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Práctica personalizada",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "practice",
+        "correct": 10,
+        "wrong": 0,
+        "answered": 10
+      },
+      "esperado": {
+        "xp": 50,
+        "gems": 72,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 1,
+          "correct": 10,
+          "total": 10,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": ["first", "goal"],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Desafío con 12 aciertos",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "timed",
+        "correct": 12,
+        "wrong": 3,
+        "answered": 15
+      },
+      "esperado": {
+        "xp": 60,
+        "gems": 74,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 12,
+          "total": 15,
+          "perfect": 0,
+          "timedBest": 12
+        },
+        "ach": ["goal", "timed"],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Desafío con 2 aciertos",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "timed",
+        "correct": 2,
+        "wrong": 5,
+        "answered": 7
+      },
+      "esperado": {
+        "xp": 10,
+        "gems": 50,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 2,
+          "total": 7,
+          "perfect": 0,
+          "timedBest": 2
+        },
+        "ach": [],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Prueba de nivel aprobada (83 por ciento) hasta la unidad 3",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 2,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "test",
+        "correct": 10,
+        "wrong": 2,
+        "answered": 12
+      },
+      "esperado": {
+        "xp": 40,
+        "gems": 85,
+        "done": [3, 3, 3, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 10,
+          "total": 12,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": ["unit1", "unit3"],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Prueba de nivel reprobada (75 por ciento)",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 2,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "test",
+        "correct": 9,
+        "wrong": 3,
+        "answered": 12
+      },
+      "esperado": {
+        "xp": 0,
+        "gems": 50,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 9,
+          "total": 12,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Sin vidas en el plan gratis",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 0,
+        "gems": 50,
+        "pro": false,
+        "goal": 50,
+        "xpHoy": 0,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 0,
+        "outOfHearts": true,
+        "mode": "lesson",
+        "correct": 4,
+        "wrong": 1,
+        "answered": 5
+      },
+      "esperado": {
+        "xp": 8,
+        "gems": 50,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 4,
+          "total": 5,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Cruza la meta diaria (40 de 50 XP hechos)",
+      "hoy": "2026-10-27",
+      "estadoInicial": {
+        "xp": 40,
+        "gems": 50,
+        "pro": true,
+        "goal": 50,
+        "xpHoy": 40,
+        "done": [0, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 0,
+          "correct": 0,
+          "total": 0,
+          "perfect": 0,
+          "timedBest": 0
+        },
+        "ach": [],
+        "streak": 0,
+        "best": 0,
+        "lastDay": "",
+        "shield": ""
+      },
+      "sesion": {
+        "unit": 0,
+        "lesson": 0,
+        "outOfHearts": false,
+        "mode": "lesson",
+        "correct": 10,
+        "wrong": 0,
+        "answered": 10
+      },
+      "esperado": {
+        "xp": 160,
+        "gems": 90,
+        "done": [1, 0, 0, 0, 0],
+        "stats": {
+          "lessons": 1,
+          "correct": 10,
+          "total": 10,
+          "perfect": 1,
+          "timedBest": 0
+        },
+        "ach": ["first", "goal", "perfect", "xp100"],
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    }
+  ]
+}

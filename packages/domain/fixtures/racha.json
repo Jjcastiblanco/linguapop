@@ -1,0 +1,207 @@
+{
+  "origen": {
+    "archivo": "linguapop.html",
+    "commit": "5285d9729c2721b5e5eb22f900f1a2f16cd532b4",
+    "sha256": "b7c479fc473299c78bbac5df97aa1ab7e061ee32cda42f39a2bc7024a72fcbb8"
+  },
+  "casos": [
+    {
+      "nombre": "Primer día",
+      "hoy": "2026-10-27",
+      "estado": {
+        "lastDay": "",
+        "streak": 0,
+        "best": 0,
+        "pro": true,
+        "shield": ""
+      },
+      "rachaVisibleAntes": 0,
+      "esperado": {
+        "streak": 1,
+        "best": 1,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Mismo día: no cambia",
+      "hoy": "2026-10-27",
+      "estado": {
+        "lastDay": "2026-10-27",
+        "streak": 3,
+        "best": 3,
+        "pro": true,
+        "shield": ""
+      },
+      "rachaVisibleAntes": 3,
+      "esperado": {
+        "streak": 3,
+        "best": 3,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Día consecutivo suma",
+      "hoy": "2026-10-27",
+      "estado": {
+        "lastDay": "2026-10-26",
+        "streak": 3,
+        "best": 3,
+        "pro": true,
+        "shield": ""
+      },
+      "rachaVisibleAntes": 3,
+      "esperado": {
+        "streak": 4,
+        "best": 4,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Día consecutivo supera la mejor racha",
+      "hoy": "2026-10-27",
+      "estado": {
+        "lastDay": "2026-10-26",
+        "streak": 5,
+        "best": 5,
+        "pro": true,
+        "shield": ""
+      },
+      "rachaVisibleAntes": 5,
+      "esperado": {
+        "streak": 6,
+        "best": 6,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Falta un día con protector disponible",
+      "hoy": "2026-10-27",
+      "estado": {
+        "lastDay": "2026-10-25",
+        "streak": 4,
+        "best": 4,
+        "pro": true,
+        "shield": ""
+      },
+      "rachaVisibleAntes": 4,
+      "esperado": {
+        "streak": 5,
+        "best": 5,
+        "lastDay": "2026-10-27",
+        "shield": "2026-10"
+      }
+    },
+    {
+      "nombre": "Falta un día y el protector ya se usó este mes",
+      "hoy": "2026-10-27",
+      "estado": {
+        "lastDay": "2026-10-25",
+        "streak": 4,
+        "best": 6,
+        "pro": true,
+        "shield": "2026-10"
+      },
+      "rachaVisibleAntes": 0,
+      "esperado": {
+        "streak": 1,
+        "best": 6,
+        "lastDay": "2026-10-27",
+        "shield": "2026-10"
+      }
+    },
+    {
+      "nombre": "Falta un día sin plan PRO",
+      "hoy": "2026-10-27",
+      "estado": {
+        "lastDay": "2026-10-25",
+        "streak": 4,
+        "best": 4,
+        "pro": false,
+        "shield": ""
+      },
+      "rachaVisibleAntes": 0,
+      "esperado": {
+        "streak": 1,
+        "best": 4,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Faltan tres días: se reinicia",
+      "hoy": "2026-10-27",
+      "estado": {
+        "lastDay": "2026-10-24",
+        "streak": 9,
+        "best": 9,
+        "pro": true,
+        "shield": ""
+      },
+      "rachaVisibleAntes": 0,
+      "esperado": {
+        "streak": 1,
+        "best": 9,
+        "lastDay": "2026-10-27",
+        "shield": ""
+      }
+    },
+    {
+      "nombre": "Cambio de mes con protector del mes anterior",
+      "hoy": "2026-11-01",
+      "estado": {
+        "lastDay": "2026-10-30",
+        "streak": 7,
+        "best": 7,
+        "pro": true,
+        "shield": "2026-10"
+      },
+      "rachaVisibleAntes": 7,
+      "esperado": {
+        "streak": 8,
+        "best": 8,
+        "lastDay": "2026-11-01",
+        "shield": "2026-11"
+      }
+    },
+    {
+      "nombre": "Cambio de año con protector disponible",
+      "hoy": "2027-01-01",
+      "estado": {
+        "lastDay": "2026-12-30",
+        "streak": 2,
+        "best": 2,
+        "pro": true,
+        "shield": ""
+      },
+      "rachaVisibleAntes": 2,
+      "esperado": {
+        "streak": 3,
+        "best": 3,
+        "lastDay": "2027-01-01",
+        "shield": "2027-01"
+      }
+    },
+    {
+      "nombre": "Falta un día el último día de febrero bisiesto",
+      "hoy": "2028-03-01",
+      "estado": {
+        "lastDay": "2028-02-28",
+        "streak": 6,
+        "best": 6,
+        "pro": true,
+        "shield": ""
+      },
+      "rachaVisibleAntes": 6,
+      "esperado": {
+        "streak": 7,
+        "best": 7,
+        "lastDay": "2028-03-01",
+        "shield": "2028-03"
+      }
+    }
+  ]
+}
