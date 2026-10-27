@@ -1,7 +1,9 @@
 export * from './events';
 export * from './exercises';
+export * from './lesson';
 export type * from './ports';
 export * from './progress';
+export { shuffle } from './random';
 export * from './scoring';
 export * from './streak';
 export * from './text';
