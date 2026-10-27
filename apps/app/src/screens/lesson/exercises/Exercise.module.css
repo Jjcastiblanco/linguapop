@@ -1,0 +1,152 @@
+.prompt {
+  font-size: 22px;
+  font-weight: 900;
+  margin: 6px 0 16px;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.option {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  padding: 16px 8px;
+  font-weight: 800;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 0 var(--line);
+  transition: 0.12s;
+}
+
+.option:disabled {
+  cursor: default;
+}
+
+.emoji {
+  font-size: 40px;
+}
+
+.selected {
+  border-color: var(--blue);
+  background: rgba(47, 140, 255, 0.12);
+  box-shadow: 0 4px 0 var(--blue);
+}
+
+.good {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+  box-shadow: 0 4px 0 var(--ok);
+}
+
+.bad {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+  box-shadow: 0 4px 0 var(--bad);
+  animation: shake 0.4s;
+}
+
+.answerArea {
+  min-height: 64px;
+  border-bottom: 2px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 16px;
+  background: repeating-linear-gradient(transparent 0 55px, var(--line) 55px 57px);
+}
+
+.bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.token {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 800;
+  font-size: 17px;
+  box-shadow: 0 3px 0 var(--line);
+  animation: pop 0.2s;
+}
+
+.tokenUsed {
+  background: var(--line);
+  color: transparent;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.field {
+  width: 100%;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 18px;
+  background: var(--card);
+  color: var(--ink);
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  min-height: 96px;
+}
+
+.field:focus {
+  border-color: var(--blue);
+}
+
+.unsupported {
+  background: var(--card);
+  border: 2px dashed var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+@keyframes shake {
+  20%,
+  60% {
+    transform: translateX(-7px);
+  }
+  40%,
+  80% {
+    transform: translateX(7px);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bad,
+  .token {
+    animation: none;
+  }
+  .option {
+    transition: none;
+  }
+}

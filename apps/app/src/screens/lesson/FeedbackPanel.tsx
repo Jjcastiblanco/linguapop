@@ -1,0 +1,42 @@
+import type { AnswerResult } from '@linguapop/domain';
+import type { Exercise } from '@linguapop/content';
+import { useMemo } from 'react';
+import { useServices } from '../../composition/context';
+import { t, type TextKey } from '../../i18n';
+import styles from './LessonScreen.module.css';
+
+const PRAISES: readonly TextKey[] = [
+  'feedback.ok.1',
+  'feedback.ok.2',
+  'feedback.ok.3',
+  'feedback.ok.4',
+  'feedback.ok.5',
+];
+
+/** Resultado de la comprobación: felicitación o respuesta correcta, con su aviso y la explicación del ejercicio. */
+export function FeedbackPanel({ exercise, result }: { exercise: Exercise; result: AnswerResult }) {
+  const { composition } = useServices();
+  const praise = useMemo(
+    () => t(PRAISES[Math.floor(composition.random.next() * PRAISES.length)] ?? 'feedback.ok.1'),
+    [composition, exercise.id],
+  );
+  const note = result.typo
+    ? t('feedback.typo', { answer: result.correctAnswer })
+    : (result.translation ?? null);
+
+  return (
+    <div className={styles.feedback} role="status">
+      {result.ok ? (
+        <b>{result.skipped ? '' : praise}</b>
+      ) : (
+        <>
+          <b>{t('feedback.wrong')}</b>
+          <div>{result.correctAnswer}</div>
+        </>
+      )}
+      {note && result.ok === false && <div>{note}</div>}
+      {note && result.ok && <div>{note}</div>}
+      {exercise.tip && <div className={styles.tip}>💡 {exercise.tip}</div>}
+    </div>
+  );
+}

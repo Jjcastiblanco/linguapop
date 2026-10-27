@@ -1,6 +1,7 @@
 import { Navigate, type RouteObject } from 'react-router';
 import { Placeholder } from './screens/Placeholder';
 import { LearnScreen } from './screens/learn/LearnScreen';
+import { LessonScreen } from './screens/lesson/LessonScreen';
 import { AppShell } from './shell/AppShell';
 
 /**
@@ -19,7 +20,7 @@ export const appRoutes: RouteObject[] = [
       { path: 'perfil', element: <Placeholder title="screen.profile.title" /> },
     ],
   },
-  { path: '/leccion/:unitId/:lessonId', element: <Placeholder title="screen.lesson.title" /> },
+  { path: '/leccion/:unitId/:lessonId', element: <LessonScreen /> },
   { path: '/llamada', element: <Placeholder title="screen.call.title" /> },
   { path: '*', element: <Navigate to="/aprender" replace /> },
 ];

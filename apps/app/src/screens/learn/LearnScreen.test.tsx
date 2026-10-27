@@ -87,14 +87,13 @@ describe('camino de aprendizaje', () => {
   });
 
   it('un nodo abierto lleva a su lección y uno hecho se puede repetir', async () => {
-    const { router } = await preparar([leccion('u-saludos', 1)]);
+    const primera = await preparar([leccion('u-saludos', 1)]);
     await userEvent.click(nodo('u-saludos-l2'));
-    expect(router.state.location.pathname).toBe('/leccion/u-saludos/u-saludos-l2');
-    await act(async () => {
-      await router.navigate(-1);
-    });
+    expect(primera.router.state.location.pathname).toBe('/leccion/u-saludos/u-saludos-l2');
+    primera.unmount();
+    const segunda = await preparar([leccion('u-saludos', 1)]);
     await userEvent.click(nodo('u-saludos-l1'));
-    expect(router.state.location.pathname).toBe('/leccion/u-saludos/u-saludos-l1');
+    expect(segunda.router.state.location.pathname).toBe('/leccion/u-saludos/u-saludos-l1');
   });
 
   it('un nodo cerrado no lleva a ninguna parte', async () => {

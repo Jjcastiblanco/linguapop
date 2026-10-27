@@ -1,8 +1,11 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useStore } from 'zustand';
 import {
+  createLessonSessionStore,
   createProgressStore,
   createUiStore,
+  type LessonSessionState,
+  type LessonSessionStore,
   type ProgressStore,
   type ProgressStoreState,
   type UiState,
@@ -14,6 +17,7 @@ export type AppServices = {
   composition: Composition;
   progress: ProgressStore;
   ui: UiStore;
+  lesson: LessonSessionStore;
 };
 
 const AppContext = createContext<AppServices | null>(null);
@@ -23,7 +27,8 @@ export function createServices(composition: Composition): AppServices {
   const ui = createUiStore(composition.store);
   // El sonido obedece a la preferencia del dispositivo.
   composition.sound.setEnabledSource(() => ui.getState().sound);
-  return { composition, progress: createProgressStore(composition), ui };
+  const progress = createProgressStore(composition);
+  return { composition, progress, ui, lesson: createLessonSessionStore(composition, progress) };
 }
 
 export function AppProvider({
@@ -49,4 +54,8 @@ export function useProgress<T>(selector: (s: ProgressStoreState) => T): T {
 
 export function useUi<T>(selector: (s: UiState) => T): T {
   return useStore(useServices().ui, selector);
+}
+
+export function useLesson<T>(selector: (s: LessonSessionState) => T): T {
+  return useStore(useServices().lesson, selector);
 }
