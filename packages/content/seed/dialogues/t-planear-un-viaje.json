@@ -1,0 +1,138 @@
+{
+  "id": "t-planear-un-viaje",
+  "unitId": "u-viajes",
+  "title": "Planear un viaje",
+  "emoji": "🧳",
+  "intro": "Pack your bags! We're planning a trip. I'm in charge, obviously.",
+  "outro": "This trip is going to be epic. See you at the airport!",
+  "turns": [
+    {
+      "nova": "Where do you want to travel?",
+      "accepted": [
+        "i want to go to *",
+        "i want to travel to *",
+        "i would like to go to *",
+        "i want to visit *",
+        "let us go to *",
+        "i would like to visit *",
+        "i want to see *"
+      ],
+      "hint": "Di: \"I want to go to Italy.\"",
+      "comment": "Ooh, good choice. Fancy."
+    },
+    {
+      "nova": "How do we get there? By plane or by train?",
+      "accepted": [
+        "by plane",
+        "by train",
+        "by bus",
+        "by car",
+        "we take the plane",
+        "we take the train",
+        "let us take the *",
+        "i prefer *",
+        "the plane",
+        "the train",
+        "plane",
+        "train",
+        "i want to take *"
+      ],
+      "hint": "Di: \"By plane.\"",
+      "comment": "Plane it is. Window seat is mine."
+    },
+    {
+      "nova": "Where do we stay? In a hotel?",
+      "accepted": [
+        "yes a hotel",
+        "a hotel",
+        "hotel",
+        "yes",
+        "a hotel please",
+        "i want a hotel",
+        "let us stay in a hotel",
+        "we stay in a hotel",
+        "a room please"
+      ],
+      "hint": "Di: \"Yes, a hotel.\"",
+      "comment": "Hotel. With room service, I hope."
+    },
+    {
+      "nova": "How long is the trip?",
+      "accepted": [
+        "* days",
+        "for * days",
+        "* week",
+        "* weeks",
+        "one week",
+        "a week",
+        "a weekend",
+        "for a week",
+        "it is * days",
+        "one day"
+      ],
+      "hint": "Di: \"Five days.\"",
+      "comment": "Perfect. Long enough to get lost."
+    },
+    {
+      "nova": "What do we pack in the suitcase?",
+      "accepted": [
+        "my passport",
+        "passport",
+        "clothes",
+        "a map",
+        "i pack *",
+        "we pack *",
+        "my clothes",
+        "i take *",
+        "we need *",
+        "shoes",
+        "my phone"
+      ],
+      "hint": "Di: \"My passport and clothes.\"",
+      "comment": "Yes, the passport. Never forget the passport."
+    },
+    {
+      "nova": "We are lost! Ask someone: where is the station?",
+      "accepted": [
+        "where is the station",
+        "where is the train station",
+        "where is the bus station",
+        "excuse me where is the station",
+        "excuse me where is *",
+        "where is *"
+      ],
+      "hint": "Di: \"Excuse me, where is the station?\"",
+      "comment": "Look at you, asking for directions like a pro."
+    },
+    {
+      "nova": "The person says: turn left. What do you say?",
+      "accepted": [
+        "thank you",
+        "thanks",
+        "thank you very much",
+        "thank you turn left",
+        "ok thank you",
+        "ok thanks"
+      ],
+      "hint": "Di: \"Thank you very much.\"",
+      "comment": "Left it is. Hopefully."
+    },
+    {
+      "nova": "We are at the beach! How do you feel?",
+      "accepted": [
+        "i am happy",
+        "i am very happy",
+        "i feel *",
+        "it is beautiful",
+        "it is great",
+        "i am tired",
+        "i am *",
+        "i love it",
+        "this is great",
+        "this is beautiful"
+      ],
+      "hint": "Di: \"I am very happy.\"",
+      "comment": "Same. Do not tell anyone."
+    }
+  ]
+}

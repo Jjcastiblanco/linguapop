@@ -1,0 +1,320 @@
+{
+  "id": "u-trabajo",
+  "name": "Trabajo",
+  "emoji": "💼",
+  "color": "#ec4899",
+  "colorDark": "#b8286f",
+  "description": "Oficina y profesiones",
+  "exercises": [
+    {
+      "id": "u-trabajo-e01",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"oficina\"?",
+      "options": [
+        {
+          "emoji": "🏢",
+          "text": "Office"
+        },
+        {
+          "emoji": "🏫",
+          "text": "School"
+        },
+        {
+          "emoji": "🏥",
+          "text": "Hospital"
+        },
+        {
+          "emoji": "🏪",
+          "text": "Shop"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Office\" = oficina."
+    },
+    {
+      "id": "u-trabajo-e02",
+      "type": "order",
+      "es": "Trabajo en una oficina",
+      "en": "I work in an office",
+      "extraWords": ["at", "live"],
+      "tip": "Antes de vocal se usa \"an\": an office."
+    },
+    {
+      "id": "u-trabajo-e03",
+      "type": "write",
+      "es": "Mi jefe",
+      "en": "My boss",
+      "alternatives": [],
+      "tip": "\"Boss\" = jefe o jefa."
+    },
+    {
+      "id": "u-trabajo-e04",
+      "type": "listen",
+      "en": "I have a meeting at ten",
+      "es": "Tengo una reunión a las diez"
+    },
+    {
+      "id": "u-trabajo-e05",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"médico\"?",
+      "options": [
+        {
+          "emoji": "🧑‍⚕️",
+          "text": "Doctor"
+        },
+        {
+          "emoji": "🧑‍🏫",
+          "text": "Teacher"
+        },
+        {
+          "emoji": "🧑‍🍳",
+          "text": "Chef"
+        },
+        {
+          "emoji": "🧑‍🔧",
+          "text": "Mechanic"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Doctor\" se escribe casi igual."
+    },
+    {
+      "id": "u-trabajo-e06",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Maestro",
+          "en": "Teacher"
+        },
+        {
+          "es": "Ingeniero",
+          "en": "Engineer"
+        },
+        {
+          "es": "Cocinero",
+          "en": "Cook"
+        },
+        {
+          "es": "Abogado",
+          "en": "Lawyer"
+        }
+      ]
+    },
+    {
+      "id": "u-trabajo-e07",
+      "type": "order",
+      "es": "Ella es profesora",
+      "en": "She is a teacher",
+      "extraWords": ["he", "an"],
+      "tip": "Con profesiones se usa \"a\": a teacher."
+    },
+    {
+      "id": "u-trabajo-e08",
+      "type": "speak",
+      "en": "I work from nine to five",
+      "es": "Trabajo de nueve a cinco"
+    },
+    {
+      "id": "u-trabajo-e09",
+      "type": "write",
+      "es": "Necesito un trabajo",
+      "en": "I need a job",
+      "alternatives": [],
+      "tip": "\"Job\" = trabajo (empleo)."
+    },
+    {
+      "id": "u-trabajo-e10",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"computadora\"?",
+      "options": [
+        {
+          "emoji": "💻",
+          "text": "Computer"
+        },
+        {
+          "emoji": "📱",
+          "text": "Phone"
+        },
+        {
+          "emoji": "🖨️",
+          "text": "Printer"
+        },
+        {
+          "emoji": "⌨️",
+          "text": "Keyboard"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Computer\" = computadora/ordenador."
+    },
+    {
+      "id": "u-trabajo-e11",
+      "type": "listen",
+      "en": "Can you help me please",
+      "es": "¿Me puedes ayudar, por favor?"
+    },
+    {
+      "id": "u-trabajo-e12",
+      "type": "order",
+      "es": "Mi trabajo es muy difícil",
+      "en": "My job is very difficult",
+      "extraWords": ["easy", "are"],
+      "tip": "\"Very\" intensifica el adjetivo."
+    },
+    {
+      "id": "u-trabajo-e13",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"reunión\"?",
+      "options": [
+        {
+          "emoji": "👥",
+          "text": "Meeting"
+        },
+        {
+          "emoji": "📧",
+          "text": "Email"
+        },
+        {
+          "emoji": "📞",
+          "text": "Call"
+        },
+        {
+          "emoji": "📅",
+          "text": "Calendar"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Meeting\" viene de \"to meet\" (reunirse)."
+    },
+    {
+      "id": "u-trabajo-e14",
+      "type": "write",
+      "es": "Trabajo con mis amigos",
+      "en": "I work with my friends",
+      "alternatives": [],
+      "tip": "\"Friends\" es el plural de \"friend\"."
+    },
+    {
+      "id": "u-trabajo-e15",
+      "type": "speak",
+      "en": "Thank you for your help",
+      "es": "Gracias por tu ayuda"
+    },
+    {
+      "id": "u-trabajo-e16",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Salario",
+          "en": "Salary"
+        },
+        {
+          "es": "Correo",
+          "en": "Email"
+        },
+        {
+          "es": "Equipo",
+          "en": "Team"
+        },
+        {
+          "es": "Empleado",
+          "en": "Employee"
+        }
+      ]
+    },
+    {
+      "id": "u-trabajo-e17",
+      "type": "listen",
+      "en": "I am looking for a new job",
+      "es": "Estoy buscando un nuevo trabajo"
+    },
+    {
+      "id": "u-trabajo-e18",
+      "type": "order",
+      "es": "Tengo una entrevista mañana",
+      "en": "I have an interview tomorrow",
+      "extraWords": ["am", "today"],
+      "tip": "\"An interview\": \"an\" antes de vocal."
+    },
+    {
+      "id": "u-trabajo-e19",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"horario\"?",
+      "options": [
+        {
+          "emoji": "⏰",
+          "text": "Schedule"
+        },
+        {
+          "emoji": "💰",
+          "text": "Money"
+        },
+        {
+          "emoji": "📝",
+          "text": "Note"
+        },
+        {
+          "emoji": "🎓",
+          "text": "Degree"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Schedule\" = horario o agenda."
+    },
+    {
+      "id": "u-trabajo-e20",
+      "type": "write",
+      "es": "Mi compañero es amable",
+      "en": "My coworker is kind",
+      "alternatives": ["My coworker is nice", "My colleague is kind", "My colleague is nice"],
+      "tip": "\"Coworker\" y \"colleague\" = compañero de trabajo."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "u-trabajo-l1",
+      "exerciseIds": [
+        "u-trabajo-e01",
+        "u-trabajo-e02",
+        "u-trabajo-e03",
+        "u-trabajo-e04",
+        "u-trabajo-e05",
+        "u-trabajo-e06",
+        "u-trabajo-e07",
+        "u-trabajo-e08",
+        "u-trabajo-e09",
+        "u-trabajo-e10"
+      ]
+    },
+    {
+      "id": "u-trabajo-l2",
+      "exerciseIds": [
+        "u-trabajo-e08",
+        "u-trabajo-e09",
+        "u-trabajo-e10",
+        "u-trabajo-e11",
+        "u-trabajo-e12",
+        "u-trabajo-e13",
+        "u-trabajo-e14",
+        "u-trabajo-e15",
+        "u-trabajo-e16",
+        "u-trabajo-e17"
+      ]
+    },
+    {
+      "id": "u-trabajo-l3",
+      "exerciseIds": [
+        "u-trabajo-e15",
+        "u-trabajo-e16",
+        "u-trabajo-e17",
+        "u-trabajo-e18",
+        "u-trabajo-e19",
+        "u-trabajo-e20",
+        "u-trabajo-e01",
+        "u-trabajo-e02",
+        "u-trabajo-e03",
+        "u-trabajo-e04"
+      ]
+    }
+  ]
+}

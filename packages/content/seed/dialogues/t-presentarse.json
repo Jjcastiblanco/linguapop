@@ -1,0 +1,115 @@
+{
+  "id": "t-presentarse",
+  "unitId": "u-saludos",
+  "title": "Presentarse",
+  "emoji": "🙋",
+  "intro": "Hey! Finally. I'm Nova. Let's see if your English survives a real conversation.",
+  "outro": "Not bad for a beginner. Call me again. Bye!",
+  "turns": [
+    {
+      "nova": "Hi there! What's your name?",
+      "accepted": ["my name is *", "i am *", "call me *", "my name is"],
+      "hint": "Di: \"My name is…\" (tu nombre)",
+      "comment": "Nice name. I'll try to remember it.",
+      "rejectWords": [
+        "tired",
+        "fine",
+        "good",
+        "great",
+        "happy",
+        "sad",
+        "hungry",
+        "ok",
+        "okay",
+        "sick"
+      ]
+    },
+    {
+      "nova": "Nice to meet you! How are you today?",
+      "accepted": [
+        "i am fine",
+        "i am good",
+        "i am great",
+        "i am ok",
+        "i am okay",
+        "fine thank you",
+        "good thank you",
+        "i am happy",
+        "i am tired",
+        "i am sad",
+        "not bad",
+        "i am well",
+        "i am very well",
+        "i am very good",
+        "i am fine thank you"
+      ],
+      "hint": "Di: \"I am fine, thank you.\"",
+      "comment": "Glad to hear it. Or not. Whatever."
+    },
+    {
+      "nova": "Where are you from?",
+      "accepted": ["i am from *", "i come from *", "from *", "my country is *"],
+      "hint": "Di: \"I am from…\" (tu país)",
+      "comment": "Oh, I have always wanted to visit. Maybe."
+    },
+    {
+      "nova": "How old are you?",
+      "accepted": ["i am * years old", "i am *", "my age is *", "* years old", "i have * years"],
+      "hint": "Di: \"I am twenty years old.\"",
+      "comment": "Wow. Old enough to know better.",
+      "requiredPattern": "(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)"
+    },
+    {
+      "nova": "Do you work or study?",
+      "accepted": [
+        "i work",
+        "i study",
+        "i am a *",
+        "i am an *",
+        "i work as *",
+        "i work in *",
+        "i study *",
+        "i am student",
+        "i am a student"
+      ],
+      "hint": "Di: \"I am a student.\"",
+      "comment": "Respect. Honestly."
+    },
+    {
+      "nova": "What do you like to do in your free time?",
+      "accepted": [
+        "i like *",
+        "i love *",
+        "i enjoy *",
+        "i play *",
+        "i watch *",
+        "i read *",
+        "i listen to *"
+      ],
+      "hint": "Di: \"I like music.\"",
+      "comment": "That's actually cool. Don't tell anyone I said that."
+    },
+    {
+      "nova": "Do you speak other languages?",
+      "accepted": [
+        "i speak *",
+        "yes i speak *",
+        "yes i do",
+        "no i do not",
+        "only spanish",
+        "yes a little",
+        "a little",
+        "no only spanish",
+        "no"
+      ],
+      "hint": "Di: \"I speak Spanish.\"",
+      "comment": "Languages are fun. Sometimes."
+    },
+    {
+      "nova": "Last one. Can you say: See you later?",
+      "accepted": ["see you later", "bye see you later", "goodbye", "bye", "see you"],
+      "hint": "Di: \"See you later.\"",
+      "comment": "Perfect. See? Not so hard."
+    }
+  ]
+}

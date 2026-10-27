@@ -1,0 +1,153 @@
+{
+  "id": "t-pedir-comida",
+  "unitId": "u-comida",
+  "title": "Pedir comida",
+  "emoji": "🍽️",
+  "intro": "Welcome to Nova's Cafe. Yes, I run it. No, the coffee is not free.",
+  "outro": "Thanks for coming! Tip is optional. Bye!",
+  "turns": [
+    {
+      "nova": "Table for how many?",
+      "accepted": [
+        "a table for *",
+        "table for *",
+        "for two",
+        "for one",
+        "for three",
+        "for four",
+        "one",
+        "two",
+        "three",
+        "just me",
+        "one person",
+        "two people",
+        "i want a table for *"
+      ],
+      "hint": "Di: \"A table for two, please.\"",
+      "comment": "Great, follow me. Mind the floor."
+    },
+    {
+      "nova": "Here is the menu. What would you like to drink?",
+      "accepted": [
+        "i would like *",
+        "i want *",
+        "water",
+        "coffee",
+        "juice",
+        "tea",
+        "milk",
+        "a coffee",
+        "a water",
+        "some water",
+        "can i have *",
+        "a juice"
+      ],
+      "hint": "Di: \"I would like some water.\"",
+      "comment": "Coming right up. Eventually."
+    },
+    {
+      "nova": "And to eat? We have pizza, soup and salad.",
+      "accepted": [
+        "i would like *",
+        "i want *",
+        "pizza",
+        "soup",
+        "salad",
+        "the pizza",
+        "the soup",
+        "the salad",
+        "can i have *",
+        "i will have *",
+        "a pizza"
+      ],
+      "hint": "Di: \"I would like the soup.\"",
+      "comment": "Excellent choice. The chef agrees."
+    },
+    {
+      "nova": "Do you want anything else?",
+      "accepted": [
+        "no thank you",
+        "no thanks",
+        "that is all",
+        "that is all thank you",
+        "yes *",
+        "i want *",
+        "i would like *",
+        "nothing else",
+        "no",
+        "no that is all"
+      ],
+      "hint": "Di: \"No, thank you.\"",
+      "comment": "Simple. I like simple."
+    },
+    {
+      "nova": "Do you like spicy food?",
+      "accepted": [
+        "yes i like *",
+        "yes i do",
+        "no i do not *",
+        "i like *",
+        "i do not like *",
+        "a little",
+        "not really",
+        "yes",
+        "no i do not"
+      ],
+      "hint": "Di: \"Yes, I like spicy food.\"",
+      "comment": "Brave. Very brave."
+    },
+    {
+      "nova": "Here is your food. How is it?",
+      "accepted": [
+        "it is delicious",
+        "it is good",
+        "it is very good",
+        "it is great",
+        "it is hot",
+        "it is cold",
+        "it is salty",
+        "it is ok",
+        "delicious",
+        "very good",
+        "the soup is *",
+        "the pizza is *",
+        "it is *"
+      ],
+      "hint": "Di: \"It is delicious.\"",
+      "comment": "Of course it is. I cooked it. Well, I watched."
+    },
+    {
+      "nova": "Are you ready to pay?",
+      "accepted": [
+        "the check please",
+        "the bill please",
+        "can i have the check *",
+        "can i have the bill *",
+        "check please",
+        "bill please",
+        "how much is it",
+        "how much",
+        "yes the bill please",
+        "yes the check please"
+      ],
+      "hint": "Di: \"The bill, please.\"",
+      "comment": "Fine, fine. Let me find it."
+    },
+    {
+      "nova": "That's twelve dollars. Have a nice day!",
+      "accepted": [
+        "thank you",
+        "thanks",
+        "thank you goodbye",
+        "thank you bye",
+        "thanks bye",
+        "goodbye",
+        "bye",
+        "you too",
+        "thank you you too"
+      ],
+      "hint": "Di: \"Thank you, goodbye.\"",
+      "comment": "Politeness. Wow."
+    }
+  ]
+}

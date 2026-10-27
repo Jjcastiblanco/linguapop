@@ -1,0 +1,320 @@
+{
+  "id": "u-comida",
+  "name": "Comida",
+  "emoji": "🍎",
+  "color": "#22b573",
+  "colorDark": "#168a55",
+  "description": "Pedir en un restaurante",
+  "exercises": [
+    {
+      "id": "u-comida-e01",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"manzana\"?",
+      "options": [
+        {
+          "emoji": "🍎",
+          "text": "Apple"
+        },
+        {
+          "emoji": "🍌",
+          "text": "Banana"
+        },
+        {
+          "emoji": "🍞",
+          "text": "Bread"
+        },
+        {
+          "emoji": "🥛",
+          "text": "Milk"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Apple\" – una de las primeras palabras de comida."
+    },
+    {
+      "id": "u-comida-e02",
+      "type": "order",
+      "es": "Quiero agua",
+      "en": "I want water",
+      "extraWords": ["eat", "the"],
+      "tip": "\"I want\" = yo quiero."
+    },
+    {
+      "id": "u-comida-e03",
+      "type": "write",
+      "es": "El pan",
+      "en": "The bread",
+      "alternatives": [],
+      "tip": "\"The\" es el artículo: el, la, los, las."
+    },
+    {
+      "id": "u-comida-e04",
+      "type": "listen",
+      "en": "I would like a coffee",
+      "es": "Me gustaría un café"
+    },
+    {
+      "id": "u-comida-e05",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"leche\"?",
+      "options": [
+        {
+          "emoji": "🥛",
+          "text": "Milk"
+        },
+        {
+          "emoji": "🧀",
+          "text": "Cheese"
+        },
+        {
+          "emoji": "🥚",
+          "text": "Egg"
+        },
+        {
+          "emoji": "🍚",
+          "text": "Rice"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Milk\" se pronuncia /milk/."
+    },
+    {
+      "id": "u-comida-e06",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Arroz",
+          "en": "Rice"
+        },
+        {
+          "es": "Huevo",
+          "en": "Egg"
+        },
+        {
+          "es": "Queso",
+          "en": "Cheese"
+        },
+        {
+          "es": "Pollo",
+          "en": "Chicken"
+        }
+      ]
+    },
+    {
+      "id": "u-comida-e07",
+      "type": "order",
+      "es": "Tengo hambre",
+      "en": "I am hungry",
+      "extraWords": ["have", "thirsty"],
+      "tip": "En inglés se usa \"ser/estar\" (I am), no \"tener\"."
+    },
+    {
+      "id": "u-comida-e08",
+      "type": "speak",
+      "en": "I would like some water, please",
+      "es": "Quisiera un poco de agua, por favor"
+    },
+    {
+      "id": "u-comida-e09",
+      "type": "write",
+      "es": "La cuenta, por favor",
+      "en": "The bill, please",
+      "alternatives": ["The check, please", "Check please"],
+      "tip": "\"Bill\" (UK) y \"check\" (US) significan cuenta."
+    },
+    {
+      "id": "u-comida-e10",
+      "type": "mc",
+      "prompt": "¿Qué significa \"I like pizza\"?",
+      "options": [
+        {
+          "emoji": "🍕",
+          "text": "Me gusta la pizza"
+        },
+        {
+          "emoji": "🍔",
+          "text": "Me gustan las hamburguesas"
+        },
+        {
+          "emoji": "🥗",
+          "text": "Me gusta la ensalada"
+        },
+        {
+          "emoji": "🍝",
+          "text": "Me gusta la pasta"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"I like\" = me gusta."
+    },
+    {
+      "id": "u-comida-e11",
+      "type": "listen",
+      "en": "I am thirsty",
+      "es": "Tengo sed"
+    },
+    {
+      "id": "u-comida-e12",
+      "type": "order",
+      "es": "Una mesa para dos",
+      "en": "A table for two",
+      "extraWords": ["three", "the"],
+      "tip": "\"For two\" = para dos."
+    },
+    {
+      "id": "u-comida-e13",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"desayuno\"?",
+      "options": [
+        {
+          "emoji": "🍳",
+          "text": "Breakfast"
+        },
+        {
+          "emoji": "🍽️",
+          "text": "Dinner"
+        },
+        {
+          "emoji": "🥪",
+          "text": "Lunch"
+        },
+        {
+          "emoji": "🍰",
+          "text": "Dessert"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Breakfast\" = romper el ayuno."
+    },
+    {
+      "id": "u-comida-e14",
+      "type": "write",
+      "es": "Tengo sed",
+      "en": "I am thirsty",
+      "alternatives": [],
+      "tip": "Igual que con hambre: I am + adjetivo."
+    },
+    {
+      "id": "u-comida-e15",
+      "type": "speak",
+      "en": "The soup is delicious",
+      "es": "La sopa está deliciosa"
+    },
+    {
+      "id": "u-comida-e16",
+      "type": "match",
+      "pairs": [
+        {
+          "es": "Sopa",
+          "en": "Soup"
+        },
+        {
+          "es": "Ensalada",
+          "en": "Salad"
+        },
+        {
+          "es": "Jugo",
+          "en": "Juice"
+        },
+        {
+          "es": "Fruta",
+          "en": "Fruit"
+        }
+      ]
+    },
+    {
+      "id": "u-comida-e17",
+      "type": "listen",
+      "en": "Can I have the menu",
+      "es": "¿Me puede dar el menú?"
+    },
+    {
+      "id": "u-comida-e18",
+      "type": "order",
+      "es": "No como carne",
+      "en": "I do not eat meat",
+      "extraWords": ["am", "the"],
+      "tip": "\"Do not\" (don't) niega los verbos normales."
+    },
+    {
+      "id": "u-comida-e19",
+      "type": "mc",
+      "prompt": "¿Cómo se dice \"tomate\"?",
+      "options": [
+        {
+          "emoji": "🍅",
+          "text": "Tomato"
+        },
+        {
+          "emoji": "🥕",
+          "text": "Carrot"
+        },
+        {
+          "emoji": "🧅",
+          "text": "Onion"
+        },
+        {
+          "emoji": "🥔",
+          "text": "Potato"
+        }
+      ],
+      "answerIndex": 0,
+      "tip": "\"Tomato\" se pronuncia /təˈmeɪtoʊ/."
+    },
+    {
+      "id": "u-comida-e20",
+      "type": "write",
+      "es": "Quiero un café con leche",
+      "en": "I want a coffee with milk",
+      "alternatives": ["I would like a coffee with milk"],
+      "tip": "\"With\" = con."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "u-comida-l1",
+      "exerciseIds": [
+        "u-comida-e01",
+        "u-comida-e02",
+        "u-comida-e03",
+        "u-comida-e04",
+        "u-comida-e05",
+        "u-comida-e06",
+        "u-comida-e07",
+        "u-comida-e08",
+        "u-comida-e09",
+        "u-comida-e10"
+      ]
+    },
+    {
+      "id": "u-comida-l2",
+      "exerciseIds": [
+        "u-comida-e08",
+        "u-comida-e09",
+        "u-comida-e10",
+        "u-comida-e11",
+        "u-comida-e12",
+        "u-comida-e13",
+        "u-comida-e14",
+        "u-comida-e15",
+        "u-comida-e16",
+        "u-comida-e17"
+      ]
+    },
+    {
+      "id": "u-comida-l3",
+      "exerciseIds": [
+        "u-comida-e15",
+        "u-comida-e16",
+        "u-comida-e17",
+        "u-comida-e18",
+        "u-comida-e19",
+        "u-comida-e20",
+        "u-comida-e01",
+        "u-comida-e02",
+        "u-comida-e03",
+        "u-comida-e04"
+      ]
+    }
+  ]
+}

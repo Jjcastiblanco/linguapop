@@ -1,0 +1,142 @@
+[
+  {
+    "id": "first",
+    "icon": "🎯",
+    "name": "Primer paso",
+    "description": "Completa tu primera lección",
+    "condition": {
+      "stat": "lessons",
+      "atLeast": 1
+    }
+  },
+  {
+    "id": "streak3",
+    "icon": "🔥",
+    "name": "En llamas",
+    "description": "Racha de 3 días",
+    "condition": {
+      "stat": "streak",
+      "atLeast": 3
+    }
+  },
+  {
+    "id": "streak7",
+    "icon": "🌋",
+    "name": "Imparable",
+    "description": "Racha de 7 días",
+    "condition": {
+      "stat": "streak",
+      "atLeast": 7
+    }
+  },
+  {
+    "id": "xp100",
+    "icon": "⚡",
+    "name": "Energía",
+    "description": "Gana 100 XP",
+    "condition": {
+      "stat": "xp",
+      "atLeast": 100
+    }
+  },
+  {
+    "id": "xp500",
+    "icon": "🚀",
+    "name": "Cohete",
+    "description": "Gana 500 XP",
+    "condition": {
+      "stat": "xp",
+      "atLeast": 500
+    }
+  },
+  {
+    "id": "perfect",
+    "icon": "💯",
+    "name": "Perfecto",
+    "description": "Lección sin errores",
+    "condition": {
+      "stat": "perfectLessons",
+      "atLeast": 1
+    }
+  },
+  {
+    "id": "unit1",
+    "icon": "🏅",
+    "name": "Unidad completa",
+    "description": "Termina una unidad",
+    "condition": {
+      "stat": "unitsCompleted",
+      "atLeast": 1
+    }
+  },
+  {
+    "id": "unit3",
+    "icon": "🏆",
+    "name": "Viajero",
+    "description": "Termina 3 unidades",
+    "condition": {
+      "stat": "unitsCompleted",
+      "atLeast": 3
+    }
+  },
+  {
+    "id": "unit5",
+    "icon": "👑",
+    "name": "Maestro pop",
+    "description": "Termina las 5 unidades",
+    "condition": {
+      "stat": "unitsCompleted",
+      "atLeast": 5
+    }
+  },
+  {
+    "id": "nova",
+    "icon": "📞",
+    "name": "Llamada con Nova",
+    "description": "Completa una llamada",
+    "condition": {
+      "stat": "calls",
+      "atLeast": 1
+    }
+  },
+  {
+    "id": "c50",
+    "icon": "✅",
+    "name": "Cincuenta",
+    "description": "50 respuestas correctas",
+    "condition": {
+      "stat": "correctAnswers",
+      "atLeast": 50
+    }
+  },
+  {
+    "id": "gems200",
+    "icon": "💎",
+    "name": "Coleccionista",
+    "description": "Ten 200 gemas",
+    "condition": {
+      "stat": "gems",
+      "atLeast": 200
+    }
+  },
+  {
+    "id": "goal",
+    "icon": "🎁",
+    "name": "Meta diaria",
+    "description": "Cumple la meta de XP del día",
+    "condition": {
+      "stat": "dailyGoalReached",
+      "atLeast": 1
+    }
+  },
+  {
+    "id": "timed",
+    "icon": "⏱️",
+    "name": "Velocista",
+    "description": "10 aciertos en el desafío",
+    "condition": {
+      "stat": "timedBest",
+      "atLeast": 10
+    }
+  }
+]

@@ -1,0 +1,121 @@
+{
+  "id": "t-hablar-de-la-familia",
+  "unitId": "u-familia",
+  "title": "Hablar de la familia",
+  "emoji": "👪",
+  "intro": "Oh, it's you. Let's talk about family. Don't worry, I won't judge. Much.",
+  "outro": "Family is great. Mine is chaos. Talk soon, bye!",
+  "turns": [
+    {
+      "nova": "Do you have brothers or sisters?",
+      "accepted": [
+        "i have *",
+        "yes i have *",
+        "no i do not have *",
+        "i do not have *",
+        "i am an only child",
+        "no",
+        "yes"
+      ],
+      "hint": "Di: \"I have one brother.\"",
+      "comment": "Siblings. Built-in rivals."
+    },
+    {
+      "nova": "What is your mother's name?",
+      "accepted": [
+        "my mother is *",
+        "my mothers name is *",
+        "my mom is *",
+        "her name is *",
+        "my moms name is *",
+        "my mother name is *",
+        "my mom *"
+      ],
+      "hint": "Di: \"My mother is Maria.\"",
+      "comment": "Lovely. Moms are the best."
+    },
+    {
+      "nova": "And your father? What does he do?",
+      "accepted": [
+        "he is *",
+        "he works *",
+        "my father is *",
+        "my father works *",
+        "my dad is *",
+        "my dad works *",
+        "he is a *"
+      ],
+      "hint": "Di: \"He is a teacher.\"",
+      "comment": "Interesting. Very respectable."
+    },
+    {
+      "nova": "Do you have grandparents?",
+      "accepted": [
+        "yes i have *",
+        "yes i do",
+        "no i do not",
+        "i have *",
+        "my grandparents are *",
+        "yes",
+        "no"
+      ],
+      "hint": "Di: \"Yes, I have two grandparents.\"",
+      "comment": "Grandparents give the best food."
+    },
+    {
+      "nova": "Is your family big or small?",
+      "accepted": [
+        "my family is big",
+        "my family is small",
+        "it is big",
+        "it is small",
+        "big",
+        "small",
+        "my family is *",
+        "it is *"
+      ],
+      "hint": "Di: \"My family is big.\"",
+      "comment": "Noted. Holidays must be loud.",
+      "requiredPattern": "(big|small|large|little)"
+    },
+    {
+      "nova": "Who is the funniest person in your family?",
+      "accepted": [
+        "my * is funny",
+        "my * is the funniest",
+        "my brother",
+        "my sister",
+        "my father",
+        "my mother",
+        "my dad",
+        "my mom",
+        "i am *",
+        "it is my *",
+        "my * is *"
+      ],
+      "hint": "Di: \"My brother is funny.\"",
+      "comment": "Ha. I would pay to meet that person."
+    },
+    {
+      "nova": "Do you live with your family?",
+      "accepted": [
+        "yes i live with *",
+        "yes i do",
+        "no i do not",
+        "i live with *",
+        "i live alone",
+        "no i live alone",
+        "yes",
+        "no"
+      ],
+      "hint": "Di: \"Yes, I live with my family.\"",
+      "comment": "Cozy. Or crowded. Probably both."
+    },
+    {
+      "nova": "Last question: say 'I love my family'.",
+      "accepted": ["i love my family", "i love my family very much", "i really love my family"],
+      "hint": "Di: \"I love my family.\"",
+      "comment": "Aww. Okay, that was cute."
+    }
+  ]
+}
