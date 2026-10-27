@@ -1,3 +1,4 @@
+export * from './call';
 export * from './events';
 export * from './exercises';
 export * from './lesson';
