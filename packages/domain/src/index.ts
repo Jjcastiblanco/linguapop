@@ -2,6 +2,7 @@ export * from './call';
 export * from './events';
 export * from './exercises';
 export * from './lesson';
+export * from './path';
 export type * from './ports';
 export * from './practice';
 export * from './progress';

@@ -14,4 +14,14 @@ describe('catálogo de textos', () => {
       expect(es[clave]).toBeDefined();
     }
   });
+
+  it('reemplaza los marcadores con los parámetros, incluso números', () => {
+    expect(t('learn.goal', { xp: 40, goal: 50 })).toBe('Meta diaria: 40/50 XP');
+    expect(t('learn.unit', { n: 2 })).toBe('UNIDAD 2');
+  });
+
+  it('un marcador sin parámetro se deja visible y una clave sin marcadores no cambia', () => {
+    expect(t('learn.unit')).toBe('UNIDAD {n}');
+    expect(t('nav.learn', { n: 1 })).toBe('Aprender');
+  });
 });

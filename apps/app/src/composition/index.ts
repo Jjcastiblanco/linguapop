@@ -1,4 +1,5 @@
 import { seedCourse } from '@linguapop/content';
+import type { Course } from '@linguapop/content';
 import type { Clock, ContentSource, Random, Speech } from '@linguapop/domain';
 import type { ProgressContext } from '@linguapop/domain';
 import { createLocalProgressSink, type LocalProgressSink } from './adapters/local-progress-sink';
@@ -13,6 +14,8 @@ export type Composition = {
   store: WebLocalStore;
   progressSink: LocalProgressSink;
   content: ContentSource;
+  /** El curso con el que se dibuja la app (hoy el contenido semilla; luego el publicado). */
+  course: Course;
   /** Voz del navegador: habla y escucha, y dice cuándo no puede. */
   speech: Speech;
   /** Sonidos con Web Audio; respeta la preferencia de sonido del dispositivo. */
@@ -50,6 +53,7 @@ export function createComposition(overrides: CompositionOverrides = {}): Composi
     store,
     progressSink: createLocalProgressSink(store),
     content: { load: async () => seedCourse },
+    course: seedCourse,
     speech: overrides.speech ?? createWebSpeech(),
     sound: overrides.sound ?? createWebSound(),
     progressContext: { units, achievements: seedCourse.achievements },

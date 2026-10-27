@@ -1,0 +1,286 @@
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.goal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+
+.goalIcon {
+  font-size: 34px;
+}
+
+.goalBody {
+  flex: 1;
+}
+
+.bar {
+  height: 14px;
+  background: var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.bar > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ffb347, var(--brand));
+  border-radius: 10px;
+  transition: width 0.5s;
+}
+
+.nova {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #7c3aed, #c026d3);
+  color: #fff;
+  border-radius: 20px;
+  padding: 12px;
+  margin-bottom: 14px;
+  box-shadow: 0 5px 0 #5b21b6;
+  width: 100%;
+  text-align: left;
+}
+
+.nova:disabled {
+  background: var(--locked);
+  box-shadow: 0 5px 0 var(--locked-d);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.novaAvatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #2e1065;
+  overflow: hidden;
+  flex: none;
+}
+
+.novaText {
+  flex: 1;
+}
+
+.novaTitle {
+  font-size: 17px;
+  font-weight: 800;
+  display: block;
+}
+
+.novaSub {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.pro {
+  background: linear-gradient(135deg, #ffe27a, #ffb300);
+  color: #6b4500;
+  font-weight: 900;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid #d99a00;
+}
+
+.ad {
+  border: 2px dashed var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.unit {
+  margin-bottom: 6px;
+}
+
+.banner {
+  border-radius: 20px;
+  padding: 14px 16px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bannerEmoji {
+  font-size: 34px;
+}
+
+.bannerText b {
+  font-size: 12px;
+  opacity: 0.85;
+  letter-spacing: 1px;
+}
+
+.bannerText h3 {
+  font-size: 21px;
+  margin: 2px 0 0;
+}
+
+.bannerText small {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.skip {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+}
+
+.unitDone {
+  margin-left: auto;
+  font-size: 26px;
+}
+
+.path {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 0 20px;
+}
+
+.node {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  margin: 11px 0;
+  font-size: 32px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.15s;
+  border: 0;
+}
+
+.node:not(:disabled):active {
+  transform: translateY(4px) !important;
+}
+
+.node:disabled {
+  background: var(--locked) !important;
+  box-shadow: 0 7px 0 var(--locked-d) !important;
+  color: var(--muted);
+  cursor: default;
+}
+
+.current::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 4px solid var(--ring);
+  animation: pulse 1.5s infinite;
+}
+
+.current::before {
+  content: attr(data-label);
+  position: absolute;
+  top: -34px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 9px;
+  border-radius: 10px;
+  border: 2px solid var(--line);
+  animation: bob 1.4s infinite;
+  white-space: nowrap;
+}
+
+.star {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 17px;
+  background: #fff;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.rewardLine {
+  font-size: 22px;
+  font-weight: 900;
+  margin: 8px 0 16px;
+}
+
+.ok {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--ok);
+  box-shadow: 0 5px 0 var(--ok-d);
+}
+
+.chestBig {
+  font-size: 80px;
+  display: inline-block;
+  animation: bob 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .current::after,
+  .current::before,
+  .chestBig {
+    animation: none;
+  }
+  .bar > i {
+    transition: none;
+  }
+}
