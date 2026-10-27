@@ -1,7 +1,9 @@
 import type { Exercise } from '@linguapop/content';
+import { ListenExercise } from './ListenExercise';
+import { MatchExercise } from './MatchExercise';
 import { McExercise } from './McExercise';
 import { OrderExercise } from './OrderExercise';
-import { Unsupported } from './Unsupported';
+import { SpeakExercise } from './SpeakExercise';
 import { WriteExercise } from './WriteExercise';
 import type { ExerciseProps } from './types';
 
@@ -16,7 +18,11 @@ export function ExerciseView({ exercise, ...rest }: Props) {
       return <OrderExercise exercise={exercise} {...rest} />;
     case 'write':
       return <WriteExercise exercise={exercise} {...rest} />;
-    default:
-      return <Unsupported />;
+    case 'match':
+      return <MatchExercise exercise={exercise} {...rest} />;
+    case 'listen':
+      return <ListenExercise exercise={exercise} {...rest} />;
+    case 'speak':
+      return <SpeakExercise exercise={exercise} {...rest} />;
   }
 }

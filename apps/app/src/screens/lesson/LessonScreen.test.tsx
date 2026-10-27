@@ -265,12 +265,6 @@ describe('ejercicios', () => {
     await userEvent.type(screen.getByRole('textbox'), '   {Enter}');
     expect(screen.queryByRole('button', { name: 'Continuar' })).toBeNull();
   });
-
-  it('los tipos que llegan con la historia siguiente muestran un aviso en lugar de romper', async () => {
-    await abrir({ ids: ['u-saludos-e04'] });
-    expect(screen.getByText('Este tipo de ejercicio llega pronto.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Comprobar' })).toBeDisabled();
-  });
 });
 
 describe('vidas', () => {

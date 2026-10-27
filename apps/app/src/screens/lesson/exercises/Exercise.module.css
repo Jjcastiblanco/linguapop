@@ -150,3 +150,175 @@
     transition: none;
   }
 }
+
+/* Emparejar */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.column {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.pairButton {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  padding: 14px 6px;
+  font-weight: 800;
+  font-size: 16px;
+  box-shadow: 0 4px 0 var(--line);
+  text-align: center;
+}
+
+.matched {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+  box-shadow: 0 4px 0 var(--ok);
+  animation: vanish 0.01s 0.45s forwards;
+}
+
+@keyframes vanish {
+  to {
+    visibility: hidden;
+  }
+}
+
+/* Escuchar */
+.speakers {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px 0 20px;
+}
+
+.speaker {
+  width: 92px;
+  height: 92px;
+  border-radius: 24px;
+  font-size: 38px;
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 6px 0 var(--blue-d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.speakerSlow {
+  background: #38bdf8;
+  box-shadow: 0 6px 0 #0c8ac4;
+  width: 70px;
+  height: 70px;
+  font-size: 28px;
+  align-self: flex-end;
+}
+
+.speaker:active {
+  transform: translateY(5px);
+  box-shadow: none;
+}
+
+.notice {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  margin: 8px 0 12px;
+}
+
+/* Hablar */
+.phraseCard {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  padding: 14px;
+  text-align: center;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+
+.phrase {
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.translation {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hear {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 9px 16px;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--blue);
+  box-shadow: 0 5px 0 var(--blue-d);
+}
+
+.mic {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  font-size: 46px;
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 7px 0 var(--brand-d);
+  margin: 10px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.listening {
+  background: var(--bad);
+  box-shadow: 0 7px 0 var(--bad-d);
+  animation: pulse 1s infinite;
+}
+
+.heard {
+  text-align: center;
+  color: var(--muted);
+  min-height: 36px;
+  font-size: 14px;
+}
+
+.skip {
+  display: block;
+  margin: 10px auto 0;
+  padding: 10px 16px;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: var(--card);
+  color: var(--brand);
+  border: 2px solid var(--line);
+  box-shadow: 0 4px 0 var(--line);
+}
+
+.typed {
+  margin-top: 10px;
+  min-height: 70px;
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listening,
+  .matched {
+    animation: none;
+  }
+}

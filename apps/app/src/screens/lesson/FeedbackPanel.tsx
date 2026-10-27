@@ -20,22 +20,33 @@ export function FeedbackPanel({ exercise, result }: { exercise: Exercise; result
     () => t(PRAISES[Math.floor(composition.random.next() * PRAISES.length)] ?? 'feedback.ok.1'),
     [composition, exercise.id],
   );
-  const note = result.typo
-    ? t('feedback.typo', { answer: result.correctAnswer })
-    : (result.translation ?? null);
+  const notes = [
+    result.typo ? t('feedback.typo', { answer: result.correctAnswer }) : null,
+    result.translation ?? null,
+    result.mistakes
+      ? t(result.mistakes === 1 ? 'feedback.mistakes' : 'feedback.mistakes.many', {
+          n: result.mistakes,
+        })
+      : null,
+    result.pronunciation !== undefined
+      ? t('feedback.pronunciation', { n: result.pronunciation })
+      : null,
+    result.heard ? t('feedback.heard', { text: result.heard }) : null,
+  ].filter((n): n is string => n !== null);
 
   return (
     <div className={styles.feedback} role="status">
       {result.ok ? (
-        <b>{result.skipped ? '' : praise}</b>
+        <b>{result.skipped ? t('feedback.skipped') : praise}</b>
       ) : (
         <>
           <b>{t('feedback.wrong')}</b>
           <div>{result.correctAnswer}</div>
         </>
       )}
-      {note && result.ok === false && <div>{note}</div>}
-      {note && result.ok && <div>{note}</div>}
+      {notes.map((n) => (
+        <div key={n}>{n}</div>
+      ))}
       {exercise.tip && <div className={styles.tip}>💡 {exercise.tip}</div>}
     </div>
   );

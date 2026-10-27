@@ -9,6 +9,6 @@ export type ExerciseProps<E> = {
   result: AnswerResult | null;
   /** Avisa de la respuesta actual, o nulo si todavía no hay nada que comprobar. */
   onAnswer: (answer: Answer | null) => void;
-  /** Pide comprobar (por ejemplo, con Enter). */
-  onSubmit: () => void;
+  /** Pide comprobar (por ejemplo, con Enter); con una respuesta, comprueba esa sin esperar al estado. */
+  onSubmit: (answer?: Answer) => void;
 };
