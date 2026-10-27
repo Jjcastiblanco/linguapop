@@ -177,198 +177,623 @@
       "tema": "Presentarse",
       "turno": 1,
       "texto": "My name is Ana",
+      "giro": {
+        "accepted": ["my name is *", "i am *", "call me *", "my name is"],
+        "rejectWords": [
+          "tired",
+          "fine",
+          "good",
+          "great",
+          "happy",
+          "sad",
+          "hungry",
+          "ok",
+          "okay",
+          "sick"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 1,
       "texto": "I am Ana",
+      "giro": {
+        "accepted": ["my name is *", "i am *", "call me *", "my name is"],
+        "rejectWords": [
+          "tired",
+          "fine",
+          "good",
+          "great",
+          "happy",
+          "sad",
+          "hungry",
+          "ok",
+          "okay",
+          "sick"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 1,
       "texto": "I am tired",
+      "giro": {
+        "accepted": ["my name is *", "i am *", "call me *", "my name is"],
+        "rejectWords": [
+          "tired",
+          "fine",
+          "good",
+          "great",
+          "happy",
+          "sad",
+          "hungry",
+          "ok",
+          "okay",
+          "sick"
+        ]
+      },
       "esperado": false
     },
     {
       "tema": "Presentarse",
       "turno": 1,
       "texto": "Call me Pepe",
+      "giro": {
+        "accepted": ["my name is *", "i am *", "call me *", "my name is"],
+        "rejectWords": [
+          "tired",
+          "fine",
+          "good",
+          "great",
+          "happy",
+          "sad",
+          "hungry",
+          "ok",
+          "okay",
+          "sick"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 1,
       "texto": "banana",
+      "giro": {
+        "accepted": ["my name is *", "i am *", "call me *", "my name is"],
+        "rejectWords": [
+          "tired",
+          "fine",
+          "good",
+          "great",
+          "happy",
+          "sad",
+          "hungry",
+          "ok",
+          "okay",
+          "sick"
+        ]
+      },
       "esperado": false
     },
     {
       "tema": "Presentarse",
       "turno": 1,
       "texto": "well my name is Ana and I am happy",
+      "giro": {
+        "accepted": ["my name is *", "i am *", "call me *", "my name is"],
+        "rejectWords": [
+          "tired",
+          "fine",
+          "good",
+          "great",
+          "happy",
+          "sad",
+          "hungry",
+          "ok",
+          "okay",
+          "sick"
+        ]
+      },
       "esperado": false
     },
     {
       "tema": "Presentarse",
       "turno": 1,
       "texto": "my name is anna",
+      "giro": {
+        "accepted": ["my name is *", "i am *", "call me *", "my name is"],
+        "rejectWords": [
+          "tired",
+          "fine",
+          "good",
+          "great",
+          "happy",
+          "sad",
+          "hungry",
+          "ok",
+          "okay",
+          "sick"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 2,
       "texto": "I'm fine thank you",
+      "giro": {
+        "accepted": [
+          "i am fine",
+          "i am good",
+          "i am great",
+          "i am ok",
+          "i am okay",
+          "fine thank you",
+          "good thank you",
+          "i am happy",
+          "i am tired",
+          "i am sad",
+          "not bad",
+          "i am well",
+          "i am very well",
+          "i am very good",
+          "i am fine thank you"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 2,
       "texto": "fine thanks",
+      "giro": {
+        "accepted": [
+          "i am fine",
+          "i am good",
+          "i am great",
+          "i am ok",
+          "i am okay",
+          "fine thank you",
+          "good thank you",
+          "i am happy",
+          "i am tired",
+          "i am sad",
+          "not bad",
+          "i am well",
+          "i am very well",
+          "i am very good",
+          "i am fine thank you"
+        ]
+      },
       "esperado": false
     },
     {
       "tema": "Presentarse",
       "turno": 2,
       "texto": "I am very well",
+      "giro": {
+        "accepted": [
+          "i am fine",
+          "i am good",
+          "i am great",
+          "i am ok",
+          "i am okay",
+          "fine thank you",
+          "good thank you",
+          "i am happy",
+          "i am tired",
+          "i am sad",
+          "not bad",
+          "i am well",
+          "i am very well",
+          "i am very good",
+          "i am fine thank you"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 2,
       "texto": "potato",
+      "giro": {
+        "accepted": [
+          "i am fine",
+          "i am good",
+          "i am great",
+          "i am ok",
+          "i am okay",
+          "fine thank you",
+          "good thank you",
+          "i am happy",
+          "i am tired",
+          "i am sad",
+          "not bad",
+          "i am well",
+          "i am very well",
+          "i am very good",
+          "i am fine thank you"
+        ]
+      },
       "esperado": false
     },
     {
       "tema": "Presentarse",
       "turno": 4,
       "texto": "I am twenty years old",
+      "giro": {
+        "accepted": ["i am * years old", "i am *", "my age is *", "* years old", "i have * years"],
+        "requiredPattern": "(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)"
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 4,
       "texto": "I am fine",
+      "giro": {
+        "accepted": ["i am * years old", "i am *", "my age is *", "* years old", "i have * years"],
+        "requiredPattern": "(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)"
+      },
       "esperado": false
     },
     {
       "tema": "Presentarse",
       "turno": 4,
       "texto": "I am 25",
+      "giro": {
+        "accepted": ["i am * years old", "i am *", "my age is *", "* years old", "i have * years"],
+        "requiredPattern": "(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)"
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 5,
       "texto": "I am a student",
+      "giro": {
+        "accepted": [
+          "i work",
+          "i study",
+          "i am a *",
+          "i am an *",
+          "i work as *",
+          "i work in *",
+          "i study *",
+          "i am student",
+          "i am a student"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 8,
       "texto": "see you later",
+      "giro": {
+        "accepted": ["see you later", "bye see you later", "goodbye", "bye", "see you"]
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 8,
       "texto": "bye",
+      "giro": {
+        "accepted": ["see you later", "bye see you later", "goodbye", "bye", "see you"]
+      },
       "esperado": true
     },
     {
       "tema": "Presentarse",
       "turno": 8,
       "texto": "hello",
+      "giro": {
+        "accepted": ["see you later", "bye see you later", "goodbye", "bye", "see you"]
+      },
       "esperado": false
     },
     {
       "tema": "Pedir comida",
       "turno": 1,
       "texto": "a table for two please",
+      "giro": {
+        "accepted": [
+          "a table for *",
+          "table for *",
+          "for two",
+          "for one",
+          "for three",
+          "for four",
+          "one",
+          "two",
+          "three",
+          "just me",
+          "one person",
+          "two people",
+          "i want a table for *"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Pedir comida",
       "turno": 1,
       "texto": "two",
+      "giro": {
+        "accepted": [
+          "a table for *",
+          "table for *",
+          "for two",
+          "for one",
+          "for three",
+          "for four",
+          "one",
+          "two",
+          "three",
+          "just me",
+          "one person",
+          "two people",
+          "i want a table for *"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Pedir comida",
       "turno": 7,
       "texto": "the bill please",
+      "giro": {
+        "accepted": [
+          "the check please",
+          "the bill please",
+          "can i have the check *",
+          "can i have the bill *",
+          "check please",
+          "bill please",
+          "how much is it",
+          "how much",
+          "yes the bill please",
+          "yes the check please"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Pedir comida",
       "turno": 7,
       "texto": "pizza",
+      "giro": {
+        "accepted": [
+          "the check please",
+          "the bill please",
+          "can i have the check *",
+          "can i have the bill *",
+          "check please",
+          "bill please",
+          "how much is it",
+          "how much",
+          "yes the bill please",
+          "yes the check please"
+        ]
+      },
       "esperado": false
     },
     {
       "tema": "Hablar de la familia",
       "turno": 5,
       "texto": "my family is big",
+      "giro": {
+        "accepted": [
+          "my family is big",
+          "my family is small",
+          "it is big",
+          "it is small",
+          "big",
+          "small",
+          "my family is *",
+          "it is *"
+        ],
+        "requiredPattern": "(big|small|large|little)"
+      },
       "esperado": true
     },
     {
       "tema": "Hablar de la familia",
       "turno": 5,
       "texto": "I like pizza",
+      "giro": {
+        "accepted": [
+          "my family is big",
+          "my family is small",
+          "it is big",
+          "it is small",
+          "big",
+          "small",
+          "my family is *",
+          "it is *"
+        ],
+        "requiredPattern": "(big|small|large|little)"
+      },
       "esperado": false
     },
     {
       "tema": "Hablar de la familia",
       "turno": 5,
       "texto": "it is blue",
+      "giro": {
+        "accepted": [
+          "my family is big",
+          "my family is small",
+          "it is big",
+          "it is small",
+          "big",
+          "small",
+          "my family is *",
+          "it is *"
+        ],
+        "requiredPattern": "(big|small|large|little)"
+      },
       "esperado": false
     },
     {
       "tema": "Hablar de la familia",
       "turno": 6,
       "texto": "my brother is funny",
+      "giro": {
+        "accepted": [
+          "my * is funny",
+          "my * is the funniest",
+          "my brother",
+          "my sister",
+          "my father",
+          "my mother",
+          "my dad",
+          "my mom",
+          "i am *",
+          "it is my *",
+          "my * is *"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Planear un viaje",
       "turno": 2,
       "texto": "by plane",
+      "giro": {
+        "accepted": [
+          "by plane",
+          "by train",
+          "by bus",
+          "by car",
+          "we take the plane",
+          "we take the train",
+          "let us take the *",
+          "i prefer *",
+          "the plane",
+          "the train",
+          "plane",
+          "train",
+          "i want to take *"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Planear un viaje",
       "turno": 4,
       "texto": "five days",
+      "giro": {
+        "accepted": [
+          "* days",
+          "for * days",
+          "* week",
+          "* weeks",
+          "one week",
+          "a week",
+          "a weekend",
+          "for a week",
+          "it is * days",
+          "one day"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Planear un viaje",
       "turno": 4,
       "texto": "for a week",
+      "giro": {
+        "accepted": [
+          "* days",
+          "for * days",
+          "* week",
+          "* weeks",
+          "one week",
+          "a week",
+          "a weekend",
+          "for a week",
+          "it is * days",
+          "one day"
+        ]
+      },
       "esperado": true
     },
     {
       "tema": "Planear un viaje",
       "turno": 4,
       "texto": "banana",
+      "giro": {
+        "accepted": [
+          "* days",
+          "for * days",
+          "* week",
+          "* weeks",
+          "one week",
+          "a week",
+          "a weekend",
+          "for a week",
+          "it is * days",
+          "one day"
+        ]
+      },
       "esperado": false
     },
     {
       "tema": "Hablar del trabajo",
       "turno": 3,
       "texto": "I start at nine",
+      "giro": {
+        "accepted": [
+          "i start at *",
+          "at *",
+          "i start work at *",
+          "i work from * to *",
+          "i start at nine",
+          "at nine"
+        ],
+        "requiredPattern": "(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)"
+      },
       "esperado": true
     },
     {
       "tema": "Hablar del trabajo",
       "turno": 3,
       "texto": "I start at lunch",
+      "giro": {
+        "accepted": [
+          "i start at *",
+          "at *",
+          "i start work at *",
+          "i work from * to *",
+          "i start at nine",
+          "at nine"
+        ],
+        "requiredPattern": "(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)"
+      },
       "esperado": false
     },
     {
       "tema": "Hablar del trabajo",
       "turno": 7,
       "texto": "yes of course",
+      "giro": {
+        "accepted": [
+          "yes i can",
+          "yes of course",
+          "sure",
+          "of course",
+          "yes",
+          "yes i can help you",
+          "sure i can help",
+          "no i can not",
+          "i am sorry *"
+        ]
+      },
       "esperado": true
     }
   ]
