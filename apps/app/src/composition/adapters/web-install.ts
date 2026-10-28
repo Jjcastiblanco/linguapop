@@ -11,6 +11,8 @@ export type WebInstall = {
   available(): boolean;
   subscribe(listener: () => void): () => void;
   prompt(): Promise<InstallOutcome>;
+  /** Avisa cuando la app termina de instalarse. */
+  onInstalled(listener: () => void): () => void;
 };
 
 type InstallEnv = {
@@ -36,6 +38,7 @@ function browserEnv(): InstallEnv | null {
 export function createWebInstall(env: InstallEnv | null = browserEnv()): WebInstall {
   let saved: InstallPromptEvent | null = null;
   const listeners = new Set<() => void>();
+  const installedListeners = new Set<() => void>();
   const notify = () => listeners.forEach((l) => l());
 
   env?.target.addEventListener('beforeinstallprompt', (event) => {
@@ -46,9 +49,14 @@ export function createWebInstall(env: InstallEnv | null = browserEnv()): WebInst
   env?.target.addEventListener('appinstalled', () => {
     saved = null;
     notify();
+    installedListeners.forEach((l) => l());
   });
 
   return {
+    onInstalled(listener) {
+      installedListeners.add(listener);
+      return () => void installedListeners.delete(listener);
+    },
     available: () => saved !== null && env?.standalone() !== true,
     subscribe(listener) {
       listeners.add(listener);

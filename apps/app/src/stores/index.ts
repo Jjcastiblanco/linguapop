@@ -10,5 +10,18 @@ export {
   type LessonSessionState,
   type LessonSessionStore,
 } from './lesson-session-store';
-export { createProgressStore, type ProgressStore, type ProgressStoreState } from './progress-store';
+export {
+  createProgressStore,
+  type ProgressStore,
+  type ProgressStoreOptions,
+  type ProgressStoreState,
+} from './progress-store';
+export { notifyProgress, startNotifications } from './notifications';
+export {
+  TOAST_MS,
+  createToastStore,
+  type Toast,
+  type ToastState,
+  type ToastStore,
+} from './toast-store';
 export { createUiStore, type Theme, type UiState, type UiStore } from './ui-store';

@@ -1,7 +1,5 @@
 import {
-  MAX_HEARTS,
   PRICES,
-  currentHearts,
   dayKey,
   isNovaUnlocked,
   isUnitComplete,
@@ -15,6 +13,7 @@ import { useNavigate } from 'react-router';
 import { useProgress, useServices } from '../../composition/context';
 import { t, type TextKey } from '../../i18n';
 import { Modal } from '../../ui/Modal';
+import { activatePro as switchToPro, buyItem, type BuyOutcome } from '../shop';
 import styles from './PracticeScreen.module.css';
 
 /** Ruta de la sesión de práctica ya iniciada en el almacén de lección. */
@@ -25,9 +24,17 @@ const NOTICE: Partial<Record<PracticeFailure, TextKey>> = {
   'no-hearts': 'practice.nohearts',
 };
 
+const BUY_NOTICE: Record<BuyOutcome, TextKey> = {
+  bought: 'shop.bought',
+  'no-gems': 'shop.nogems',
+  'hearts-full': 'shop.heartsfull',
+  'shield-ready': 'shop.shieldready',
+};
+
 /** Pantalla Practicar: modos de práctica (PRO), tienda de gemas, protector de racha y palabras a mejorar. */
 export function PracticeScreen() {
-  const { composition, progress: store, lesson } = useServices();
+  const services = useServices();
+  const { composition, lesson } = services;
   const progress = useProgress((s) => s.progress);
   const navigate = useNavigate();
   const [notice, setNotice] = useState('');
@@ -62,19 +69,13 @@ export function PracticeScreen() {
 
   async function activatePro() {
     setProFor(null);
-    await store.getState().record([{ type: 'settings_changed@1', payload: { plan: 'pro' } }]);
+    await switchToPro(services);
     setNotice(t('pro.activated'));
   }
 
   async function buy(item: keyof typeof PRICES) {
-    const cost = PRICES[item];
-    if (progress.gems < cost) return setNotice(t('shop.nogems'));
-    if (item === 'hearts' && currentHearts(progress, today) >= MAX_HEARTS)
-      return setNotice(t('shop.heartsfull'));
-    if (item === 'streak_shield' && !shieldUsed) return setNotice(t('shop.shieldready'));
-    await store.getState().record([{ type: 'purchase@1', payload: { item, costGems: cost } }]);
-    composition.sound.play('win');
-    setNotice(t('shop.bought'));
+    const outcome = await buyItem(services, item);
+    setNotice(t(BUY_NOTICE[outcome]));
   }
 
   const shieldText = !pro ? 'shield.free' : shieldUsed ? 'shield.used' : 'shield.available';

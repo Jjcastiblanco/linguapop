@@ -246,6 +246,13 @@ export const es = {
   'profile.install.title': 'Instalar LinguaPop',
   'profile.install.text': 'Úsala como app y sin conexión',
   'profile.install.button': 'Instalar',
+  'toast.goal': '🎯 ¡Meta diaria cumplida! +10 💎',
+  'toast.achievement': '{icon} Logro: {name} (+5 💎)',
+  'toast.shield': '🛡️ Protector de racha usado: tu racha sigue viva',
+  'toast.installed': '✅ LinguaPop instalada',
+  'toast.novoice': '🔇 Este navegador no puede reproducir voz.',
+  'lesson.nohearts.recharge': 'Recargar vidas · 30 💎',
+  'lesson.nohearts.pro': 'Activar PRO',
   'mascot.fox': 'Zorro de LinguaPop',
   'mascot.nova': 'Nova',
 } as const;

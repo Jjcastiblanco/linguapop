@@ -210,6 +210,7 @@ describe('instalar la app', () => {
         available: () => disponible,
         subscribe: (o: () => void) => (oyentes.add(o), () => void oyentes.delete(o)),
         prompt,
+        onInstalled: () => () => undefined,
       },
     };
   }
