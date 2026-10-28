@@ -144,7 +144,10 @@ describe('build.gradle del proyecto Android (AD-21)', () => {
   });
 
   it('toma la versión del entorno y deja valores por defecto en local', () => {
-    expect(gradle).toContain("System.getenv('APP_VERSION_CODE') ?: '1'");
+    // Con paréntesis tras `versionCode`, Groovy lo lee como una llamada a método y falla con "Value is null".
+    expect(gradle).toContain(
+      "versionCode Integer.parseInt(System.getenv('APP_VERSION_CODE') ?: '1')",
+    );
     expect(gradle).toContain("System.getenv('APP_VERSION_NAME') ?: '1.0'");
   });
 });
