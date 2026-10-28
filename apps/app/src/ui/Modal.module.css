@@ -16,6 +16,7 @@
   padding: 22px 20px calc(22px + env(safe-area-inset-bottom));
   animation: slideup 0.3s;
   max-height: 88vh;
+  max-height: 88dvh;
   overflow: auto;
   text-align: center;
 }

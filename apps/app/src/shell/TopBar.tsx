@@ -17,7 +17,7 @@ export function TopBar({ dark }: { dark: boolean }) {
     <header className={styles.bar}>
       <div className={styles.logo}>
         <Fox mood="idle" width={28} decorative />
-        {t('app.name')}
+        <span className={styles.name}>{t('app.name')}</span>
         {pro && <span className={styles.pro}>{t('app.pro')}</span>}
       </div>
       <div className={styles.chip} role="status" aria-label={t('topbar.streak')}>
