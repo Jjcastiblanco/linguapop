@@ -10,7 +10,7 @@ const prefersDark = () =>
   window.matchMedia?.('(prefers-color-scheme: dark)').matches === true;
 
 /** ¿Hay que mostrar el tema oscuro? Con "auto" manda la preferencia del sistema. */
-function useDark(): boolean {
+export function useDark(): boolean {
   const theme = useUi((s) => s.theme);
   const [system, setSystem] = useState(prefersDark);
   useEffect(() => {
