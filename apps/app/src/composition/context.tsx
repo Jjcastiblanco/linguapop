@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import { useStore } from 'zustand';
 import {
   createCallStore,
@@ -72,4 +72,10 @@ export function useLesson<T>(selector: (s: LessonSessionState) => T): T {
 
 export function useCall<T>(selector: (s: CallStoreState) => T): T {
   return useStore(useServices().call, selector);
+}
+
+/** ¿Se puede ofrecer instalar la app ahora mismo? */
+export function useInstallAvailable(): boolean {
+  const { install } = useServices().composition;
+  return useSyncExternalStore(install.subscribe, install.available);
 }

@@ -194,3 +194,34 @@ describe('exportar, importar y borrar', () => {
     expect(progreso(services).stats.lessons).toBe(0);
   });
 });
+
+describe('instalar la app', () => {
+  function instalador() {
+    let disponible = false;
+    const oyentes = new Set<() => void>();
+    const prompt = vi.fn(async () => 'accepted' as const);
+    return {
+      prompt,
+      ofrecer() {
+        disponible = true;
+        oyentes.forEach((o) => o());
+      },
+      install: {
+        available: () => disponible,
+        subscribe: (o: () => void) => (oyentes.add(o), () => void oyentes.delete(o)),
+        prompt,
+      },
+    };
+  }
+
+  it('la tarjeta aparece cuando el navegador permite instalar y lanza el aviso', async () => {
+    const inst = instalador();
+    const services = await crearServicios({ storage: memoria().storage, install: inst.install });
+    renderApp(services, '/perfil');
+    expect(screen.queryByText('Instalar LinguaPop')).not.toBeInTheDocument();
+    act(() => inst.ofrecer());
+    expect(screen.getByText('Instalar LinguaPop')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Instalar' }));
+    expect(inst.prompt).toHaveBeenCalledTimes(1);
+  });
+});
