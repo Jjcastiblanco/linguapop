@@ -1,4 +1,4 @@
-export { dayKey, daysBetween, monthKey, type DayKey } from './day';
+export { addDays, dayKey, daysBetween, localHour, monthKey, weekday, type DayKey } from './day';
 export {
   INITIAL_STREAK,
   registerActivity,

@@ -49,3 +49,45 @@ export function daysBetween(from: DayKey, to: DayKey): number | null {
 export function monthKey(day: DayKey): string {
   return day.slice(0, 7);
 }
+
+/** Día de la semana de un día calendario: 0 = lunes … 6 = domingo; nulo si el día es inválido. */
+export function weekday(day: DayKey): number | null {
+  const n = dayNumber(day);
+  // El 1970-01-01 fue jueves.
+  return n === null ? null : (((n + 3) % 7) + 7) % 7;
+}
+
+/** El día calendario `n` días después (o antes, si `n` es negativo); el mismo día si es inválido. */
+export function addDays(day: DayKey, n: number): DayKey {
+  const base = dayNumber(day);
+  if (base === null) return day;
+  const z = base + n + 719468;
+  const era = Math.floor(z / 146097);
+  const doe = z - era * 146097;
+  const yoe = Math.floor(
+    (doe - Math.floor(doe / 1460) + Math.floor(doe / 36524) - Math.floor(doe / 146096)) / 365,
+  );
+  const doy = doe - (365 * yoe + Math.floor(yoe / 4) - Math.floor(yoe / 100));
+  const mp = Math.floor((5 * doy + 2) / 153);
+  const d = doy - Math.floor((153 * mp + 2) / 5) + 1;
+  const m = mp < 10 ? mp + 3 : mp - 9;
+  const y = yoe + era * 400 + (m <= 2 ? 1 : 0);
+  return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+/** Hora local (0-23) de un instante en la zona horaria del usuario; si la zona no es válida usa UTC. */
+export function localHour(nowMs: number, timeZone: string): number {
+  const format = (zone: string) =>
+    Number(
+      new Intl.DateTimeFormat('en-GB', {
+        timeZone: zone,
+        hour: '2-digit',
+        hourCycle: 'h23',
+      }).format(nowMs),
+    );
+  try {
+    return format(timeZone);
+  } catch {
+    return format('UTC');
+  }
+}
