@@ -17,3 +17,4 @@ export {
   type ProgressState,
   type ProgressStats,
 } from './state';
+export { recentXp, type DayXp } from './recent-xp';

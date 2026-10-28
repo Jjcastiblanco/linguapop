@@ -11,19 +11,22 @@ export type ModalProps = {
 export function Modal({ title, onClose, children }: ModalProps) {
   const titleId = useId();
   const sheet = useRef<HTMLDivElement>(null);
+  // El cierre se guarda aparte: si el efecto dependiera de él se repetiría en cada render y le robaría el foco al campo de texto.
+  const close = useRef(onClose);
+  close.current = onClose;
 
   useEffect(() => {
     const previo = document.activeElement as HTMLElement | null;
     sheet.current?.querySelector<HTMLElement>('button')?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') close.current();
     };
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
       previo?.focus?.();
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div className={styles.backdrop} onClick={onClose} data-testid="modal-backdrop">
