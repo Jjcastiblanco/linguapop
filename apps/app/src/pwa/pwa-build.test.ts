@@ -82,6 +82,12 @@ describe('PWA generada', () => {
       expect(regla.test(ruta), ruta).toBe(false);
   });
 
+  it('una versión nueva espera la orden del estudiante en vez de activarse sola', () => {
+    // Con `registerType: 'prompt'` el service worker solo se salta la espera si la página se lo pide.
+    expect(sw).toContain('SKIP_WAITING');
+    expect(sw).not.toMatch(/clientsClaim\(/);
+  });
+
   it('el service worker no registra rutas de caché para otros orígenes', () => {
     expect(sw).not.toMatch(/registerRoute\([^)]*https?:/);
   });

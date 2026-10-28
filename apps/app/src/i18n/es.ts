@@ -253,6 +253,9 @@ export const es = {
   'toast.novoice': '🔇 Este navegador no puede reproducir voz.',
   'lesson.nohearts.recharge': 'Recargar vidas · 30 💎',
   'lesson.nohearts.pro': 'Activar PRO',
+  'update.available': 'Hay una versión nueva de LinguaPop',
+  'update.apply': 'Actualizar',
+  'update.later': 'Luego',
   'mascot.fox': 'Zorro de LinguaPop',
   'mascot.nova': 'Nova',
 } as const;

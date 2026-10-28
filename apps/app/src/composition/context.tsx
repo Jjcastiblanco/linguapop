@@ -84,3 +84,9 @@ export function useInstallAvailable(): boolean {
   const { install } = useServices().composition;
   return useSyncExternalStore(install.subscribe, install.available);
 }
+
+/** ¿Hay una versión nueva de la app lista para activar? */
+export function useUpdateAvailable(): boolean {
+  const { update } = useServices().composition;
+  return useSyncExternalStore(update.subscribe, update.available);
+}
