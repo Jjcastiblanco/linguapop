@@ -243,6 +243,9 @@ export const es = {
   'call.weak.added': 'Se agregaron a tu Repaso de errores.',
   'call.weak.none': '¡Ninguna! Muy bien.',
   'call.again': 'Llamar otra vez',
+  'profile.install.title': 'Instalar LinguaPop',
+  'profile.install.text': 'Úsala como app y sin conexión',
+  'profile.install.button': 'Instalar',
   'mascot.fox': 'Zorro de LinguaPop',
   'mascot.nova': 'Nova',
 } as const;

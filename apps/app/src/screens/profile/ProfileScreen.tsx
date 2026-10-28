@@ -1,6 +1,6 @@
 import { dayKey, isUnitComplete, recentXp, type PendingEvent } from '@linguapop/domain';
 import { useRef, useState, type FormEvent } from 'react';
-import { useProgress, useServices, useUi } from '../../composition/context';
+import { useInstallAvailable, useProgress, useServices, useUi } from '../../composition/context';
 import { t } from '../../i18n';
 import { Fox } from '../../mascots';
 import { useDark } from '../../shell/AppShell';
@@ -43,6 +43,7 @@ export function ProfileScreen() {
   const sound = useUi((s) => s.sound);
   const subtitles = useUi((s) => s.subtitles);
   const dark = useDark();
+  const canInstall = useInstallAvailable();
   const [notice, setNotice] = useState('');
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState('');
@@ -293,6 +294,28 @@ export function ProfileScreen() {
           {t('profile.reset')}
         </button>
       </section>
+
+      {canInstall && (
+        <section className={styles.card} aria-label={t('profile.install.title')}>
+          <div className={styles.row}>
+            <span style={{ fontSize: 30 }} aria-hidden="true">
+              📲
+            </span>
+            <div style={{ flex: 1 }}>
+              <b>{t('profile.install.title')}</b>
+              <div className={styles.muted}>{t('profile.install.text')}</div>
+            </div>
+            <button
+              type="button"
+              className={styles.btn}
+              style={{ flex: 'none' }}
+              onClick={() => void composition.install.prompt()}
+            >
+              {t('profile.install.button')}
+            </button>
+          </div>
+        </section>
+      )}
 
       {renaming && (
         <Modal title={t('profile.rename')} onClose={() => setRenaming(false)}>
