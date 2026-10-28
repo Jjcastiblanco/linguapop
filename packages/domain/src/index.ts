@@ -1,6 +1,7 @@
 export * from './call';
 export * from './events';
 export * from './exercises';
+export * from './league';
 export * from './lesson';
 export * from './path';
 export type * from './ports';
