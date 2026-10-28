@@ -1,6 +1,7 @@
 # Dependencias y compilaciones
 node_modules/
 dist/
+dist-native/
 build/
 .pnpm-store/
 *.log
