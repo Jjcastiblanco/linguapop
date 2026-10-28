@@ -4,13 +4,17 @@ import {
   createCallStore,
   createLessonSessionStore,
   createProgressStore,
+  createToastStore,
   createUiStore,
+  notifyProgress,
+  startNotifications,
   type CallStore,
   type CallStoreState,
   type LessonSessionState,
   type LessonSessionStore,
   type ProgressStore,
   type ProgressStoreState,
+  type ToastStore,
   type UiState,
   type UiStore,
 } from '../stores';
@@ -22,6 +26,7 @@ export type AppServices = {
   ui: UiStore;
   lesson: LessonSessionStore;
   call: CallStore;
+  toast: ToastStore;
 };
 
 const AppContext = createContext<AppServices | null>(null);
@@ -31,14 +36,14 @@ export function createServices(composition: Composition): AppServices {
   const ui = createUiStore(composition.store);
   // El sonido obedece a la preferencia del dispositivo.
   composition.sound.setEnabledSource(() => ui.getState().sound);
-  const progress = createProgressStore(composition);
-  return {
-    composition,
-    progress,
-    ui,
-    lesson: createLessonSessionStore(composition, progress),
-    call: createCallStore(composition, progress),
-  };
+  const toast = createToastStore();
+  const progress = createProgressStore(composition, {
+    onRecorded: (prev, next) => notifyProgress(composition, toast, prev, next),
+  });
+  const lesson = createLessonSessionStore(composition, progress);
+  const call = createCallStore(composition, progress);
+  startNotifications(composition, toast, lesson, call);
+  return { composition, progress, ui, lesson, call, toast };
 }
 
 export function AppProvider({

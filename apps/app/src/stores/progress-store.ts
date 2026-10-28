@@ -26,7 +26,15 @@ export type ProgressStoreState = {
 
 export type ProgressStore = StoreApi<ProgressStoreState>;
 
-export function createProgressStore(c: Composition): ProgressStore {
+export type ProgressStoreOptions = {
+  /** Se llama tras registrar eventos nuevos (no al cargar, importar ni borrar), con el estado de antes y el de después. */
+  onRecorded?: (prev: ProgressState, next: ProgressState) => void;
+};
+
+export function createProgressStore(
+  c: Composition,
+  options: ProgressStoreOptions = {},
+): ProgressStore {
   let lastMs = 0;
   let queue: Promise<void> = Promise.resolve();
   /** Cada evento recibe un instante propio y creciente, así el orden de guardado se conserva al plegar. */
@@ -62,8 +70,11 @@ export function createProgressStore(c: Composition): ProgressStore {
         );
         const guardado = queue.then(async () => {
           for (const e of nuevos) await c.progressSink.append(e);
+          const prev = get().progress;
           const events = [...get().events, ...nuevos];
-          set({ events, progress: foldEvents(events, c.progressContext) });
+          const progress = foldEvents(events, c.progressContext);
+          set({ events, progress });
+          options.onRecorded?.(prev, progress);
         });
         queue = guardado.catch(() => undefined);
         return guardado;

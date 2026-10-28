@@ -3,6 +3,7 @@ import type { Unit } from '@linguapop/content';
 import { useEffect, useRef, useState } from 'react';
 import { useBlocker, useNavigate } from 'react-router';
 import { useLesson, useProgress, useServices } from '../../composition/context';
+import { activatePro, buyItem } from '../shop';
 import { t } from '../../i18n';
 import { Fox } from '../../mascots';
 import { Modal } from '../../ui/Modal';
@@ -24,7 +25,8 @@ type Props = {
  * y los modos de práctica.
  */
 export function SessionView({ unit, exitTo }: Props) {
-  const { composition, lesson: sessionStore } = useServices();
+  const services = useServices();
+  const { composition, lesson: sessionStore, toast } = services;
   const progress = useProgress((s) => s.progress);
   const lesson = useLesson((s) => s.lesson);
   const failure = useLesson((s) => s.failure);
@@ -57,6 +59,19 @@ export function SessionView({ unit, exitTo }: Props) {
     navigate(exitTo, { replace: true });
   };
 
+  /** Compra vidas y vuelve; sin gemas se avisa y se queda. */
+  const recharge = async () => {
+    const outcome = await buyItem(services, 'hearts');
+    if (outcome === 'no-gems') return toast.getState().show(t('shop.nogems'));
+    if (outcome === 'bought') toast.getState().show(t('shop.bought'));
+    leave();
+  };
+  const goPro = async () => {
+    await activatePro(services);
+    toast.getState().show(t('pro.activated'));
+    leave();
+  };
+
   if (failure === 'no-hearts') {
     return (
       <div className={`${styles.screen}`}>
@@ -64,7 +79,17 @@ export function SessionView({ unit, exitTo }: Props) {
           <Fox mood="sad" className={styles.centerFox} />
           <h2>{t('lesson.nohearts.title')}</h2>
           <p>{t('lesson.nohearts.text')}</p>
-          <button type="button" className={styles.action} onClick={leave}>
+          <button
+            type="button"
+            className={`${styles.action} ${styles.actionBlue}`}
+            onClick={() => void recharge()}
+          >
+            {t('lesson.nohearts.recharge')}
+          </button>
+          <button type="button" className={styles.action} onClick={() => void goPro()}>
+            {t('lesson.nohearts.pro')}
+          </button>
+          <button type="button" className={styles.ghost} onClick={leave}>
             {t('lesson.nohearts.back')}
           </button>
         </div>
