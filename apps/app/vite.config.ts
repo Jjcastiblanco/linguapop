@@ -10,7 +10,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export const LEGACY_PATH = /^\/legacy(\/|$)/;
 
 export const pwaOptions = {
-  registerType: 'autoUpdate',
+  registerType: 'prompt',
   injectRegister: false,
   includeAssets: ['icons/favicon-64.png', 'icons/apple-touch-icon.png'],
   manifest: {

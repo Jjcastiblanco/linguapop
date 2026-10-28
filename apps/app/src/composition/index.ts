@@ -5,6 +5,7 @@ import type { ProgressContext } from '@linguapop/domain';
 import { createLocalProgressSink, type LocalProgressSink } from './adapters/local-progress-sink';
 import { createLocalStore, type StorageLike, type WebLocalStore } from './adapters/local-store';
 import { createWebInstall, type WebInstall } from './adapters/web-install';
+import { createWebUpdate, type WebUpdate } from './adapters/web-update';
 import { createWebSound, type WebSound } from './adapters/web-sound';
 import { createWebSpeech } from './adapters/web-speech';
 
@@ -23,6 +24,8 @@ export type Composition = {
   sound: WebSound;
   /** Instalación como PWA: dice si se puede ofrecer y lanza el aviso del navegador. */
   install: WebInstall;
+  /** Versión nueva de la app lista para activar (la ofrece el service worker). */
+  update: WebUpdate;
   /** Estructura del contenido que el pliegue de eventos necesita. */
   progressContext: ProgressContext;
   /** Zona horaria del dispositivo, para decidir qué es "hoy". */
@@ -35,7 +38,7 @@ export type Composition = {
 export type CompositionOverrides = Partial<
   Pick<
     Composition,
-    'clock' | 'random' | 'timeZone' | 'newId' | 'speech' | 'sound' | 'course' | 'install'
+    'clock' | 'random' | 'timeZone' | 'newId' | 'speech' | 'sound' | 'course' | 'install' | 'update'
   >
 > & {
   storage?: StorageLike | null;
@@ -64,6 +67,7 @@ export function createComposition(overrides: CompositionOverrides = {}): Composi
     speech: overrides.speech ?? createWebSpeech(),
     sound: overrides.sound ?? createWebSound(),
     install: overrides.install ?? createWebInstall(),
+    update: overrides.update ?? createWebUpdate(),
     progressContext: { units, achievements: course.achievements },
     timeZone: overrides.timeZone ?? deviceTimeZone(),
     contentVersion: 0,

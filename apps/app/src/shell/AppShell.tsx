@@ -3,6 +3,7 @@ import { Outlet } from 'react-router';
 import { useUi } from '../composition/context';
 import { BottomNav } from './BottomNav';
 import styles from './AppShell.module.css';
+import { UpdateBanner } from '../ui/UpdateBanner';
 import { TopBar } from './TopBar';
 
 const prefersDark = () =>
@@ -36,6 +37,7 @@ export function AppShell() {
       <main className={styles.content}>
         <Outlet />
       </main>
+      <UpdateBanner />
       <BottomNav />
     </>
   );
