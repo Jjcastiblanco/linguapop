@@ -97,6 +97,8 @@ export default [
     ignores: [
       '**/dist/**',
       '**/dist-native/**',
+      // Proyecto nativo de Capacitor: `cap sync` copia ahí la app ya compilada.
+      'apps/app/android/**',
       '**/node_modules/**',
       '_bmad-output/**',
       'legacy/**',
@@ -135,7 +137,12 @@ export default [
   },
   {
     // El único código de la app que puede hablar con Capacitor y sus plugins (AD-19).
-    files: ['apps/app/src/composition/native/**/*.{ts,tsx}', 'apps/app/src/main.native.tsx'],
+    files: [
+      'apps/app/src/composition/native/**/*.{ts,tsx}',
+      'apps/app/src/main.native.tsx',
+      // Archivo de herramientas de Capacitor, no código de la app.
+      'apps/app/capacitor.config.ts',
+    ],
     rules: {
       ...restringir(ENTRE_APPS_DESDE_APP),
       'no-restricted-syntax': 'off',
