@@ -1,6 +1,6 @@
 import { Navigate, type RouteObject } from 'react-router';
-import { Placeholder } from './screens/Placeholder';
 import { LearnScreen } from './screens/learn/LearnScreen';
+import { CallScreen } from './screens/call/CallScreen';
 import { LeaguesScreen } from './screens/leagues/LeaguesScreen';
 import { ProfileScreen } from './screens/profile/ProfileScreen';
 import { LessonScreen } from './screens/lesson/LessonScreen';
@@ -26,6 +26,6 @@ export const appRoutes: RouteObject[] = [
   },
   { path: '/practicar/sesion', element: <PracticeSessionScreen /> },
   { path: '/leccion/:unitId/:lessonId', element: <LessonScreen /> },
-  { path: '/llamada', element: <Placeholder title="screen.call.title" /> },
+  { path: '/llamada', element: <CallScreen /> },
   { path: '*', element: <Navigate to="/aprender" replace /> },
 ];
