@@ -1,0 +1,164 @@
+name: Android
+
+# Compila el APK de depuración (AD-22) y lo publica como versión previa `android-debug` (AD-23).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - apps/app/**
+      - packages/**
+      - pnpm-lock.yaml
+      - package.json
+      - .github/workflows/android.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Por referencia: un PR no cancela la publicación de `main`. En `main` las ejecuciones esperan en
+# cola para no interrumpir una publicación a medias.
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    name: build-apk
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # El servidor trae Java 17 por defecto y `@capacitor/android` exige 21.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/app/android/**/*.gradle*', 'apps/app/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+
+      - name: Compilar la app en modo native y sincronizar Capacitor
+        run: pnpm --filter @linguapop/app cap:sync
+      - name: Comprobar que cap sync no deja cambios sin commitear
+        run: |
+          if [ -n "$(git status --porcelain apps/app/android)" ]; then
+            echo "::error::cap sync cambió archivos versionados de apps/app/android; haz commit de esos cambios."
+            git status --porcelain apps/app/android
+            exit 1
+          fi
+
+      # Los secretos solo se leen en un push: un PR nunca los ve (AD-9, AD-22).
+      - name: Preparar la clave de depuración
+        id: clave
+        env:
+          KEYSTORE_BASE64: ${{ github.event_name == 'push' && secrets.ANDROID_DEBUG_KEYSTORE_BASE64 || '' }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/debug.keystore"
+            echo "archivo=$RUNNER_TEMP/debug.keystore" >> "$GITHUB_OUTPUT"
+            echo "firma=clave estable" >> "$GITHUB_OUTPUT"
+          else
+            if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+              echo "::warning::Falta el secreto ANDROID_DEBUG_KEYSTORE_BASE64 (y sus tres compañeros): se firma con una clave temporal y esta versión no se podrá instalar sobre otra."
+            fi
+            echo "archivo=" >> "$GITHUB_OUTPUT"
+            echo "firma=clave temporal" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Calcular la versión
+        id: version
+        env:
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          corto="${SHA::7}"
+          base="$(node -p "require('./apps/app/package.json').version")"
+          echo "corto=$corto" >> "$GITHUB_OUTPUT"
+          echo "nombre=${base}-debug-${corto}" >> "$GITHUB_OUTPUT"
+
+      - name: Compilar el APK de depuración
+        working-directory: apps/app/android
+        env:
+          APP_VERSION_NAME: ${{ steps.version.outputs.nombre }}
+          APP_VERSION_CODE: ${{ github.run_number }}
+          DEBUG_KEYSTORE_FILE: ${{ steps.clave.outputs.archivo }}
+          DEBUG_KEYSTORE_PASSWORD: ${{ github.event_name == 'push' && secrets.ANDROID_DEBUG_KEYSTORE_PASSWORD || '' }}
+          DEBUG_KEY_ALIAS: ${{ github.event_name == 'push' && secrets.ANDROID_DEBUG_KEY_ALIAS || '' }}
+          DEBUG_KEY_PASSWORD: ${{ github.event_name == 'push' && secrets.ANDROID_DEBUG_KEY_PASSWORD || '' }}
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Comprobar el APK
+        env:
+          VERSION: ${{ steps.version.outputs.nombre }}
+          CORTO: ${{ steps.version.outputs.corto }}
+          FIRMA: ${{ steps.clave.outputs.firma }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          apk=apps/app/android/app/build/outputs/apk/debug/app-debug.apk
+          herramientas="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          badging="$("$herramientas/aapt2" dump badging "$apk")"
+          nombre="$(echo "$badging" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p" | head -1)"
+          if [ "$nombre" != "$VERSION" ] || [[ "$nombre" != *"$CORTO"* ]]; then
+            echo "::error::El versionName del APK ($nombre) no lleva el SHA esperado ($VERSION)."
+            exit 1
+          fi
+          huella="$("$herramientas/apksigner" verify --print-certs "$apk" | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)"
+          mkdir -p salida
+          cp "$apk" salida/linguapop-debug.apk
+          {
+            echo "APK de depuración de LinguaPop para Android 13 o superior."
+            echo
+            echo "- Commit: \`$SHA\`"
+            echo "- versionName: \`$nombre\`"
+            echo "- Firma: $FIRMA (huella SHA-256 \`$huella\`)"
+            echo "- Compilación: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo "No lleva secretos. Si instalas una versión con otra firma, desinstala la anterior una vez."
+          } > salida/notas.md
+          cat salida/notas.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-debug
+          path: salida/
+          retention-days: 14
+
+  publish:
+    name: publish-apk
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: android-debug
+          path: salida
+      - name: Mover la etiqueta android-debug al commit actual
+        run: |
+          git tag -f android-debug "$GITHUB_SHA"
+          git push -f origin android-debug
+      - name: Publicar o actualizar la versión previa
+        run: |
+          if gh release view android-debug >/dev/null 2>&1; then
+            gh release upload android-debug salida/linguapop-debug.apk --clobber
+            gh release edit android-debug --prerelease --title "APK de depuración" --notes-file salida/notas.md
+          else
+            gh release create android-debug salida/linguapop-debug.apk --prerelease --title "APK de depuración" --notes-file salida/notas.md
+          fi
