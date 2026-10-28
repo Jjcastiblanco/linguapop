@@ -78,3 +78,39 @@ describe('las apps no se importan entre sí', () => {
     expect(await reglasQueFallan(codigo, ADMIN)).toEqual([]);
   });
 });
+
+describe('Capacitor solo en el código nativo (AD-19)', () => {
+  const FUERA = 'apps/app/src/screens/ejemplo.ts';
+  const NATIVO = 'apps/app/src/composition/native/ejemplo.ts';
+  const ARRANQUE = 'apps/app/src/main.native.tsx';
+
+  it.each([
+    ["import { Capacitor } from '@capacitor/core';"],
+    ["import { TextToSpeech } from '@capacitor-community/text-to-speech';"],
+    ["import { SpeechRecognition } from '@capgo/capacitor-speech-recognition';"],
+  ])('la app no puede importar %s fuera del código nativo', async (codigo) => {
+    expect(await reglasQueFallan(codigo, FUERA)).toContain('no-restricted-imports');
+    expect(await reglasQueFallan(codigo, APP)).toContain('no-restricted-imports');
+  });
+
+  it('la app no puede hacer import dinámico de Capacitor fuera del código nativo', async () => {
+    expect(await reglasQueFallan("const c = () => import('@capacitor/core');", FUERA)).toContain(
+      'no-restricted-syntax',
+    );
+  });
+
+  it.each([[NATIVO], [ARRANQUE]])('sí puede importarlo %s', async (archivo) => {
+    const codigo =
+      "import { Capacitor } from '@capacitor/core';\nimport { TextToSpeech } from '@capacitor-community/text-to-speech';\nexport const c = Capacitor;\n";
+    expect(await reglasQueFallan(codigo, archivo)).toEqual([]);
+    expect(
+      await reglasQueFallan("export const c = () => import('@capacitor/core');", archivo),
+    ).toEqual([]);
+  });
+
+  it('el código nativo sigue sin poder importar el panel', async () => {
+    expect(await reglasQueFallan("import { x } from '@linguapop/admin';", NATIVO)).toContain(
+      'no-restricted-imports',
+    );
+  });
+});

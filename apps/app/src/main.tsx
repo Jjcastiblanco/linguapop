@@ -1,16 +1,9 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
 import { createBrowserRouter } from 'react-router';
-import { RouterProvider } from 'react-router/dom';
 import { registerSW } from 'virtual:pwa-register';
+import { startApp } from './bootstrap';
 import { createComposition } from './composition';
 import { createWebUpdate } from './composition/adapters/web-update';
-import { AppProvider, createServices } from './composition/context';
 import { appRoutes } from './routes';
-import './styles/theme.css';
-
-const root = document.getElementById('root');
-if (!root) throw new Error('No se encontró el elemento #root');
 
 const update = createWebUpdate();
 
@@ -32,16 +25,4 @@ if (import.meta.env.PROD) {
   });
 }
 
-const services = createServices(createComposition({ update }));
-const router = createBrowserRouter(appRoutes);
-
-// Se leen las preferencias y el progreso guardados antes de mostrar nada.
-void Promise.all([services.ui.getState().load(), services.progress.getState().load()]).then(() => {
-  createRoot(root).render(
-    <StrictMode>
-      <AppProvider services={services}>
-        <RouterProvider router={router} />
-      </AppProvider>
-    </StrictMode>,
-  );
-});
+void startApp(createComposition({ update }), { router: createBrowserRouter(appRoutes) });

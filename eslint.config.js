@@ -69,6 +69,24 @@ const IMPORT_DINAMICO = [
   },
 ];
 
+const ENTRE_APPS_DESDE_APP = [
+  { group: ['@linguapop/admin'], message: 'Las apps no se importan entre sí (AD-2).' },
+  { regex: '(^|/)apps/admin(/|$)', message: 'Las apps no se importan entre sí (AD-2).' },
+  { regex: '^(\\.\\./)+admin(/|$)', message: 'Las apps no se importan entre sí (AD-2).' },
+];
+
+const CAPACITOR_SOLO_EN_NATIVO = {
+  group: ['@capacitor/*', '@capacitor-community/*', '@capgo/*'],
+  message:
+    'Capacitor y los plugins de voz solo se importan en src/composition/native y en main.native.tsx (AD-19).',
+};
+
+const CAPACITOR_DINAMICO_SOLO_EN_NATIVO = {
+  selector: 'ImportExpression[source.value=/^@(capacitor|capacitor-community|capgo)\\//]',
+  message:
+    'Capacitor y los plugins de voz solo se importan en src/composition/native y en main.native.tsx (AD-19).',
+};
+
 const restringir = (patterns) => ({
   'no-restricted-imports': ['error', { patterns }],
 });
@@ -78,6 +96,7 @@ export default [
   {
     ignores: [
       '**/dist/**',
+      '**/dist-native/**',
       '**/node_modules/**',
       '_bmad-output/**',
       'legacy/**',
@@ -109,11 +128,18 @@ export default [
   },
   {
     files: ['apps/app/**/*.{ts,tsx,js}'],
-    rules: restringir([
-      { group: ['@linguapop/admin'], message: 'Las apps no se importan entre sí (AD-2).' },
-      { regex: '(^|/)apps/admin(/|$)', message: 'Las apps no se importan entre sí (AD-2).' },
-      { regex: '^(\\.\\./)+admin(/|$)', message: 'Las apps no se importan entre sí (AD-2).' },
-    ]),
+    rules: {
+      ...restringir([...ENTRE_APPS_DESDE_APP, CAPACITOR_SOLO_EN_NATIVO]),
+      'no-restricted-syntax': ['error', CAPACITOR_DINAMICO_SOLO_EN_NATIVO],
+    },
+  },
+  {
+    // El único código de la app que puede hablar con Capacitor y sus plugins (AD-19).
+    files: ['apps/app/src/composition/native/**/*.{ts,tsx}', 'apps/app/src/main.native.tsx'],
+    rules: {
+      ...restringir(ENTRE_APPS_DESDE_APP),
+      'no-restricted-syntax': 'off',
+    },
   },
   {
     files: ['apps/admin/**/*.{ts,tsx,js}'],
