@@ -143,6 +143,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .bad,
+  .pairButton.bad,
   .token {
     animation: none;
   }
@@ -173,6 +174,20 @@
   font-size: 16px;
   box-shadow: 0 4px 0 var(--line);
   text-align: center;
+}
+
+/* `.selected` y `.bad` se definen más arriba; sin este selector doble `.pairButton` los pisaría. */
+.pairButton.selected {
+  border-color: var(--blue);
+  background: rgba(47, 140, 255, 0.12);
+  box-shadow: 0 4px 0 var(--blue);
+}
+
+.pairButton.bad {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+  box-shadow: 0 4px 0 var(--bad);
+  animation: shake 0.4s;
 }
 
 .matched {
