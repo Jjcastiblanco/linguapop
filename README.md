@@ -34,6 +34,10 @@ Cada cambio que entra a `main` publica la web (`apps/app`) en Cloudflare Pages, 
 
 La app es una PWA instalable que abre sin conexión (`vite-plugin-pwa`, configurada en `apps/app/vite.config.ts`). Su service worker nunca atiende `/legacy/`: la navegación la excluye y nada de `legacy/` se precachea, y una prueba lo comprueba sobre el build real. Una versión nueva no se activa sola: la app muestra «Hay una versión nueva · Actualizar» en las pantallas principales (nunca sobre una lección o llamada) y recarga solo cuando el estudiante lo pide; además comprueba si hay versión nueva cada hora y al volver a la pestaña.
 
+## Android
+
+`apps/app/android/` es el proyecto nativo de Capacitor 8 (`appId` `app.linguapop.mobile`, Android 13 o superior). `pnpm --filter @linguapop/app cap:sync` compila la app en modo `native` (`dist-native`, sin service worker) y la copia al proyecto. El Android SDK local es opcional: el APK de depuración se compila en GitHub Actions.
+
 La web de staging también sirve la versión heredada en `/legacy/` (se abre en `/legacy/linguapop.html`) hasta que la app nueva alcance paridad.
 
 ## Supabase

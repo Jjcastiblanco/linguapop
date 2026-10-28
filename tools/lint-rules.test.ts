@@ -108,6 +108,15 @@ describe('Capacitor solo en el código nativo (AD-19)', () => {
     ).toEqual([]);
   });
 
+  it('el archivo de configuración de Capacitor sí puede importar su tipo', async () => {
+    expect(
+      await reglasQueFallan(
+        "import type { CapacitorConfig } from '@capacitor/cli';\nexport const c: CapacitorConfig = {};\n",
+        'apps/app/capacitor.config.ts',
+      ),
+    ).toEqual([]);
+  });
+
   it('el código nativo sigue sin poder importar el panel', async () => {
     expect(await reglasQueFallan("import { x } from '@linguapop/admin';", NATIVO)).toContain(
       'no-restricted-imports',
