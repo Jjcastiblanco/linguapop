@@ -73,8 +73,12 @@ button {
   width: 100%;
   max-width: 520px;
   min-height: 100vh;
+  /* En móvil 100vh incluye la barra del navegador: 100dvh es el alto realmente visible. */
+  min-height: 100dvh;
   background: var(--bg);
   position: relative;
+  /* Nada de lo que pinte la app debe ensanchar la página. */
+  overflow-x: clip;
 }
 
 @media (min-width: 560px) {

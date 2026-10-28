@@ -93,6 +93,7 @@
   align-items: center;
   gap: 8px;
   padding: 14px 18px;
+  padding-top: calc(14px + env(safe-area-inset-top));
   font-weight: 800;
   z-index: 2;
 }
