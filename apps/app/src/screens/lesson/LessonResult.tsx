@@ -6,10 +6,19 @@ import { Fox } from '../../mascots';
 import { Confetti } from '../../ui/Confetti';
 import styles from './LessonResult.module.css';
 
+const TITLES = {
+  lesson: 'lesson.finished.title',
+  review: 'session.finished.practice',
+  practice: 'session.finished.practice',
+  timed: 'session.finished.timed',
+  test: 'session.finished.test',
+} as const;
+
 type Props = {
   lesson: LessonState;
   summary: LessonSummary;
-  unit: Unit;
+  /** Unidad de la lección; las sesiones de práctica sueltas no la tienen. */
+  unit?: Unit;
   onContinue: () => void;
 };
 
@@ -28,19 +37,34 @@ export function LessonResult({ lesson, summary, unit, onContinue }: Props) {
 
   const today = dayKey(composition.clock.now(), progress.settings.timeZone);
   const streak = visibleStreak(progress.streak, today, progress.settings.plan);
-  const lastOfUnit = unit.lessons.at(-1)?.id === config.lessonId;
-  const unitCompleted = !outOfHearts && !config.isReplay && lastOfUnit;
+  const lastOfUnit = unit?.lessons.at(-1)?.id === config.lessonId;
+  const unitCompleted = unit !== undefined && !outOfHearts && !config.isReplay && lastOfUnit;
+  const testUnit =
+    config.mode === 'test'
+      ? composition.course.units.find((u) => u.id === config.unitId)
+      : undefined;
 
   return (
     <div className={`${styles.body}`}>
       {!outOfHearts && <Confetti count={unitCompleted || score.perfect ? 90 : 50} />}
       <Fox mood={outOfHearts ? 'sad' : 'celebrate'} className={styles.fox} />
-      <h2>{outOfHearts ? t('lesson.finished.nohearts') : t('lesson.finished.title')}</h2>
+      <h2>{outOfHearts ? t('lesson.finished.nohearts') : t(TITLES[config.mode])}</h2>
       {outOfHearts && <p className={styles.note}>{t('lesson.nohearts.text')}</p>}
       {score.perfect && <p className={styles.badge}>{t('result.perfect')}</p>}
-      {unitCompleted && (
+      {unit && unitCompleted && (
         <p className={styles.unit} role="status">
           {t('result.unit', { unit: unit.name })}
+        </p>
+      )}
+
+      {config.mode === 'timed' && (
+        <p className={styles.note} role="status" data-testid="result-timed">
+          {t('result.timed', { n: lesson.correct, best: progress.stats.timedBest })}
+        </p>
+      )}
+      {testUnit && score.passed !== null && (
+        <p className={score.passed ? styles.unit : styles.note} role="status">
+          {t(score.passed ? 'result.test.passed' : 'result.test.failed', { unit: testUnit.name })}
         </p>
       )}
 
