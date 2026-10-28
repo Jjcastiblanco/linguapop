@@ -1,0 +1,129 @@
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.notice {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+
+.pcard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+
+.pcard:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.em {
+  font-size: 28px;
+}
+
+.grow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.grow small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.pro {
+  background: var(--gold);
+  color: #3b2a00;
+  border-radius: 8px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.card {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.muted {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.buy {
+  flex: 1;
+  padding: 10px;
+  border-radius: 14px;
+  font-weight: 900;
+  color: #fff;
+  background: var(--blue);
+  box-shadow: 0 4px 0 var(--blue-d);
+}
+
+.pill {
+  background: var(--bg);
+  border: 2px solid var(--line);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 6px 12px;
+  margin: 4px 6px 0 0;
+  font-weight: 800;
+}
+
+.sheet {
+  display: grid;
+  gap: 10px;
+}
+
+.sheet button {
+  padding: 12px;
+  border-radius: 14px;
+  font-weight: 900;
+  text-align: left;
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid var(--line);
+}
+
+.sheet button:disabled {
+  opacity: 0.5;
+}
+
+.sheet .primary {
+  text-align: center;
+  color: #fff;
+  background: var(--brand);
+  border: 0;
+  box-shadow: 0 4px 0 var(--brand-d);
+}

@@ -2,6 +2,8 @@ import { Navigate, type RouteObject } from 'react-router';
 import { Placeholder } from './screens/Placeholder';
 import { LearnScreen } from './screens/learn/LearnScreen';
 import { LessonScreen } from './screens/lesson/LessonScreen';
+import { PracticeScreen } from './screens/practice/PracticeScreen';
+import { PracticeSessionScreen } from './screens/practice/PracticeSessionScreen';
 import { AppShell } from './shell/AppShell';
 
 /**
@@ -15,11 +17,12 @@ export const appRoutes: RouteObject[] = [
     children: [
       { index: true, element: <Navigate to="/aprender" replace /> },
       { path: 'aprender', element: <LearnScreen /> },
-      { path: 'practicar', element: <Placeholder title="screen.practice.title" /> },
+      { path: 'practicar', element: <PracticeScreen /> },
       { path: 'ligas', element: <Placeholder title="screen.leagues.title" /> },
       { path: 'perfil', element: <Placeholder title="screen.profile.title" /> },
     ],
   },
+  { path: '/practicar/sesion', element: <PracticeSessionScreen /> },
   { path: '/leccion/:unitId/:lessonId', element: <LessonScreen /> },
   { path: '/llamada', element: <Placeholder title="screen.call.title" /> },
   { path: '*', element: <Navigate to="/aprender" replace /> },

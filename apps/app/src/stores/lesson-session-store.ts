@@ -19,6 +19,8 @@ export type LessonSessionState = {
   start: (config: LessonConfig) => void;
   submit: (answer: Answer) => void;
   next: () => void;
+  /** El tiempo avanza: con límite de tiempo, termina la sesión al agotarse. */
+  tick: () => void;
   /** Abandona la sesión sin registrar nada. */
   abort: () => void;
   /** Cierra la sesión terminada o abandonada y vuelve al estado inicial. */
@@ -64,6 +66,14 @@ export function createLessonSessionStore(
       const { lesson } = get();
       if (!lesson) return;
       const step = stepLesson(lesson, { type: 'continue', nowMs: c.clock.now() });
+      set({ lesson: step.state });
+      run(step.effects);
+    },
+    tick() {
+      const { lesson } = get();
+      if (!lesson) return;
+      const step = stepLesson(lesson, { type: 'tick', nowMs: c.clock.now() });
+      if (step.state === lesson) return;
       set({ lesson: step.state });
       run(step.effects);
     },

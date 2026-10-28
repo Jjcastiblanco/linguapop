@@ -1,41 +1,14 @@
-import {
-  currentExercise,
-  currentHearts,
-  dayKey,
-  exercisesOfLesson,
-  lessonProgress,
-  type Answer,
-} from '@linguapop/domain';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useBlocker, useNavigate, useParams } from 'react-router';
-import { useLesson, useProgress, useServices } from '../../composition/context';
-import { t } from '../../i18n';
-import { Fox } from '../../mascots';
-import { Modal } from '../../ui/Modal';
-import { FeedbackPanel } from './FeedbackPanel';
-import styles from './LessonScreen.module.css';
-import { LessonResult } from './LessonResult';
-import { ExerciseView } from './exercises/ExerciseView';
+import { currentHearts, dayKey, exercisesOfLesson } from '@linguapop/domain';
+import { useEffect, useMemo } from 'react';
+import { Navigate, useParams } from 'react-router';
+import { useProgress, useServices } from '../../composition/context';
+import { SessionView } from './SessionView';
 
-const HINTS = {
-  mc: 'lesson.hint.mc',
-  order: 'lesson.hint.order',
-  write: 'lesson.hint.write',
-  match: 'lesson.hint.match',
-  listen: 'lesson.hint.listen',
-  speak: 'lesson.hint.speak',
-} as const;
-
-/** Pantalla de lección: ejercicios uno a uno sobre el motor del dominio, con feedback y salida confirmada. */
+/** Pantalla de lección: arma la sesión de la lección de la ruta y la muestra con `SessionView`. */
 export function LessonScreen() {
   const { unitId, lessonId } = useParams();
   const { composition, lesson: sessionStore } = useServices();
   const progress = useProgress((s) => s.progress);
-  const lesson = useLesson((s) => s.lesson);
-  const failure = useLesson((s) => s.failure);
-  const navigate = useNavigate();
-  const [draft, setDraft] = useState<Answer | null>(null);
-  const leaving = useRef(false);
 
   const unit = composition.course.units.find((u) => u.id === unitId);
   const lessonDef = unit?.lessons.find((l) => l.id === lessonId);
@@ -63,159 +36,6 @@ export function LessonScreen() {
     // La sesión se arma con el progreso del momento de abrir; no debe reiniciarse al registrar eventos.
   }, [unit, lessonDef, exercises]);
 
-  const active = lesson !== null && (lesson.phase === 'answering' || lesson.phase === 'feedback');
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      active && !leaving.current && currentLocation.pathname !== nextLocation.pathname,
-  );
-
   if (!unit || !lessonDef || exercises.length === 0) return <Navigate to="/aprender" replace />;
-
-  const leave = () => {
-    leaving.current = true;
-    sessionStore.getState().clear();
-    navigate('/aprender', { replace: true });
-  };
-
-  if (failure === 'no-hearts') {
-    return (
-      <div className={`${styles.screen}`}>
-        <div className={`${styles.body} ${styles.center}`}>
-          <Fox mood="sad" className={styles.centerFox} />
-          <h2>{t('lesson.nohearts.title')}</h2>
-          <p>{t('lesson.nohearts.text')}</p>
-          <button type="button" className={styles.action} onClick={leave}>
-            {t('lesson.nohearts.back')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-  if (!lesson) return null;
-
-  if (lesson.phase === 'finished' && lesson.summary) {
-    return (
-      <div className={styles.screen}>
-        <LessonResult lesson={lesson} summary={lesson.summary} unit={unit} onContinue={leave} />
-      </div>
-    );
-  }
-
-  const exercise = currentExercise(lesson);
-  if (!exercise) return null;
-  const feedback = lesson.phase === 'feedback' ? lesson.feedback : null;
-  const pro = progress.settings.plan === 'pro';
-  const percent = Math.round(lessonProgress(lesson) * 100);
-
-  const hintKey =
-    exercise.type === 'mc'
-      ? 'lesson.hint.mc'
-      : exercise.type === 'order'
-        ? 'lesson.hint.order'
-        : exercise.type === 'write'
-          ? 'lesson.hint.write'
-          : 'lesson.translate';
-  const mood = feedback ? (feedback.result.ok ? 'happy' : 'sad') : 'idle';
-  const bubble = feedback
-    ? feedback.result.ok
-      ? t('lesson.fox.ok')
-      : lesson.outOfHearts
-        ? t('lesson.fox.nohearts')
-        : t('lesson.fox.bad')
-    : t(hintKey);
-
-  const check = (answer?: Answer) => {
-    const toSend = answer ?? draft;
-    if (lesson.phase === 'answering' && toSend) sessionStore.getState().submit(toSend);
-  };
-  const next = () => {
-    setDraft(null);
-    sessionStore.getState().next();
-  };
-
-  return (
-    <div className={styles.screen}>
-      <div className={styles.header}>
-        <button
-          type="button"
-          className={styles.close}
-          aria-label={t('lesson.close')}
-          onClick={() => navigate('/aprender')}
-        >
-          ✕
-        </button>
-        <div
-          className={styles.bar}
-          role="progressbar"
-          aria-label={t('lesson.progress')}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percent}
-        >
-          <i style={{ width: `${percent}%` }} />
-        </div>
-        <span className={styles.chip} role="status" aria-label={t('lesson.hearts')}>
-          <span aria-hidden="true">❤️</span>
-          <span data-testid="lesson-hearts">{pro ? '∞' : lesson.hearts}</span>
-        </span>
-      </div>
-
-      <div className={styles.body}>
-        <div className={styles.foxLine}>
-          <Fox mood={mood} className={styles.fox} decorative />
-          <div className={styles.bubble} data-testid="bubble">
-            {bubble}
-          </div>
-        </div>
-        <ExerciseView
-          key={`${exercise.id}:${lesson.index}`}
-          exercise={exercise}
-          locked={feedback !== null}
-          result={feedback?.result ?? null}
-          onAnswer={setDraft}
-          onSubmit={check}
-        />
-      </div>
-
-      <div
-        className={`${styles.foot} ${feedback ? (feedback.result.ok ? styles.footGood : styles.footBad) : ''}`}
-      >
-        {feedback && <FeedbackPanel exercise={exercise} result={feedback.result} />}
-        <button
-          type="button"
-          className={`${styles.action} ${feedback ? (feedback.result.ok ? styles.actionOk : styles.actionBad) : ''}`}
-          disabled={!feedback && !draft}
-          onClick={feedback ? next : () => check()}
-        >
-          {feedback ? t('lesson.continue') : t('lesson.check')}
-        </button>
-      </div>
-
-      {blocker.state === 'blocked' && (
-        <Modal title={t('exit.title')} onClose={() => blocker.reset()}>
-          <p>{t('exit.text')}</p>
-          <div className={styles.sheetButtons}>
-            <button
-              type="button"
-              className={`${styles.action} ${styles.actionOk}`}
-              onClick={() => blocker.reset()}
-            >
-              {t('exit.stay')}
-            </button>
-            <button
-              type="button"
-              className={styles.ghost}
-              onClick={() => {
-                leaving.current = true;
-                sessionStore.getState().abort();
-                blocker.proceed();
-              }}
-            >
-              {t('exit.leave')}
-            </button>
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
+  return <SessionView unit={unit} exitTo="/aprender" />;
 }
