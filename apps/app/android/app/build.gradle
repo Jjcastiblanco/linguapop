@@ -7,8 +7,10 @@ android {
         applicationId "app.linguapop.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // El CI fija la versión de cada compilación (`versionName` lleva el SHA del commit y
+        // `versionCode` sube con cada ejecución); en local quedan los valores por defecto.
+        versionCode Integer.parseInt(System.getenv('APP_VERSION_CODE') ?: '1')
+        versionName System.getenv('APP_VERSION_NAME') ?: '1.0'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,7 +18,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        debug {
+            // Clave de depuración estable (AD-21): solo si el CI la entrega. Sin ella queda la
+            // clave temporal que Android genera por defecto, y la app no se instala sobre otra firmada distinto.
+            def keystore = System.getenv('DEBUG_KEYSTORE_FILE')
+            if (keystore) {
+                storeFile file(keystore)
+                storePassword System.getenv('DEBUG_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('DEBUG_KEY_ALIAS')
+                keyPassword System.getenv('DEBUG_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

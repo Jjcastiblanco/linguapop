@@ -38,6 +38,8 @@ La app es una PWA instalable que abre sin conexión (`vite-plugin-pwa`, configur
 
 `apps/app/android/` es el proyecto nativo de Capacitor 8 (`appId` `app.linguapop.mobile`, Android 13 o superior). `pnpm --filter @linguapop/app cap:sync` compila la app en modo `native` (`dist-native`, sin service worker) y la copia al proyecto. El Android SDK local es opcional: el APK de depuración se compila en GitHub Actions.
 
+Cada push a `main` compila el APK (`.github/workflows/android.yml`) y lo publica en la versión previa [`android-debug`](../../releases/tag/android-debug) como `linguapop-debug.apk`; su `versionName` lleva el SHA del commit. Los PR que tocan la app lo compilan para comprobar que no se rompe, sin firma estable y sin publicar. Para poder instalar cada versión encima de la anterior sin perder el progreso, el APK se firma con una clave de depuración estable guardada en cuatro secretos del repositorio: `ANDROID_DEBUG_KEYSTORE_BASE64` (el keystore en base64), `ANDROID_DEBUG_KEYSTORE_PASSWORD`, `ANDROID_DEBUG_KEY_ALIAS` y `ANDROID_DEBUG_KEY_PASSWORD`. Sin ellos se firma con una clave temporal y el flujo avisa.
+
 La web de staging también sirve la versión heredada en `/legacy/` (se abre en `/legacy/linguapop.html`) hasta que la app nueva alcance paridad.
 
 ## Supabase
