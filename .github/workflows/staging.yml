@@ -42,8 +42,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
         if: steps.credenciales.outputs.listas == 'true'
+      # La URL y la clave anónima de Supabase son públicas (AD-9); si faltan, la app sale sin cuentas.
       - run: pnpm --filter @linguapop/app build
         if: steps.credenciales.outputs.listas == 'true'
+        env:
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
       - name: Armar el sitio (app nueva y versión heredada)
         if: steps.credenciales.outputs.listas == 'true'
         run: |

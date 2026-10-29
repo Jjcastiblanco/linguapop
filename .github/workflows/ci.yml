@@ -46,3 +46,5 @@ jobs:
       - name: Arrancar solo lo necesario de Supabase
         run: pnpm exec supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: pnpm db:test
+      - name: Cuentas contra la base local
+        run: pnpm db:test:auth
