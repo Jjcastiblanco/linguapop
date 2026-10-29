@@ -90,3 +90,9 @@ export function useUpdateAvailable(): boolean {
   const { update } = useServices().composition;
   return useSyncExternalStore(update.subscribe, update.available);
 }
+
+/** La cuenta con la sesión abierta, o `null` si es invitado. */
+export function useAccount() {
+  const { auth } = useServices().composition;
+  return useSyncExternalStore(auth.subscribe, auth.account);
+}

@@ -1,6 +1,6 @@
 import { seedCourse } from '@linguapop/content';
 import type { Course } from '@linguapop/content';
-import type { Clock, ContentSource, Random, Speech } from '@linguapop/domain';
+import type { Auth, Clock, ContentSource, Random, Speech } from '@linguapop/domain';
 import type { ProgressContext } from '@linguapop/domain';
 import { createLocalProgressSink, type LocalProgressSink } from './adapters/local-progress-sink';
 import { createLocalStore, type StorageLike, type WebLocalStore } from './adapters/local-store';
@@ -8,6 +8,7 @@ import { createWebInstall, type WebInstall } from './adapters/web-install';
 import { createWebUpdate, type WebUpdate } from './adapters/web-update';
 import { createWebSound, type WebSound } from './adapters/web-sound';
 import { createWebSpeech } from './adapters/web-speech';
+import { createAuthFromConfig } from './adapters/supabase-auth';
 
 /** Todo lo que la app necesita del exterior, ya conectado. Se crea una sola vez al arrancar. */
 export type Composition = {
@@ -26,6 +27,8 @@ export type Composition = {
   install: WebInstall;
   /** Versión nueva de la app lista para activar (la ofrece el service worker). */
   update: WebUpdate;
+  /** Cuentas y sesión; sin Supabase configurado la app es solo de invitado. */
+  auth: Auth;
   /** Estructura del contenido que el pliegue de eventos necesita. */
   progressContext: ProgressContext;
   /** Zona horaria del dispositivo, para decidir qué es "hoy". */
@@ -38,7 +41,16 @@ export type Composition = {
 export type CompositionOverrides = Partial<
   Pick<
     Composition,
-    'clock' | 'random' | 'timeZone' | 'newId' | 'speech' | 'sound' | 'course' | 'install' | 'update'
+    | 'clock'
+    | 'random'
+    | 'timeZone'
+    | 'newId'
+    | 'speech'
+    | 'sound'
+    | 'course'
+    | 'install'
+    | 'update'
+    | 'auth'
   >
 > & {
   storage?: StorageLike | null;
@@ -68,6 +80,12 @@ export function createComposition(overrides: CompositionOverrides = {}): Composi
     sound: overrides.sound ?? createWebSound(),
     install: overrides.install ?? createWebInstall(),
     update: overrides.update ?? createWebUpdate(),
+    auth:
+      overrides.auth ??
+      createAuthFromConfig({
+        url: import.meta.env.VITE_SUPABASE_URL,
+        anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      }),
     progressContext: { units, achievements: course.achievements },
     timeZone: overrides.timeZone ?? deviceTimeZone(),
     contentVersion: 0,

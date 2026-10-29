@@ -48,8 +48,12 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
 
+      # La URL y la clave anónima de Supabase son públicas (AD-9); si faltan, el APK sale sin cuentas.
       - name: Compilar la app en modo native y sincronizar Capacitor
         run: pnpm --filter @linguapop/app cap:sync
+        env:
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
       - name: Comprobar que cap sync no deja cambios sin commitear
         run: |
           if [ -n "$(git status --porcelain apps/app/android)" ]; then

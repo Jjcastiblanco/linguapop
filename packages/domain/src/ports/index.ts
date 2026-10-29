@@ -1,3 +1,4 @@
+export type { Account, Auth, AuthFailure, AuthResult } from './auth';
 export type { Clock } from './clock';
 export type { ContentSource } from './content-source';
 export type { DialogueAgent, DialogueMessage } from './dialogue-agent';

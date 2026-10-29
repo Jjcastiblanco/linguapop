@@ -16,7 +16,8 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "db:test": "supabase test db"
+    "db:test": "supabase test db",
+    "db:test:auth": "sh -c 'eval \"$(supabase status -o env)\" && SUPABASE_TEST_URL=$API_URL SUPABASE_TEST_ANON_KEY=$ANON_KEY vitest run supabase-auth.integration'"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

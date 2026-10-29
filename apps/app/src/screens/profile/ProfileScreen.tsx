@@ -5,6 +5,7 @@ import { t } from '../../i18n';
 import { Fox } from '../../mascots';
 import { useDark } from '../../shell/AppShell';
 import { Modal } from '../../ui/Modal';
+import { AccountCard } from './AccountCard';
 import styles from './ProfileScreen.module.css';
 import { buildExport, parseImport } from './progress-file';
 
@@ -294,6 +295,8 @@ export function ProfileScreen() {
           {t('profile.reset')}
         </button>
       </section>
+
+      <AccountCard />
 
       {canInstall && (
         <section className={styles.card} aria-label={t('profile.install.title')}>
