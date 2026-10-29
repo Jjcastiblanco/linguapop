@@ -10,6 +10,7 @@ import {
   type UtteranceLike,
   type VoiceLike,
 } from './web-speech';
+import { runSpeechContract } from './speech-contract';
 
 const VOCES: VoiceLike[] = [
   { name: 'Microsoft David', lang: 'en-US' },
@@ -89,6 +90,21 @@ function reconocimientoFalso() {
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
+
+runSpeechContract('adaptador web', () => {
+  const rec = reconocimientoFalso();
+  const speech = createWebSpeech({ ...sintesisFalsa().env, createRecognition: rec.crear });
+  const actual = () => rec.instancias[rec.instancias.length - 1]!;
+  return {
+    speech,
+    driver: {
+      emitHeard: (alternatives) =>
+        rec.resultado(actual(), { isFinal: true, alternativas: alternatives }),
+      emitNoMatch: () => actual().onerror?.({ error: 'no-speech' }),
+      denyPermission: () => actual().onerror?.({ error: 'not-allowed' }),
+    },
+  };
+});
 
 describe('elección de voz', () => {
   it('prefiere una voz femenina de inglés de EE. UU.', () => {
