@@ -1,18 +1,27 @@
-import { seedCourse, type Course } from '@linguapop/content';
+import { seedCourse, type Course, type TeachCard } from '@linguapop/content';
 
 /**
  * Un curso de prueba con la misma estructura que el real, pero cuyas lecciones solo usan los tipos
  * de ejercicio que la pantalla ya soporta (elegir, ordenar y escribir). `ids` fija los ejercicios
- * de la primera lección de Saludos; las demás lecciones se dejan como están.
+ * de la primera lección de Saludos; las demás lecciones se dejan como están. La primera lección
+ * no trae «Palabras nuevas» salvo que se pasen `teach`, para que las pruebas entren directo al ejercicio.
  */
-export function cursoConLeccion(ids: readonly string[]): Course {
+export function cursoConLeccion(ids: readonly string[], teach?: readonly TeachCard[]): Course {
   return {
     ...seedCourse,
     units: seedCourse.units.map((u, i) =>
       i === 0
         ? {
             ...u,
-            lessons: u.lessons.map((l, j) => (j === 0 ? { ...l, exerciseIds: [...ids] } : l)),
+            lessons: u.lessons.map((l, j) => {
+              if (j !== 0) return l;
+              const { teach: _semilla, ...sinTeach } = l;
+              return {
+                ...sinTeach,
+                exerciseIds: [...ids],
+                ...(teach ? { teach: [...teach] } : {}),
+              };
+            }),
           }
         : u,
     ),

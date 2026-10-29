@@ -1,5 +1,5 @@
 import { currentExercise, lessonProgress, remainingSec, type Answer } from '@linguapop/domain';
-import type { Unit } from '@linguapop/content';
+import type { TeachCard, Unit } from '@linguapop/content';
 import { useEffect, useRef, useState } from 'react';
 import { useBlocker, useNavigate } from 'react-router';
 import { useLesson, useProgress, useServices } from '../../composition/context';
@@ -8,6 +8,7 @@ import { t } from '../../i18n';
 import { Fox } from '../../mascots';
 import { Modal } from '../../ui/Modal';
 import { FeedbackPanel } from './FeedbackPanel';
+import { TeachIntro } from './TeachIntro';
 import styles from './LessonScreen.module.css';
 import { LessonResult, formatDuration } from './LessonResult';
 import { ExerciseView } from './exercises/ExerciseView';
@@ -17,6 +18,8 @@ type Props = {
   unit?: Unit;
   /** A dónde se vuelve al cerrar o terminar la sesión. */
   exitTo: string;
+  /** Tarjetas de «Palabras nuevas» que se ven antes del primer ejercicio; sin ellas no hay fase. */
+  teach?: readonly TeachCard[];
 };
 
 /**
@@ -24,7 +27,7 @@ type Props = {
  * (si la sesión tiene límite de tiempo), salida confirmada y pantalla final. Lo usan la lección
  * y los modos de práctica.
  */
-export function SessionView({ unit, exitTo }: Props) {
+export function SessionView({ unit, exitTo, teach = [] }: Props) {
   const services = useServices();
   const { composition, lesson: sessionStore, toast } = services;
   const progress = useProgress((s) => s.progress);
@@ -34,9 +37,12 @@ export function SessionView({ unit, exitTo }: Props) {
   const [draft, setDraft] = useState<Answer | null>(null);
   const [now, setNow] = useState(() => composition.clock.now());
   const leaving = useRef(false);
+  const [introDone, setIntroDone] = useState(teach.length === 0);
 
   const timed = lesson?.config.timeLimitSec !== undefined;
-  const running = lesson !== null && (lesson.phase === 'answering' || lesson.phase === 'feedback');
+  const intro = !introDone && lesson !== null && lesson.phase === 'answering';
+  const running =
+    lesson !== null && !intro && (lesson.phase === 'answering' || lesson.phase === 'feedback');
 
   // Con límite de tiempo, cada segundo se avanza el reloj y se deja que el motor decida si terminó.
   useEffect(() => {
@@ -103,6 +109,16 @@ export function SessionView({ unit, exitTo }: Props) {
       <div className={styles.screen}>
         <LessonResult lesson={lesson} summary={lesson.summary} unit={unit} onContinue={leave} />
       </div>
+    );
+  }
+
+  if (intro) {
+    return (
+      <TeachIntro
+        cards={teach}
+        onDone={() => setIntroDone(true)}
+        onClose={() => navigate(exitTo)}
+      />
     );
   }
 

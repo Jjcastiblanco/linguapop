@@ -37,5 +37,5 @@ export function LessonScreen() {
   }, [unit, lessonDef, exercises]);
 
   if (!unit || !lessonDef || exercises.length === 0) return <Navigate to="/aprender" replace />;
-  return <SessionView unit={unit} exitTo="/aprender" />;
+  return <SessionView unit={unit} exitTo="/aprender" teach={lessonDef.teach} />;
 }
