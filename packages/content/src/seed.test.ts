@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CourseSchema } from './schema';
 import { seedAchievements, seedCourse, seedDialogues, seedUnits } from './seed';
+import { findUntaughtTerms, normalizeTerm } from './teach';
 
 // Fórmula de la versión heredada: 3 lecciones de 10 ejercicios con desfases 0, 7 y 14.
 const DESFASES = [0, 7, 14];
@@ -161,5 +162,23 @@ describe('semilla: curso completo', () => {
         achievements: [...seedAchievements, seedAchievements[0]!],
       }).success,
     ).toBe(false);
+  });
+});
+
+describe('semilla: enseñanza previa', () => {
+  const lecciones = seedUnits.flatMap((u) => u.lessons);
+
+  it('las 15 lecciones traen sus tarjetas', () => {
+    expect(lecciones).toHaveLength(15);
+    for (const l of lecciones) expect(l.teach?.length, l.id).toBeGreaterThan(0);
+  });
+
+  it('ninguna lección evalúa algo que ella o una anterior no enseñan', () => {
+    expect(findUntaughtTerms(seedUnits, { requireTeach: true })).toEqual([]);
+  });
+
+  it('ninguna palabra o frase se enseña dos veces en el curso', () => {
+    const vistas = lecciones.flatMap((l) => l.teach ?? []).map((c) => normalizeTerm(c.en));
+    expect(new Set(vistas).size).toBe(vistas.length);
   });
 });

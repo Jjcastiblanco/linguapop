@@ -273,6 +273,68 @@
   "lessons": [
     {
       "id": "u-viajes-l1",
+      "teach": [
+        {
+          "en": "Airport",
+          "es": "Aeropuerto",
+          "emoji": "✈️"
+        },
+        {
+          "en": "Where is the hotel",
+          "es": "¿Dónde está el hotel?"
+        },
+        {
+          "en": "A one-way ticket",
+          "es": "Un billete de ida"
+        },
+        {
+          "en": "Where is the bus station",
+          "es": "¿Dónde está la estación de autobuses?"
+        },
+        {
+          "en": "Beach",
+          "es": "Playa",
+          "emoji": "🏖️"
+        },
+        {
+          "en": "Suitcase",
+          "es": "Maleta",
+          "emoji": "🧳"
+        },
+        {
+          "en": "Passport",
+          "es": "Pasaporte",
+          "emoji": "🛂"
+        },
+        {
+          "en": "Map",
+          "es": "Mapa",
+          "emoji": "🗺️"
+        },
+        {
+          "en": "Ticket",
+          "es": "Billete",
+          "emoji": "🎫"
+        },
+        {
+          "en": "I want to book a room",
+          "es": "Quiero reservar una habitación"
+        },
+        {
+          "en": "How much is the ticket",
+          "es": "¿Cuánto cuesta el billete?"
+        },
+        {
+          "en": "Turn left",
+          "es": "Gira a la izquierda",
+          "emoji": "⬅️"
+        },
+        {
+          "en": "Train",
+          "es": "Tren",
+          "emoji": "🚆"
+        }
+      ],
       "exerciseIds": [
         "u-viajes-e01",
         "u-viajes-e02",
@@ -288,6 +350,54 @@
     },
     {
       "id": "u-viajes-l2",
+      "teach": [
+        {
+          "en": "Turn right at the corner",
+          "es": "Gira a la derecha en la esquina",
+          "emoji": "➡️"
+        },
+        {
+          "en": "The train leaves at eight",
+          "es": "El tren sale a las ocho"
+        },
+        {
+          "en": "I am lost",
+          "es": "Estoy perdido",
+          "emoji": "🧭"
+        },
+        {
+          "en": "How much is it",
+          "es": "¿Cuánto cuesta?"
+        },
+        {
+          "en": "I would like a taxi, please",
+          "es": "Quisiera un taxi, por favor"
+        },
+        {
+          "en": "Car",
+          "es": "Coche",
+          "emoji": "🚗"
+        },
+        {
+          "en": "Boat",
+          "es": "Barco",
+          "emoji": "⛵"
+        },
+        {
+          "en": "Street",
+          "es": "Calle",
+          "emoji": "🛣️"
+        },
+        {
+          "en": "Flight",
+          "es": "Vuelo",
+          "emoji": "🛫"
+        },
+        {
+          "en": "Is this seat free",
+          "es": "¿Está libre este asiento?"
+        }
+      ],
       "exerciseIds": [
         "u-viajes-e08",
         "u-viajes-e09",
@@ -303,6 +413,21 @@
     },
     {
       "id": "u-viajes-l3",
+      "teach": [
+        {
+          "en": "We are going to the beach tomorrow",
+          "es": "Vamos a la playa mañana"
+        },
+        {
+          "en": "Welcome",
+          "es": "Bienvenido",
+          "emoji": "🎉"
+        },
+        {
+          "en": "My flight arrives at three",
+          "es": "Mi vuelo llega a las tres"
+        }
+      ],
       "exerciseIds": [
         "u-viajes-e15",
         "u-viajes-e16",

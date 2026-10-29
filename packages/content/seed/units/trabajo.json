@@ -273,6 +273,68 @@
   "lessons": [
     {
       "id": "u-trabajo-l1",
+      "teach": [
+        {
+          "en": "Office",
+          "es": "Oficina",
+          "emoji": "🏢"
+        },
+        {
+          "en": "I work in an office",
+          "es": "Trabajo en una oficina"
+        },
+        {
+          "en": "My boss",
+          "es": "Mi jefe",
+          "emoji": "🧑‍💼"
+        },
+        {
+          "en": "I have a meeting at ten",
+          "es": "Tengo una reunión a las diez"
+        },
+        {
+          "en": "Doctor",
+          "es": "Médico",
+          "emoji": "🧑‍⚕️"
+        },
+        {
+          "en": "Teacher",
+          "es": "Maestro",
+          "emoji": "🧑‍🏫"
+        },
+        {
+          "en": "Engineer",
+          "es": "Ingeniero",
+          "emoji": "👷"
+        },
+        {
+          "en": "Cook",
+          "es": "Cocinero",
+          "emoji": "🧑‍🍳"
+        },
+        {
+          "en": "Lawyer",
+          "es": "Abogado",
+          "emoji": "⚖️"
+        },
+        {
+          "en": "She is a teacher",
+          "es": "Ella es profesora"
+        },
+        {
+          "en": "I work from nine to five",
+          "es": "Trabajo de nueve a cinco"
+        },
+        {
+          "en": "I need a job",
+          "es": "Necesito un trabajo"
+        },
+        {
+          "en": "Computer",
+          "es": "Computadora",
+          "emoji": "💻"
+        }
+      ],
       "exerciseIds": [
         "u-trabajo-e01",
         "u-trabajo-e02",
@@ -288,6 +350,53 @@
     },
     {
       "id": "u-trabajo-l2",
+      "teach": [
+        {
+          "en": "Can you help me please",
+          "es": "¿Me puedes ayudar, por favor?"
+        },
+        {
+          "en": "My job is very difficult",
+          "es": "Mi trabajo es muy difícil"
+        },
+        {
+          "en": "Meeting",
+          "es": "Reunión",
+          "emoji": "👥"
+        },
+        {
+          "en": "I work with my friends",
+          "es": "Trabajo con mis amigos"
+        },
+        {
+          "en": "Thank you for your help",
+          "es": "Gracias por tu ayuda"
+        },
+        {
+          "en": "Salary",
+          "es": "Salario",
+          "emoji": "💰"
+        },
+        {
+          "en": "Email",
+          "es": "Correo",
+          "emoji": "📧"
+        },
+        {
+          "en": "Team",
+          "es": "Equipo",
+          "emoji": "🤝"
+        },
+        {
+          "en": "Employee",
+          "es": "Empleado",
+          "emoji": "🧑‍💼"
+        },
+        {
+          "en": "I am looking for a new job",
+          "es": "Estoy buscando un nuevo trabajo"
+        }
+      ],
       "exerciseIds": [
         "u-trabajo-e08",
         "u-trabajo-e09",
@@ -303,6 +412,21 @@
     },
     {
       "id": "u-trabajo-l3",
+      "teach": [
+        {
+          "en": "I have an interview tomorrow",
+          "es": "Tengo una entrevista mañana"
+        },
+        {
+          "en": "Schedule",
+          "es": "Horario",
+          "emoji": "⏰"
+        },
+        {
+          "en": "My coworker is kind",
+          "es": "Mi compañero es amable"
+        }
+      ],
       "exerciseIds": [
         "u-trabajo-e15",
         "u-trabajo-e16",
