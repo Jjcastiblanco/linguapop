@@ -8,6 +8,7 @@ import { t } from '../../i18n';
 import { Fox } from '../../mascots';
 import { Modal } from '../../ui/Modal';
 import { FeedbackPanel } from './FeedbackPanel';
+import { HelpSheet } from './HelpSheet';
 import { TeachIntro } from './TeachIntro';
 import styles from './LessonScreen.module.css';
 import { LessonResult, formatDuration } from './LessonResult';
@@ -20,6 +21,8 @@ type Props = {
   exitTo: string;
   /** Tarjetas de «Palabras nuevas» que se ven antes del primer ejercicio; sin ellas no hay fase. */
   teach?: readonly TeachCard[];
+  /** Palabras que se pueden consultar durante los ejercicios; vacío oculta la ayuda. */
+  glossary?: readonly TeachCard[];
 };
 
 /**
@@ -27,7 +30,7 @@ type Props = {
  * (si la sesión tiene límite de tiempo), salida confirmada y pantalla final. Lo usan la lección
  * y los modos de práctica.
  */
-export function SessionView({ unit, exitTo, teach = [] }: Props) {
+export function SessionView({ unit, exitTo, teach = [], glossary = [] }: Props) {
   const services = useServices();
   const { composition, lesson: sessionStore, toast } = services;
   const progress = useProgress((s) => s.progress);
@@ -37,6 +40,7 @@ export function SessionView({ unit, exitTo, teach = [] }: Props) {
   const [draft, setDraft] = useState<Answer | null>(null);
   const [now, setNow] = useState(() => composition.clock.now());
   const leaving = useRef(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [introDone, setIntroDone] = useState(teach.length === 0);
 
   const timed = lesson?.config.timeLimitSec !== undefined;
@@ -195,6 +199,11 @@ export function SessionView({ unit, exitTo, teach = [] }: Props) {
             {bubble}
           </div>
         </div>
+        {glossary.length > 0 && !feedback && (
+          <button type="button" className={styles.helpLink} onClick={() => setHelpOpen(true)}>
+            <span aria-hidden="true">💡</span> {t('help.open')}
+          </button>
+        )}
         <ExerciseView
           key={`${exercise.id}:${lesson.index}`}
           exercise={exercise}
@@ -218,6 +227,10 @@ export function SessionView({ unit, exitTo, teach = [] }: Props) {
           {feedback ? t('lesson.continue') : t('lesson.check')}
         </button>
       </div>
+
+      {helpOpen && (
+        <HelpSheet cards={glossary} exercise={exercise} onClose={() => setHelpOpen(false)} />
+      )}
 
       {blocker.state === 'blocked' && (
         <Modal title={t('exit.title')} onClose={() => blocker.reset()}>
