@@ -37,9 +37,16 @@ describe('campo teach de la lección', () => {
     expect(LessonSchema.safeParse({ ...ok, teach: [{ en: ' ', es: 'Hola' }] }).success).toBe(false);
   });
 
-  it('el contenido semilla actual sigue siendo válido sin teach', () => {
-    expect(seedCourse.units.every((u) => u.lessons.every((l) => l.teach === undefined))).toBe(true);
-    expect(findUntaughtTerms(seedUnits)).toEqual([]);
+  it('el contenido semilla sigue siendo válido si se le quita teach (aditivo)', () => {
+    const sinTeach = {
+      ...seedCourse,
+      units: seedCourse.units.map((u) => ({
+        ...u,
+        lessons: u.lessons.map(({ teach: _teach, ...lesson }) => lesson),
+      })),
+    };
+    expect(CourseSchema.safeParse(sinTeach).success).toBe(true);
+    expect(findUntaughtTerms(sinTeach.units)).toEqual([]);
   });
 });
 

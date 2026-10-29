@@ -273,6 +273,60 @@
   "lessons": [
     {
       "id": "u-saludos-l1",
+      "teach": [
+        {
+          "en": "Hello",
+          "es": "Hola",
+          "emoji": "👋"
+        },
+        {
+          "en": "My name is Ana",
+          "es": "Me llamo Ana"
+        },
+        {
+          "en": "Good morning",
+          "es": "Buenos días",
+          "emoji": "🌅"
+        },
+        {
+          "en": "Nice to meet you",
+          "es": "Mucho gusto",
+          "emoji": "🤝"
+        },
+        {
+          "en": "Good night",
+          "es": "Buenas noches",
+          "emoji": "🌙"
+        },
+        {
+          "en": "Goodbye",
+          "es": "Adiós",
+          "emoji": "🚪"
+        },
+        {
+          "en": "Thank you",
+          "es": "Gracias",
+          "emoji": "🙏"
+        },
+        {
+          "en": "Please",
+          "es": "Por favor",
+          "emoji": "🙏"
+        },
+        {
+          "en": "How are you",
+          "es": "¿Cómo estás?"
+        },
+        {
+          "en": "I am fine, thank you",
+          "es": "Estoy bien, gracias"
+        },
+        {
+          "en": "I am fine",
+          "es": "Estoy bien",
+          "emoji": "😊"
+        }
+      ],
       "exerciseIds": [
         "u-saludos-e01",
         "u-saludos-e02",
@@ -288,6 +342,51 @@
     },
     {
       "id": "u-saludos-l2",
+      "teach": [
+        {
+          "en": "Good afternoon",
+          "es": "Buenas tardes",
+          "emoji": "☀️"
+        },
+        {
+          "en": "I am from Spain",
+          "es": "Soy de España"
+        },
+        {
+          "en": "I am sorry",
+          "es": "Lo siento",
+          "emoji": "😔"
+        },
+        {
+          "en": "See you later",
+          "es": "Hasta luego",
+          "emoji": "👋"
+        },
+        {
+          "en": "Morning",
+          "es": "Mañana",
+          "emoji": "🌅"
+        },
+        {
+          "en": "Night",
+          "es": "Noche",
+          "emoji": "🌙"
+        },
+        {
+          "en": "Friend",
+          "es": "Amigo",
+          "emoji": "🧑‍🤝‍🧑"
+        },
+        {
+          "en": "Name",
+          "es": "Nombre",
+          "emoji": "🏷️"
+        },
+        {
+          "en": "What is your name",
+          "es": "¿Cómo te llamas?"
+        }
+      ],
       "exerciseIds": [
         "u-saludos-e08",
         "u-saludos-e09",
@@ -303,6 +402,13 @@
     },
     {
       "id": "u-saludos-l3",
+      "teach": [
+        {
+          "en": "See you tomorrow",
+          "es": "Hasta mañana",
+          "emoji": "📅"
+        }
+      ],
       "exerciseIds": [
         "u-saludos-e15",
         "u-saludos-e16",

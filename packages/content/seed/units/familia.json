@@ -273,6 +273,70 @@
   "lessons": [
     {
       "id": "u-familia-l1",
+      "teach": [
+        {
+          "en": "Mother",
+          "es": "Madre",
+          "emoji": "👩"
+        },
+        {
+          "en": "I have two brothers",
+          "es": "Tengo dos hermanos"
+        },
+        {
+          "en": "My father",
+          "es": "Mi padre",
+          "emoji": "👨"
+        },
+        {
+          "en": "This is my family",
+          "es": "Esta es mi familia",
+          "emoji": "👨‍👩‍👧"
+        },
+        {
+          "en": "Grandmother",
+          "es": "Abuela",
+          "emoji": "👵"
+        },
+        {
+          "en": "Brother",
+          "es": "Hermano",
+          "emoji": "👦"
+        },
+        {
+          "en": "Sister",
+          "es": "Hermana",
+          "emoji": "👧"
+        },
+        {
+          "en": "Son",
+          "es": "Hijo",
+          "emoji": "👦"
+        },
+        {
+          "en": "Daughter",
+          "es": "Hija",
+          "emoji": "👧"
+        },
+        {
+          "en": "My sister is tall",
+          "es": "Mi hermana es alta"
+        },
+        {
+          "en": "I love my family",
+          "es": "Amo a mi familia",
+          "emoji": "❤️"
+        },
+        {
+          "en": "My mother is kind",
+          "es": "Mi madre es amable"
+        },
+        {
+          "en": "Uncle",
+          "es": "Tío",
+          "emoji": "👨‍🦳"
+        }
+      ],
       "exerciseIds": [
         "u-familia-e01",
         "u-familia-e02",
@@ -288,6 +352,53 @@
     },
     {
       "id": "u-familia-l2",
+      "teach": [
+        {
+          "en": "He is my brother",
+          "es": "Él es mi hermano"
+        },
+        {
+          "en": "She has a daughter",
+          "es": "Ella tiene una hija"
+        },
+        {
+          "en": "Husband",
+          "es": "Esposo",
+          "emoji": "🤵"
+        },
+        {
+          "en": "My grandparents live here",
+          "es": "Mis abuelos viven aquí"
+        },
+        {
+          "en": "My brother is very funny",
+          "es": "Mi hermano es muy gracioso"
+        },
+        {
+          "en": "Cousin",
+          "es": "Primo",
+          "emoji": "🧑"
+        },
+        {
+          "en": "Baby",
+          "es": "Bebé",
+          "emoji": "👶"
+        },
+        {
+          "en": "Wife",
+          "es": "Esposa",
+          "emoji": "👰"
+        },
+        {
+          "en": "Child",
+          "es": "Niño",
+          "emoji": "🧒"
+        },
+        {
+          "en": "How many people are in your family",
+          "es": "¿Cuántas personas hay en tu familia?"
+        }
+      ],
       "exerciseIds": [
         "u-familia-e08",
         "u-familia-e09",
@@ -303,6 +414,16 @@
     },
     {
       "id": "u-familia-l3",
+      "teach": [
+        {
+          "en": "My family is big",
+          "es": "Mi familia es grande"
+        },
+        {
+          "en": "I have a small family",
+          "es": "Tengo una familia pequeña"
+        }
+      ],
       "exerciseIds": [
         "u-familia-e15",
         "u-familia-e16",

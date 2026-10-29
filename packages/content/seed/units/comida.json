@@ -273,6 +273,71 @@
   "lessons": [
     {
       "id": "u-comida-l1",
+      "teach": [
+        {
+          "en": "Apple",
+          "es": "Manzana",
+          "emoji": "🍎"
+        },
+        {
+          "en": "I want water",
+          "es": "Quiero agua"
+        },
+        {
+          "en": "The bread",
+          "es": "El pan",
+          "emoji": "🍞"
+        },
+        {
+          "en": "I would like a coffee",
+          "es": "Me gustaría un café",
+          "emoji": "☕"
+        },
+        {
+          "en": "Milk",
+          "es": "Leche",
+          "emoji": "🥛"
+        },
+        {
+          "en": "Rice",
+          "es": "Arroz",
+          "emoji": "🍚"
+        },
+        {
+          "en": "Egg",
+          "es": "Huevo",
+          "emoji": "🥚"
+        },
+        {
+          "en": "Cheese",
+          "es": "Queso",
+          "emoji": "🧀"
+        },
+        {
+          "en": "Chicken",
+          "es": "Pollo",
+          "emoji": "🍗"
+        },
+        {
+          "en": "I am hungry",
+          "es": "Tengo hambre",
+          "emoji": "🍽️"
+        },
+        {
+          "en": "I would like some water, please",
+          "es": "Quisiera un poco de agua, por favor"
+        },
+        {
+          "en": "The bill, please",
+          "es": "La cuenta, por favor",
+          "emoji": "🧾"
+        },
+        {
+          "en": "I like pizza",
+          "es": "Me gusta la pizza",
+          "emoji": "🍕"
+        }
+      ],
       "exerciseIds": [
         "u-comida-e01",
         "u-comida-e02",
@@ -288,6 +353,50 @@
     },
     {
       "id": "u-comida-l2",
+      "teach": [
+        {
+          "en": "I am thirsty",
+          "es": "Tengo sed",
+          "emoji": "💧"
+        },
+        {
+          "en": "A table for two",
+          "es": "Una mesa para dos"
+        },
+        {
+          "en": "Breakfast",
+          "es": "Desayuno",
+          "emoji": "🍳"
+        },
+        {
+          "en": "The soup is delicious",
+          "es": "La sopa está deliciosa"
+        },
+        {
+          "en": "Soup",
+          "es": "Sopa",
+          "emoji": "🍲"
+        },
+        {
+          "en": "Salad",
+          "es": "Ensalada",
+          "emoji": "🥗"
+        },
+        {
+          "en": "Juice",
+          "es": "Jugo",
+          "emoji": "🧃"
+        },
+        {
+          "en": "Fruit",
+          "es": "Fruta",
+          "emoji": "🍇"
+        },
+        {
+          "en": "Can I have the menu",
+          "es": "¿Me puede dar el menú?"
+        }
+      ],
       "exerciseIds": [
         "u-comida-e08",
         "u-comida-e09",
@@ -303,6 +412,21 @@
     },
     {
       "id": "u-comida-l3",
+      "teach": [
+        {
+          "en": "I do not eat meat",
+          "es": "No como carne"
+        },
+        {
+          "en": "Tomato",
+          "es": "Tomate",
+          "emoji": "🍅"
+        },
+        {
+          "en": "I want a coffee with milk",
+          "es": "Quiero un café con leche"
+        }
+      ],
       "exerciseIds": [
         "u-comida-e15",
         "u-comida-e16",

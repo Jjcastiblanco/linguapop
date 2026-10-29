@@ -88,7 +88,7 @@ export const TeachCardSchema = z.object({
 export const LessonSchema = z.object({
   id: Slug,
   /** Palabras y frases que la lección enseña antes de sus ejercicios; opcional (aditivo, C6). */
-  teach: z.array(TeachCardSchema).max(12).optional(),
+  teach: z.array(TeachCardSchema).max(14).optional(),
   /** Lista ordenada de ids de ejercicio de la misma unidad. */
   exerciseIds: z.array(Slug).min(1).max(30),
 });
