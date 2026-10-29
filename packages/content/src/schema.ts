@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { findUntaughtTerms } from './teach';
 
 /** Identificador estable en minúsculas con guiones, por ejemplo `u-saludos-e07`. */
 const Slug = z
@@ -77,8 +78,17 @@ export const ExerciseSchema = z.discriminatedUnion('type', [
   Speak,
 ]);
 
+/** Tarjeta de «Palabras nuevas»: lo que la lección enseña antes de evaluarlo. */
+export const TeachCardSchema = z.object({
+  en: Texto,
+  es: Texto,
+  emoji: Texto.optional(),
+});
+
 export const LessonSchema = z.object({
   id: Slug,
+  /** Palabras y frases que la lección enseña antes de sus ejercicios; opcional (aditivo, C6). */
+  teach: z.array(TeachCardSchema).max(12).optional(),
   /** Lista ordenada de ids de ejercicio de la misma unidad. */
   exerciseIds: z.array(Slug).min(1).max(30),
 });
@@ -226,6 +236,13 @@ export const CourseSchema = z
       }
       achievementIds.add(a.id);
     });
+    findUntaughtTerms(course.units).forEach(({ unitId, lessonId, exerciseId, term }) => {
+      ctx.addIssue({
+        code: 'custom',
+        message: `la lección ${lessonId} evalúa «${term}» (${exerciseId}) sin enseñarla antes`,
+        path: ['units', course.units.findIndex((u) => u.id === unitId), 'lessons'],
+      });
+    });
     course.dialogues.forEach((d, i) => {
       if (!unitIds.has(d.unitId)) {
         ctx.addIssue({
@@ -239,6 +256,7 @@ export const CourseSchema = z
 
 export type Exercise = z.infer<typeof ExerciseSchema>;
 export type Lesson = z.infer<typeof LessonSchema>;
+export type TeachCard = z.infer<typeof TeachCardSchema>;
 export type Unit = z.infer<typeof UnitSchema>;
 export type DialogueTurn = z.infer<typeof DialogueTurnSchema>;
 export type DialogueTopic = z.infer<typeof DialogueTopicSchema>;
