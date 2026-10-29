@@ -94,7 +94,7 @@ export function TeachIntro({ cards, onDone, onClose }: Props) {
         </div>
       </div>
 
-      <div className={styles.foot}>
+      <div className={`${styles.foot} ${card.buttons}`}>
         <button
           type="button"
           className={`${styles.action} ${last ? styles.actionOk : ''}`}

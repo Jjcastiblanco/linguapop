@@ -62,3 +62,8 @@
   transform: translateY(4px);
   box-shadow: none;
 }
+
+.buttons {
+  display: grid;
+  gap: 12px;
+}
