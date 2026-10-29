@@ -1,3 +1,4 @@
+import { taughtThrough } from '@linguapop/content';
 import { currentHearts, dayKey, exercisesOfLesson } from '@linguapop/domain';
 import { useEffect, useMemo } from 'react';
 import { Navigate, useParams } from 'react-router';
@@ -37,5 +38,12 @@ export function LessonScreen() {
   }, [unit, lessonDef, exercises]);
 
   if (!unit || !lessonDef || exercises.length === 0) return <Navigate to="/aprender" replace />;
-  return <SessionView unit={unit} exitTo="/aprender" teach={lessonDef.teach} />;
+  return (
+    <SessionView
+      unit={unit}
+      exitTo="/aprender"
+      teach={lessonDef.teach}
+      glossary={taughtThrough(composition.course.units, lessonDef.id)}
+    />
+  );
 }

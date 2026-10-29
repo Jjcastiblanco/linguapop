@@ -1,4 +1,4 @@
-import type { Exercise, Unit } from './schema';
+import type { Exercise, TeachCard, Unit } from './schema';
 
 /** Una palabra o frase en inglés que un ejercicio evalúa y que ninguna lección enseñó antes. */
 export type UntaughtTerm = { unitId: string; lessonId: string; exerciseId: string; term: string };
@@ -65,4 +65,18 @@ export function findUntaughtTerms(
     }
   }
   return missing;
+}
+
+/**
+ * Tarjetas que el estudiante ya pudo ver al llegar a la lección: las suyas y las de las lecciones
+ * anteriores del curso, con las más recientes primero. Sin la lección, devuelve una lista vacía.
+ */
+export function taughtThrough(units: readonly Unit[], lessonId: string): TeachCard[] {
+  const lessons = units.flatMap((u) => u.lessons);
+  const at = lessons.findIndex((l) => l.id === lessonId);
+  if (at === -1) return [];
+  return lessons
+    .slice(0, at + 1)
+    .reverse()
+    .flatMap((l) => l.teach ?? []);
 }

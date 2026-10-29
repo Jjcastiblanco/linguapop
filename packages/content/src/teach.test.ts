@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CourseSchema, LessonSchema, UnitSchema, type Unit } from './schema';
-import { evaluatedTerms, findUntaughtTerms, normalizeTerm } from './teach';
+import { evaluatedTerms, findUntaughtTerms, normalizeTerm, taughtThrough } from './teach';
 import { seedCourse, seedUnits } from './seed';
 
 /** Unidad mínima: 15 ejercicios `listen` y lecciones definidas por la prueba. */
@@ -119,5 +119,36 @@ describe('regla de cobertura', () => {
     const r = CourseSchema.safeParse(curso);
     expect(r.success).toBe(false);
     expect(JSON.stringify(r.error?.issues)).toContain('Phrase 2');
+  });
+});
+
+describe('taughtThrough', () => {
+  const a = unidad([
+    { id: 'u-demo-l1', exerciseIds: ['u-demo-e01'], teach: [tarjeta(1)] },
+    { id: 'u-demo-l2', exerciseIds: ['u-demo-e02'], teach: [tarjeta(2), tarjeta(3)] },
+    { id: 'u-demo-l3', exerciseIds: ['u-demo-e03'] },
+  ]);
+  const b = unidad(
+    [{ id: 'u-otra-l1', exerciseIds: ['u-otra-e01'], teach: [tarjeta(9)] }],
+    'u-otra',
+  );
+
+  it('reúne las tarjetas de la lección y las anteriores, las más recientes primero', () => {
+    expect(taughtThrough([a, b], 'u-demo-l2').map((c) => c.en)).toEqual([
+      'Phrase 2',
+      'Phrase 3',
+      'Phrase 1',
+    ]);
+    expect(taughtThrough([a, b], 'u-otra-l1').map((c) => c.en)).toEqual([
+      'Phrase 9',
+      'Phrase 2',
+      'Phrase 3',
+      'Phrase 1',
+    ]);
+  });
+
+  it('no incluye lo que enseñan lecciones posteriores ni inventa para una lección inexistente', () => {
+    expect(taughtThrough([a, b], 'u-demo-l1').map((c) => c.en)).toEqual(['Phrase 1']);
+    expect(taughtThrough([a, b], 'u-no-existe')).toEqual([]);
   });
 });
