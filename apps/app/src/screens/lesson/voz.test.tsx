@@ -400,6 +400,10 @@ describe('la primera lección real de Saludos', () => {
     const speak = ejercicio(SPEAK) as Extract<Exercise, { type: 'speak' }>;
     const { eventos } = await abrir(null, { oidos: [{ kind: 'heard', alternatives: [speak.en] }] });
     const leccion = seedCourse.units[0]!.lessons[0]!;
+    // La lección real abre con sus «Palabras nuevas»: se recorren todas antes del primer ejercicio.
+    for (let i = 1; i < leccion.teach!.length; i++)
+      await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Entendido, empezar' }));
     for (const id of leccion.exerciseIds) {
       const e = ejercicio(id);
       if (e.type === 'mc') {
