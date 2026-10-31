@@ -53,7 +53,10 @@ describe('PWA generada', () => {
 
   it('el service worker precachea la app y el contenido semilla, y nada de /legacy/', () => {
     const urls = precache();
-    expect(urls).toContain('index.html');
+    // Se precachea `/`, no `/index.html`: el alojamiento redirige esta última y una respuesta
+    // redirigida no se puede entregar a una navegación.
+    expect(urls).toContain('/');
+    expect(urls).not.toContain('index.html');
     expect(urls.some((u) => u.endsWith('.js'))).toBe(true);
     expect(urls.some((u) => u.endsWith('.css'))).toBe(true);
     expect(urls).toContain('icons/icon-192.png');
@@ -65,8 +68,8 @@ describe('PWA generada', () => {
     expect(leer(js)).toContain('Presentarse');
   });
 
-  it('la navegación cae en index.html y excluye /legacy/', () => {
-    expect(sw).toMatch(/createHandlerBoundToURL\(\s*"index\.html"\s*\)/);
+  it('la navegación cae en la raíz precacheada y excluye /legacy/', () => {
+    expect(sw).toMatch(/createHandlerBoundToURL\(\s*"\/"\s*\)/);
     const denylist = /denylist:\s*\[\s*\/(.+?)\/\s*\]/.exec(sw);
     expect(denylist).not.toBeNull();
     const regla = new RegExp(denylist![1]!);
