@@ -121,13 +121,16 @@ const CONTENT_SCHEMA_VERSION = seedCourse.schemaVersion;
  */
 export async function composeWithContent(
   make: (overrides: CompositionOverrides) => Composition = createComposition,
-  overrides: CompositionOverrides & { contentRemote?: ContentRemote } = {},
+  overrides: CompositionOverrides & { contentRemote?: ContentRemote; googleSignIn?: boolean } = {},
 ): Promise<Composition> {
   const store = overrides.store ?? createLocalStore(overrides.storage);
-  const supabase = createSupabaseServices({
-    url: import.meta.env.VITE_SUPABASE_URL,
-    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-  });
+  const supabase = createSupabaseServices(
+    {
+      url: import.meta.env.VITE_SUPABASE_URL,
+      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    },
+    { google: overrides.googleSignIn },
+  );
   const content = createCachedContent({
     store,
     remote: overrides.contentRemote ?? supabase.contentRemote,

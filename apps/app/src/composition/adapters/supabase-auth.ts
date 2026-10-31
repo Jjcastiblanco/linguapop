@@ -5,6 +5,7 @@ import type {
   AuthFailure,
   AuthResult,
   DeleteAccountResult,
+  GoogleSignInResult,
 } from '@linguapop/domain';
 
 /** Lo que el adaptador usa de Supabase Auth; las pruebas lo reemplazan por uno falso. */
@@ -20,12 +21,19 @@ export type AuthClientLike = {
     error: AuthError | null;
   }>;
   signOut(): Promise<{ error: AuthError | null }>;
+  signInWithOAuth(credentials: {
+    provider: 'google';
+    options: { redirectTo: string };
+  }): Promise<{ error: AuthError | null }>;
 };
 
 /** La función del servidor que borra la cuenta de la sesión; las pruebas la reemplazan por una falsa. */
 export type DeleteAccountRpc = () => PromiseLike<{
   error: { message: string; status?: number } | null;
 }>;
+
+/** Entrar con Google redirigiendo a Google; `redirectTo` es adonde vuelve la persona. */
+export type GoogleOption = { redirectTo: () => string };
 
 export type SupabaseConfig = { url?: string; anonKey?: string };
 
@@ -71,6 +79,8 @@ export const unavailableAuth: Auth = {
   signUp: async () => failed('error'),
   signIn: async () => failed('error'),
   signOut: async () => undefined,
+  googleAvailable: () => false,
+  signInWithGoogle: async () => ({ kind: 'failed', reason: 'error' }),
   deleteAccount: async () => ({ kind: 'failed', reason: 'error' }),
 };
 
@@ -78,6 +88,7 @@ export const unavailableAuth: Auth = {
 export function createSupabaseAuth(
   client: AuthClientLike,
   deleteAccountRpc: DeleteAccountRpc = async () => ({ error: { message: 'no disponible' } }),
+  google?: GoogleOption,
 ): Auth {
   let current: Account | null = null;
   const listeners = new Set<() => void>();
@@ -131,6 +142,21 @@ export function createSupabaseAuth(
         await client.signOut();
       } finally {
         set(null);
+      }
+    },
+    googleAvailable: () => google !== undefined,
+    async signInWithGoogle(): Promise<GoogleSignInResult> {
+      if (!google) return { kind: 'failed', reason: 'error' };
+      try {
+        const { error } = await client.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: google.redirectTo() },
+        });
+        if (error)
+          return { kind: 'failed', reason: authFailure(error) === 'network' ? 'network' : 'error' };
+        return { kind: 'redirecting' };
+      } catch {
+        return { kind: 'failed', reason: 'network' };
       }
     },
     async deleteAccount(): Promise<DeleteAccountResult> {

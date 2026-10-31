@@ -12,6 +12,10 @@ export type AuthFailure =
 
 export type AuthResult = { kind: 'ok'; account: Account } | { kind: 'failed'; reason: AuthFailure };
 
+/** Entrar con Google redirige a la página de Google: la sesión llega al volver a la app. */
+export type GoogleSignInResult =
+  { kind: 'redirecting' } | { kind: 'failed'; reason: 'network' | 'error' };
+
 export type DeleteAccountResult = { kind: 'ok' } | { kind: 'failed'; reason: 'network' | 'error' };
 
 /**
@@ -28,6 +32,10 @@ export interface Auth {
   signUp(email: string, password: string): Promise<AuthResult>;
   signIn(email: string, password: string): Promise<AuthResult>;
   signOut(): Promise<void>;
+  /** Se puede entrar con Google en esta plataforma (hoy solo en la web). */
+  googleAvailable(): boolean;
+  /** Lleva a Google para elegir la cuenta; al volver, `account()` ya tiene la sesión. */
+  signInWithGoogle(): Promise<GoogleSignInResult>;
   /** Borra la cuenta con la sesión abierta y todo lo que tiene en el servidor, y cierra la sesión. */
   deleteAccount(): Promise<DeleteAccountResult>;
 }

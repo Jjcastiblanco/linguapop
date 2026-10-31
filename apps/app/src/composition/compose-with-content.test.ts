@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { seedCourse } from '@linguapop/content';
 import { composeWithContent } from '.';
+import { createNativeComposition } from './native';
 import { CONTENT_CACHE_KEY } from './adapters/cached-content';
 import { memoria, nuevoId } from '../test/helpers';
 
@@ -33,5 +35,49 @@ describe('arranque con contenido publicado', () => {
     expect(siguiente.course.level).toBe('A1-A2 v2');
     expect(siguiente.contentVersion).toBe(2);
     expect(await siguiente.content.load()).toBe(siguiente.course);
+  });
+});
+
+describe('entrar con Google según la plataforma', () => {
+  const entorno = () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://prueba.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'clave-anonima');
+  };
+  const sinRed = { available: () => false, latest: async () => null };
+
+  it('la web lo ofrece cuando hay Supabase configurado', async () => {
+    entorno();
+    const c = await composeWithContent(undefined, {
+      storage: memoria().storage,
+      contentRemote: sinRed,
+    });
+    expect(c.auth.googleAvailable()).toBe(true);
+    vi.unstubAllEnvs();
+  });
+
+  it('el APK no lo ofrece, aunque haya Supabase configurado', async () => {
+    entorno();
+    const c = await composeWithContent(createNativeComposition, {
+      storage: memoria().storage,
+      contentRemote: sinRed,
+      googleSignIn: false,
+    });
+    expect(c.auth.available()).toBe(true);
+    expect(c.auth.googleAvailable()).toBe(false);
+    vi.unstubAllEnvs();
+  });
+
+  it('el punto de entrada del APK pide que Google quede oculto', () => {
+    expect(readFileSync(new URL('../main.native.tsx', import.meta.url), 'utf8')).toMatch(
+      /googleSignIn: false/,
+    );
+  });
+
+  it('sin Supabase no hay cuentas ni Google', async () => {
+    const c = await composeWithContent(undefined, {
+      storage: memoria().storage,
+      contentRemote: sinRed,
+    });
+    expect(c.auth.googleAvailable()).toBe(false);
   });
 });
