@@ -1,11 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Auth, ProgressRemote } from '@linguapop/domain';
+import type { Auth, ContentRemote, ProgressRemote } from '@linguapop/domain';
 import {
   createSupabaseAuth,
   unavailableAuth,
   type AuthClientLike,
   type SupabaseConfig,
 } from './supabase-auth';
+import {
+  createSupabaseContentRemote,
+  unavailableContentRemote,
+  type ContentClientLike,
+} from './supabase-content-remote';
 import {
   createSupabaseProgressRemote,
   unavailableRemote,
@@ -19,13 +24,21 @@ import {
 export function createSupabaseServices({ url, anonKey }: SupabaseConfig): {
   auth: Auth;
   progressRemote: ProgressRemote;
+  contentRemote: ContentRemote;
 } {
-  if (!url || !anonKey) return { auth: unavailableAuth, progressRemote: unavailableRemote };
+  if (!url || !anonKey) {
+    return {
+      auth: unavailableAuth,
+      progressRemote: unavailableRemote,
+      contentRemote: unavailableContentRemote,
+    };
+  }
   const client = createClient(url, anonKey, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
   });
   return {
     auth: createSupabaseAuth(client.auth as unknown as AuthClientLike),
     progressRemote: createSupabaseProgressRemote(client as unknown as EventsClientLike),
+    contentRemote: createSupabaseContentRemote(client as unknown as ContentClientLike),
   };
 }

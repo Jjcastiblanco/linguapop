@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 import { registerSW } from 'virtual:pwa-register';
 import { startApp } from './bootstrap';
-import { createComposition } from './composition';
+import { composeWithContent } from './composition';
 import { createWebUpdate } from './composition/adapters/web-update';
 import { appRoutes } from './routes';
 
@@ -25,4 +25,6 @@ if (import.meta.env.PROD) {
   });
 }
 
-void startApp(createComposition({ update }), { router: createBrowserRouter(appRoutes) });
+void composeWithContent(undefined, { update }).then((composition) =>
+  startApp(composition, { router: createBrowserRouter(appRoutes) }),
+);

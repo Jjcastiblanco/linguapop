@@ -1,6 +1,8 @@
+import { parseCourseTolerant, seedCourse } from '@linguapop/content';
 import { createClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
 import { legacyEventId, legacyImportEvent, type ProgressEvent } from '@linguapop/domain';
+import { createSupabaseContentRemote, type ContentClientLike } from './supabase-content-remote';
 import { createSupabaseProgressRemote, type EventsClientLike } from './supabase-progress-remote';
 
 // Contra una base de Supabase real y local: se corre con `pnpm db:test:auth` (y en el CI, job
@@ -70,5 +72,21 @@ describe.skipIf(!url || !anonKey)('copia del progreso contra Supabase local', ()
     expect(await a.push([importado])).toEqual({ accepted: [importado.id], rejected: [] });
     expect(await a.push([importado])).toEqual({ accepted: [importado.id], rejected: [] });
     expect(await (await dispositivo(c)).pull()).toEqual([importado]);
+  });
+});
+
+describe.skipIf(!url || !anonKey)('contenido publicado contra Supabase local', () => {
+  it('sin sesión se lee el snapshot semilla publicado y la app lo acepta', async () => {
+    const remoto = createSupabaseContentRemote(
+      createClient(url!, anonKey!) as unknown as ContentClientLike,
+    );
+    const snapshot = await remoto.latest(1);
+    expect(snapshot?.version).toBe(1);
+    const curso = parseCourseTolerant(snapshot!.content);
+    expect(curso.ok && curso.skipped).toEqual([]);
+    expect(curso.ok && curso.course.units.map((u) => u.id)).toEqual(
+      seedCourse.units.map((u) => u.id),
+    );
+    expect(await remoto.latest(99)).toBeNull();
   });
 });
