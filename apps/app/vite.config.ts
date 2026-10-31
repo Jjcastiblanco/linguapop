@@ -39,7 +39,16 @@ export const pwaOptions = {
   workbox: {
     globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
     globIgnores: ['legacy/**'],
-    navigateFallback: 'index.html',
+    // El alojamiento (Cloudflare Pages) redirige /index.html a /. Precachear esa dirección deja un
+    // servicio que, si no encuentra la copia, devuelve una respuesta redirigida y el navegador
+    // falla al abrir cualquier ruta (p. ej. al volver de Google a /perfil). Se precachea `/`.
+    manifestTransforms: [
+      async (entries: Array<{ url: string; revision: string | null; size: number }>) => ({
+        manifest: entries.map((e) => (e.url === 'index.html' ? { ...e, url: '/' } : e)),
+        warnings: [],
+      }),
+    ],
+    navigateFallback: '/',
     navigateFallbackDenylist: [LEGACY_PATH],
     cleanupOutdatedCaches: true,
   },
