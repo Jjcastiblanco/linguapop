@@ -6,11 +6,27 @@ import {
 } from '@linguapop/domain';
 
 export const EVENTS_KEY = 'linguapop:events:v1';
+export const REJECTED_KEY = 'linguapop:events-rejected:v1';
 
 export type LocalProgressSink = ProgressSink & {
+  /** Ids de eventos que el servidor rechazó: siguen guardados, pero no cuentan. */
+  rejectedIds(): Promise<ReadonlySet<string>>;
+  /** Marca eventos como rechazados por el servidor. */
+  reject(ids: readonly string[]): Promise<void>;
   /** Borra todo el progreso guardado. */
   clear(): Promise<void>;
 };
+
+async function readJsonArray(store: LocalStore, key: string): Promise<unknown[]> {
+  const raw = await store.get(key);
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return []; // JSON corrupto: se empieza de cero sin romper la app
+  }
+}
 
 /**
  * Registro de eventos de progreso local-primero: se guarda en el almacenamiento local como una
@@ -19,20 +35,19 @@ export type LocalProgressSink = ProgressSink & {
  */
 export function createLocalProgressSink(store: LocalStore): LocalProgressSink {
   let cache: ProgressEvent[] | null = null;
+  let rejected: Set<string> | null = null;
 
   async function load(): Promise<ProgressEvent[]> {
     if (cache) return cache;
-    const raw = await store.get(EVENTS_KEY);
-    let parsed: unknown = [];
-    if (raw) {
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        parsed = []; // JSON corrupto: se empieza de cero sin romper la app
-      }
-    }
-    cache = Array.isArray(parsed) ? parseKnownEvents(parsed) : [];
+    cache = parseKnownEvents(await readJsonArray(store, EVENTS_KEY));
     return cache;
+  }
+
+  async function loadRejected(): Promise<Set<string>> {
+    if (rejected) return rejected;
+    const ids = await readJsonArray(store, REJECTED_KEY);
+    rejected = new Set(ids.filter((id): id is string => typeof id === 'string'));
+    return rejected;
   }
 
   return {
@@ -45,9 +60,20 @@ export function createLocalProgressSink(store: LocalStore): LocalProgressSink {
     async readAll() {
       return [...(await load())];
     },
+    async rejectedIds() {
+      return new Set(await loadRejected());
+    },
+    async reject(ids) {
+      const set = await loadRejected();
+      const before = set.size;
+      ids.forEach((id) => set.add(id));
+      if (set.size !== before) await store.set(REJECTED_KEY, JSON.stringify([...set]));
+    },
     async clear() {
       cache = [];
+      rejected = new Set();
       await store.remove(EVENTS_KEY);
+      await store.remove(REJECTED_KEY);
     },
   };
 }

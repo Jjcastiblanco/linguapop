@@ -8,6 +8,7 @@ import {
   createUiStore,
   notifyProgress,
   startNotifications,
+  startProgressSync,
   type CallStore,
   type CallStoreState,
   type LessonSessionState,
@@ -43,6 +44,7 @@ export function createServices(composition: Composition): AppServices {
   const lesson = createLessonSessionStore(composition, progress);
   const call = createCallStore(composition, progress);
   startNotifications(composition, toast, lesson, call);
+  startProgressSync(composition, progress);
   return { composition, progress, ui, lesson, call, toast };
 }
 
