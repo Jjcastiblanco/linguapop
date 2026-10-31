@@ -44,6 +44,18 @@ export function AccountCard() {
     toast.getState().show(t('account.welcome'));
   }
 
+  async function google() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    const result = await auth.signInWithGoogle();
+    // Si va bien la página se va a Google; solo hay que seguir aquí si algo falló.
+    if (result.kind === 'failed') {
+      setBusy(false);
+      setError(`account.error.${result.reason}`);
+    }
+  }
+
   async function remove() {
     if (busy) return;
     setBusy(true);
@@ -138,6 +150,19 @@ export function AccountCard() {
       {open && (
         <Modal title={t(`account.${mode}.title`)} onClose={close}>
           <form className={styles.sheet} onSubmit={(e) => void submit(e)}>
+            {auth.googleAvailable() && (
+              <>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  disabled={busy}
+                  onClick={() => void google()}
+                >
+                  {busy ? t('account.google.opening') : t('account.google')}
+                </button>
+                <p className={styles.muted}>{t('account.or')}</p>
+              </>
+            )}
             <input
               type="email"
               value={email}

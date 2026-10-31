@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { Account, Auth, AuthResult } from '@linguapop/domain';
+import type { Account, Auth, AuthResult, GoogleSignInResult } from '@linguapop/domain';
 import { describe, expect, it, vi } from 'vitest';
 import { crearServicios, memoria, renderApp } from '../../test/helpers';
 
@@ -14,6 +14,10 @@ function authFalso(
 ) {
   let actual: Account | null = null;
   const borrado: { ok: boolean; reason: 'network' | 'error' } = { ok: true, reason: 'error' };
+  const google: { disponible: boolean; resultado: GoogleSignInResult } = {
+    disponible: false,
+    resultado: { kind: 'redirecting' },
+  };
   const oyentes = new Set<() => void>();
   const llamadas: Array<[string, string, string]> = [];
   const resolver = (modo: string) => async (email: string, password: string) => {
@@ -38,6 +42,8 @@ function authFalso(
       actual = null;
       oyentes.forEach((l) => l());
     }),
+    googleAvailable: () => google.disponible,
+    signInWithGoogle: vi.fn(async () => google.resultado),
     deleteAccount: vi.fn(async () => {
       if (!borrado.ok) return { kind: 'failed' as const, reason: borrado.reason };
       actual = null;
@@ -45,7 +51,7 @@ function authFalso(
       return { kind: 'ok' as const };
     }),
   };
-  return { auth, llamadas, borrado };
+  return { auth, llamadas, borrado, google };
 }
 
 async function abrir(auth?: Auth) {
@@ -119,6 +125,37 @@ describe('cuenta en el perfil', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
     await screen.findByText('Sesión iniciada como ana@prueba.test');
     expect(services.progress.getState().events).toHaveLength(antes);
+  });
+
+  describe('entrar con Google', () => {
+    it('no se ofrece donde la plataforma no lo permite', async () => {
+      await abrir(authFalso().auth);
+      await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+      expect(
+        screen.queryByRole('button', { name: 'Continuar con Google' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('se ofrece en la web y lleva a Google sin cerrar la hoja', async () => {
+      const { auth, google } = authFalso();
+      google.disponible = true;
+      await abrir(auth);
+      await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+      expect(auth.signInWithGoogle).toHaveBeenCalledTimes(1);
+      expect(await screen.findByRole('button', { name: 'Abriendo Google…' })).toBeDisabled();
+    });
+
+    it('si falla lo explica y deja volver a intentar', async () => {
+      const { auth, google } = authFalso();
+      google.disponible = true;
+      google.resultado = { kind: 'failed', reason: 'network' };
+      await abrir(auth);
+      await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent('No hay conexión');
+      expect(screen.getByRole('button', { name: 'Continuar con Google' })).toBeEnabled();
+    });
   });
 
   describe('borrar la cuenta', () => {

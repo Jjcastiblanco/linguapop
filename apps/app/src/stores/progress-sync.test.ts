@@ -58,6 +58,8 @@ function authFalso(inicial: Account | null = null) {
     signUp: async () => ({ kind: 'failed', reason: 'error' }),
     signIn: async () => ({ kind: 'failed', reason: 'error' }),
     signOut: async () => void (actual = null),
+    googleAvailable: () => false,
+    signInWithGoogle: async () => ({ kind: 'failed', reason: 'error' }),
     deleteAccount: async () => {
       actual = null;
       return { kind: 'ok' };

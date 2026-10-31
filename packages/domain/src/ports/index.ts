@@ -1,4 +1,11 @@
-export type { Account, Auth, AuthFailure, AuthResult, DeleteAccountResult } from './auth';
+export type {
+  Account,
+  Auth,
+  AuthFailure,
+  AuthResult,
+  DeleteAccountResult,
+  GoogleSignInResult,
+} from './auth';
 export type { Clock } from './clock';
 export type { ContentRemote, ContentSnapshot } from './content-remote';
 export type { ContentSource } from './content-source';

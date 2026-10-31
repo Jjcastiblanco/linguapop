@@ -28,6 +28,7 @@ function clienteFalso(inicial: Session | null = null) {
       error: null,
     })),
     signOut: vi.fn<AuthClientLike['signOut']>(async () => ({ error: null })),
+    signInWithOAuth: vi.fn<AuthClientLike['signInWithOAuth']>(async () => ({ error: null })),
   };
   return {
     client: client as unknown as AuthClientLike,
@@ -133,6 +134,42 @@ describe('cuentas con Supabase Auth', () => {
     dejar();
     avisar(null);
     expect(oyente).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('entrar con Google', () => {
+  const google = { redirectTo: () => 'https://app.test/perfil' };
+
+  it('sin la opción no está disponible y no llama al servidor', async () => {
+    const { client, mock } = clienteFalso();
+    const auth = createSupabaseAuth(client);
+    expect(auth.googleAvailable()).toBe(false);
+    expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'error' });
+    expect(mock.signInWithOAuth).not.toHaveBeenCalled();
+  });
+
+  it('redirige a Google y vuelve a la dirección indicada', async () => {
+    const { client, mock } = clienteFalso();
+    const auth = createSupabaseAuth(client, undefined, google);
+    expect(auth.googleAvailable()).toBe(true);
+    expect(await auth.signInWithGoogle()).toEqual({ kind: 'redirecting' });
+    expect(mock.signInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: { redirectTo: 'https://app.test/perfil' },
+    });
+  });
+
+  it('un error de red o del servidor se explica', async () => {
+    const { client, mock } = clienteFalso();
+    const auth = createSupabaseAuth(client, undefined, google);
+    mock.signInWithOAuth.mockResolvedValueOnce({
+      error: error('unexpected_failure', 'fetch failed', 0),
+    });
+    expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'network' });
+    mock.signInWithOAuth.mockResolvedValueOnce({ error: error('unexpected_failure', 'boom', 500) });
+    expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'error' });
+    mock.signInWithOAuth.mockRejectedValueOnce(new Error('caído'));
+    expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'network' });
   });
 });
 
