@@ -158,6 +158,35 @@ describe('cuenta en el perfil', () => {
     });
   });
 
+  describe('entrar con Google en el APK', () => {
+    const cuenta = { id: 'u1', email: 'ana@prueba.test' };
+
+    it('si termina bien cierra la hoja y da la bienvenida', async () => {
+      const { auth, google } = authFalso();
+      google.disponible = true;
+      google.resultado = { kind: 'ok', account: cuenta };
+      await abrir(auth);
+      await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+      expect(await screen.findByText('Sesión iniciada')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Continuar con Google' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('si la persona cierra el selector no hay error y puede reintentar', async () => {
+      const { auth, google } = authFalso();
+      google.disponible = true;
+      google.resultado = { kind: 'cancelled' };
+      await abrir(auth);
+      await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+      expect(auth.signInWithGoogle).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Continuar con Google' })).toBeEnabled();
+    });
+  });
+
   describe('borrar la cuenta', () => {
     async function conSesion(fake = authFalso()) {
       const services = await abrir(fake.auth);

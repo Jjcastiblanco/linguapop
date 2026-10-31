@@ -75,6 +75,9 @@ importers:
       '@capacitor/core':
         specifier: 8.5.3
         version: 8.5.3
+      '@capgo/capacitor-social-login':
+        specifier: 8.7.5
+        version: 8.7.5(@capacitor/core@8.5.3)
       '@capgo/capacitor-speech-recognition':
         specifier: 8.4.6
         version: 8.4.6(@capacitor/core@8.5.3)
@@ -699,6 +702,11 @@ packages:
 
   '@capacitor/core@8.5.3':
     resolution: {integrity: sha512-oBE1oGuYE4ZzYYrulC75OuHdSsD6zLUy7d5o1tFwDLG4govGoubY15cxpiI5l0+q87Lm5p0bhbehMdzJg4aFag==}
+
+  '@capgo/capacitor-social-login@8.7.5':
+    resolution: {integrity: sha512-1Qd0l4AZ/ch3ILdSOa7UwrWoENFXb+/gOo1P7w/yTKENy0561JXIXWy+VhUx17E/FBMyx8DVgbrALiuCByKZ3A==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@capgo/capacitor-speech-recognition@8.4.6':
     resolution: {integrity: sha512-GbRrjCipn/nNUwv9Vc+t15s6GMXDQvdociz7DgsEsVdO6YwDKrxNdOUD+zS8xJJVUZYpMUMB9BTZHA7YJx2CXw==}
@@ -3893,6 +3901,11 @@ snapshots:
 
   '@capacitor/core@8.5.3':
     dependencies:
+      tslib: 2.8.1
+
+  '@capgo/capacitor-social-login@8.7.5(@capacitor/core@8.5.3)':
+    dependencies:
+      '@capacitor/core': 8.5.3
       tslib: 2.8.1
 
   '@capgo/capacitor-speech-recognition@8.4.6(@capacitor/core@8.5.3)':

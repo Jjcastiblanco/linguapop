@@ -12,6 +12,12 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
   },
+  plugins: {
+    // Solo Google: así el APK no trae los SDK de otras redes.
+    SocialLogin: {
+      providers: { google: true, facebook: false, apple: false, twitter: false },
+    },
+  },
 };
 
 export default config;

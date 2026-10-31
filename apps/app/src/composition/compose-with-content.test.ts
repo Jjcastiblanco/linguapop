@@ -67,10 +67,23 @@ describe('entrar con Google según la plataforma', () => {
     vi.unstubAllEnvs();
   });
 
-  it('el punto de entrada del APK pide que Google quede oculto', () => {
-    expect(readFileSync(new URL('../main.native.tsx', import.meta.url), 'utf8')).toMatch(
-      /googleSignIn: false/,
-    );
+  it('el APK lo ofrece con el selector nativo cuando se le da uno', async () => {
+    entorno();
+    const c = await composeWithContent(createNativeComposition, {
+      storage: memoria().storage,
+      contentRemote: sinRed,
+      googleSignIn: false,
+      nativeGoogle: async () => ({ kind: 'cancelled' }),
+    });
+    expect(c.auth.googleAvailable()).toBe(true);
+    expect(await c.auth.signInWithGoogle()).toEqual({ kind: 'cancelled' });
+    vi.unstubAllEnvs();
+  });
+
+  it('el punto de entrada del APK usa el selector nativo y no la redirección web', () => {
+    const entrada = readFileSync(new URL('../main.native.tsx', import.meta.url), 'utf8');
+    expect(entrada).toMatch(/googleSignIn: false/);
+    expect(entrada).toMatch(/VITE_GOOGLE_WEB_CLIENT_ID/);
   });
 
   it('sin Supabase no hay cuentas ni Google', async () => {

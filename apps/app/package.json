@@ -14,6 +14,7 @@
     "@capacitor-community/text-to-speech": "8.0.2",
     "@capacitor/android": "8.5.3",
     "@capacitor/core": "8.5.3",
+    "@capgo/capacitor-social-login": "8.7.5",
     "@capgo/capacitor-speech-recognition": "8.4.6",
     "@linguapop/content": "workspace:*",
     "@linguapop/domain": "workspace:*",

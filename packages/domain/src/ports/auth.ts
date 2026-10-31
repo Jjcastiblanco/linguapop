@@ -12,9 +12,16 @@ export type AuthFailure =
 
 export type AuthResult = { kind: 'ok'; account: Account } | { kind: 'failed'; reason: AuthFailure };
 
-/** Entrar con Google redirige a la página de Google: la sesión llega al volver a la app. */
+/**
+ * Entrar con Google: en la web redirige a la página de Google y la sesión llega al volver a la app
+ * (`redirecting`); en el APK el selector de cuentas es nativo y termina aquí (`ok`, o `cancelled`
+ * si la persona lo cierra).
+ */
 export type GoogleSignInResult =
-  { kind: 'redirecting' } | { kind: 'failed'; reason: 'network' | 'error' };
+  | { kind: 'redirecting' }
+  | { kind: 'ok'; account: Account }
+  | { kind: 'cancelled' }
+  | { kind: 'failed'; reason: 'network' | 'error' };
 
 export type DeleteAccountResult = { kind: 'ok' } | { kind: 'failed'; reason: 'network' | 'error' };
 
@@ -32,9 +39,9 @@ export interface Auth {
   signUp(email: string, password: string): Promise<AuthResult>;
   signIn(email: string, password: string): Promise<AuthResult>;
   signOut(): Promise<void>;
-  /** Se puede entrar con Google en esta plataforma (hoy solo en la web). */
+  /** Se puede entrar con Google en esta plataforma (la web y el APK con su cliente configurado). */
   googleAvailable(): boolean;
-  /** Lleva a Google para elegir la cuenta; al volver, `account()` ya tiene la sesión. */
+  /** Lleva a Google para elegir la cuenta; con `ok` o al volver de la redirección, `account()` ya tiene la sesión. */
   signInWithGoogle(): Promise<GoogleSignInResult>;
   /** Borra la cuenta con la sesión abierta y todo lo que tiene en el servidor, y cierra la sesión. */
   deleteAccount(): Promise<DeleteAccountResult>;

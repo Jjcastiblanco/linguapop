@@ -6,6 +6,7 @@ import {
   createSupabaseAuth,
   unavailableAuth,
   type AuthClientLike,
+  type NativeGoogleCredential,
 } from './supabase-auth';
 
 const sesion = (id = 'u1', email = 'ana@prueba.test') => ({ user: { id, email } }) as Session;
@@ -29,6 +30,10 @@ function clienteFalso(inicial: Session | null = null) {
     })),
     signOut: vi.fn<AuthClientLike['signOut']>(async () => ({ error: null })),
     signInWithOAuth: vi.fn<AuthClientLike['signInWithOAuth']>(async () => ({ error: null })),
+    signInWithIdToken: vi.fn<AuthClientLike['signInWithIdToken']>(async () => ({
+      data: { session: sesion() },
+      error: null,
+    })),
   };
   return {
     client: client as unknown as AuthClientLike,
@@ -170,6 +175,58 @@ describe('entrar con Google', () => {
     expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'error' });
     mock.signInWithOAuth.mockRejectedValueOnce(new Error('caído'));
     expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'network' });
+  });
+});
+
+describe('entrar con Google con el selector nativo', () => {
+  const credencial = { kind: 'ok', idToken: 'token-de-google', nonce: 'nonce-crudo' } as const;
+  const nativo = (resultado: Awaited<ReturnType<NonNullable<NativeOption['native']>>>) => ({
+    native: vi.fn(async () => resultado),
+  });
+  type NativeOption = { native: () => Promise<NativeGoogleCredential> };
+
+  it('entrega a Supabase el token y el nonce crudo y deja la sesión abierta', async () => {
+    const { client, mock } = clienteFalso();
+    const opcion = nativo(credencial);
+    const auth = createSupabaseAuth(client, undefined, opcion);
+    expect(auth.googleAvailable()).toBe(true);
+    expect(await auth.signInWithGoogle()).toEqual({
+      kind: 'ok',
+      account: { id: 'u1', email: 'ana@prueba.test' },
+    });
+    expect(mock.signInWithIdToken).toHaveBeenCalledWith({
+      provider: 'google',
+      token: 'token-de-google',
+      nonce: 'nonce-crudo',
+    });
+    expect(mock.signInWithOAuth).not.toHaveBeenCalled();
+    expect(auth.account()).toEqual({ id: 'u1', email: 'ana@prueba.test' });
+  });
+
+  it('una cancelación o un fallo del selector no llega a Supabase', async () => {
+    const { client, mock } = clienteFalso();
+    const cancelado = createSupabaseAuth(client, undefined, nativo({ kind: 'cancelled' }));
+    expect(await cancelado.signInWithGoogle()).toEqual({ kind: 'cancelled' });
+    const sinRed = createSupabaseAuth(
+      client,
+      undefined,
+      nativo({ kind: 'failed', reason: 'network' }),
+    );
+    expect(await sinRed.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'network' });
+    expect(mock.signInWithIdToken).not.toHaveBeenCalled();
+  });
+
+  it('un error de Supabase se explica y no abre sesión', async () => {
+    const { client, mock } = clienteFalso();
+    const auth = createSupabaseAuth(client, undefined, nativo(credencial));
+    mock.signInWithIdToken.mockResolvedValueOnce({
+      data: { session: null },
+      error: error('bad_jwt', 'nonce mismatch', 400),
+    });
+    expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'error' });
+    mock.signInWithIdToken.mockRejectedValueOnce(new Error('caído'));
+    expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'network' });
+    expect(auth.account()).toBeNull();
   });
 });
 

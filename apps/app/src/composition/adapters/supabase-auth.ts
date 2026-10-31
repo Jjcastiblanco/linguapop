@@ -21,6 +21,10 @@ export type AuthClientLike = {
     error: AuthError | null;
   }>;
   signOut(): Promise<{ error: AuthError | null }>;
+  signInWithIdToken(credentials: { provider: 'google'; token: string; nonce: string }): Promise<{
+    data: { session: Session | null };
+    error: AuthError | null;
+  }>;
   signInWithOAuth(credentials: {
     provider: 'google';
     options: { redirectTo: string };
@@ -32,8 +36,18 @@ export type DeleteAccountRpc = () => PromiseLike<{
   error: { message: string; status?: number } | null;
 }>;
 
-/** Entrar con Google redirigiendo a Google; `redirectTo` es adonde vuelve la persona. */
-export type GoogleOption = { redirectTo: () => string };
+/** Lo que da el selector nativo de cuentas de Google (APK): el token y el nonce crudo que lo protege. */
+export type NativeGoogleCredential =
+  | { kind: 'ok'; idToken: string; nonce: string }
+  | { kind: 'cancelled' }
+  | { kind: 'failed'; reason: 'network' | 'error' };
+
+/**
+ * Entrar con Google: redirigiendo a Google, donde `redirectTo` es adonde vuelve la persona (web), o
+ * con el selector nativo, cuyo token se entrega a Supabase (APK).
+ */
+export type GoogleOption =
+  { redirectTo: () => string } | { native: () => Promise<NativeGoogleCredential> };
 
 export type SupabaseConfig = { url?: string; anonKey?: string };
 
@@ -147,6 +161,20 @@ export function createSupabaseAuth(
     googleAvailable: () => google !== undefined,
     async signInWithGoogle(): Promise<GoogleSignInResult> {
       if (!google) return { kind: 'failed', reason: 'error' };
+      if ('native' in google) {
+        const credential = await google.native();
+        if (credential.kind !== 'ok') return credential;
+        const result = await finish(async () => {
+          const { data, error } = await client.signInWithIdToken({
+            provider: 'google',
+            token: credential.idToken,
+            nonce: credential.nonce,
+          });
+          return { session: data.session, error };
+        });
+        if (result.kind === 'ok') return result;
+        return { kind: 'failed', reason: result.reason === 'network' ? 'network' : 'error' };
+      }
       try {
         const { error } = await client.signInWithOAuth({
           provider: 'google',
