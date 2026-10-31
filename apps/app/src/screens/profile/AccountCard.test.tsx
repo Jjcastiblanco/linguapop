@@ -13,6 +13,7 @@ function authFalso(
   },
 ) {
   let actual: Account | null = null;
+  const borrado: { ok: boolean; reason: 'network' | 'error' } = { ok: true, reason: 'error' };
   const oyentes = new Set<() => void>();
   const llamadas: Array<[string, string, string]> = [];
   const resolver = (modo: string) => async (email: string, password: string) => {
@@ -37,8 +38,14 @@ function authFalso(
       actual = null;
       oyentes.forEach((l) => l());
     }),
+    deleteAccount: vi.fn(async () => {
+      if (!borrado.ok) return { kind: 'failed' as const, reason: borrado.reason };
+      actual = null;
+      oyentes.forEach((l) => l());
+      return { kind: 'ok' as const };
+    }),
   };
-  return { auth, llamadas };
+  return { auth, llamadas, borrado };
 }
 
 async function abrir(auth?: Auth) {
@@ -112,5 +119,57 @@ describe('cuenta en el perfil', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
     await screen.findByText('Sesión iniciada como ana@prueba.test');
     expect(services.progress.getState().events).toHaveLength(antes);
+  });
+
+  describe('borrar la cuenta', () => {
+    async function conSesion(fake = authFalso()) {
+      const services = await abrir(fake.auth);
+      await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+      await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@prueba.test');
+      await userEvent.type(screen.getByLabelText('Contraseña'), 'secreto1');
+      await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+      await screen.findByText('Sesión iniciada como ana@prueba.test');
+      await userEvent.click(screen.getByRole('button', { name: 'Borrar cuenta' }));
+      return { ...fake, services };
+    }
+
+    it('solo se ofrece con la sesión abierta', async () => {
+      await abrir(authFalso().auth);
+      expect(screen.queryByRole('button', { name: 'Borrar cuenta' })).not.toBeInTheDocument();
+    });
+
+    it('pide confirmación y cancelar no borra nada', async () => {
+      const { auth } = await conSesion();
+      const hoja = screen.getByRole('dialog', { name: '¿Borrar tu cuenta?' });
+      expect(within(hoja).getByText(/no se puede deshacer/)).toBeInTheDocument();
+      await userEvent.click(within(hoja).getByRole('button', { name: 'Cancelar' }));
+      expect(auth.deleteAccount).not.toHaveBeenCalled();
+      expect(screen.getByText('Sesión iniciada como ana@prueba.test')).toBeInTheDocument();
+    });
+
+    it('al confirmar borra la cuenta, vuelve a invitado y conserva el progreso del dispositivo', async () => {
+      const { auth, services } = await conSesion();
+      const eventos = services.progress.getState().events.length;
+      await userEvent.click(screen.getByRole('button', { name: 'Sí, borrar mi cuenta' }));
+      expect(await screen.findByText(/Estás como invitado/)).toBeInTheDocument();
+      expect(auth.deleteAccount).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(services.progress.getState().events).toHaveLength(eventos);
+    });
+
+    it('si falla, lo explica, mantiene la sesión y deja reintentar', async () => {
+      const fake = authFalso();
+      fake.borrado.ok = false;
+      fake.borrado.reason = 'network';
+      await conSesion(fake);
+      await userEvent.click(screen.getByRole('button', { name: 'Sí, borrar mi cuenta' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'No hay conexión: tu cuenta no se borró',
+      );
+      expect(screen.getByRole('button', { name: 'Sí, borrar mi cuenta' })).toBeEnabled();
+      fake.borrado.ok = true;
+      await userEvent.click(screen.getByRole('button', { name: 'Sí, borrar mi cuenta' }));
+      expect(await screen.findByText(/Estás como invitado/)).toBeInTheDocument();
+    });
   });
 });

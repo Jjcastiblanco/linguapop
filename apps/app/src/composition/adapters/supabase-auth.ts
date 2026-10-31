@@ -1,5 +1,11 @@
 import { createClient, type AuthError, type Session } from '@supabase/supabase-js';
-import type { Account, Auth, AuthFailure, AuthResult } from '@linguapop/domain';
+import type {
+  Account,
+  Auth,
+  AuthFailure,
+  AuthResult,
+  DeleteAccountResult,
+} from '@linguapop/domain';
 
 /** Lo que el adaptador usa de Supabase Auth; las pruebas lo reemplazan por uno falso. */
 export type AuthClientLike = {
@@ -15,6 +21,11 @@ export type AuthClientLike = {
   }>;
   signOut(): Promise<{ error: AuthError | null }>;
 };
+
+/** La función del servidor que borra la cuenta de la sesión; las pruebas la reemplazan por una falsa. */
+export type DeleteAccountRpc = () => PromiseLike<{
+  error: { message: string; status?: number } | null;
+}>;
 
 export type SupabaseConfig = { url?: string; anonKey?: string };
 
@@ -60,10 +71,14 @@ export const unavailableAuth: Auth = {
   signUp: async () => failed('error'),
   signIn: async () => failed('error'),
   signOut: async () => undefined,
+  deleteAccount: async () => ({ kind: 'failed', reason: 'error' }),
 };
 
 /** Cuentas con Supabase Auth (AD-8). Solo recibe la URL y la clave anónima pública (AD-9). */
-export function createSupabaseAuth(client: AuthClientLike): Auth {
+export function createSupabaseAuth(
+  client: AuthClientLike,
+  deleteAccountRpc: DeleteAccountRpc = async () => ({ error: { message: 'no disponible' } }),
+): Auth {
   let current: Account | null = null;
   const listeners = new Set<() => void>();
   const set = (next: Account | null) => {
@@ -118,6 +133,24 @@ export function createSupabaseAuth(client: AuthClientLike): Auth {
         set(null);
       }
     },
+    async deleteAccount(): Promise<DeleteAccountResult> {
+      if (!current) return { kind: 'failed', reason: 'error' };
+      try {
+        const { error } = await deleteAccountRpc();
+        if (error) {
+          return {
+            kind: 'failed',
+            reason: /fetch|network/i.test(error.message) ? 'network' : 'error',
+          };
+        }
+      } catch {
+        return { kind: 'failed', reason: 'network' };
+      }
+      // El usuario ya no existe: la sesión local no sirve y se cierra sin esperar al servidor.
+      await client.signOut().catch(() => undefined);
+      set(null);
+      return { kind: 'ok' };
+    },
   };
 }
 
@@ -127,5 +160,7 @@ export function createAuthFromConfig({ url, anonKey }: SupabaseConfig): Auth {
   const client = createClient(url, anonKey, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
   });
-  return createSupabaseAuth(client.auth as unknown as AuthClientLike);
+  return createSupabaseAuth(client.auth as unknown as AuthClientLike, () =>
+    client.rpc('delete_my_account'),
+  );
 }

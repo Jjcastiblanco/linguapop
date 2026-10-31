@@ -12,6 +12,8 @@ export type AuthFailure =
 
 export type AuthResult = { kind: 'ok'; account: Account } | { kind: 'failed'; reason: AuthFailure };
 
+export type DeleteAccountResult = { kind: 'ok' } | { kind: 'failed'; reason: 'network' | 'error' };
+
 /**
  * Sesión de la persona (AD-8). Sin sesión la app sigue como invitado con el progreso solo local;
  * si la plataforma no ofrece cuentas, `available()` es falso y la interfaz no las menciona.
@@ -26,4 +28,6 @@ export interface Auth {
   signUp(email: string, password: string): Promise<AuthResult>;
   signIn(email: string, password: string): Promise<AuthResult>;
   signOut(): Promise<void>;
+  /** Borra la cuenta con la sesión abierta y todo lo que tiene en el servidor, y cierra la sesión. */
+  deleteAccount(): Promise<DeleteAccountResult>;
 }

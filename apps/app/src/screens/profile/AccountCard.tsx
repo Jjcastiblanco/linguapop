@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useAccount, useServices } from '../../composition/context';
+import { deleteAccount } from '../../stores';
 import { t, type TextKey } from '../../i18n';
 import { Modal } from '../../ui/Modal';
 import styles from './ProfileScreen.module.css';
@@ -20,6 +21,8 @@ export function AccountCard() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<TextKey | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<TextKey | null>(null);
 
   if (!auth.available()) return null;
 
@@ -41,6 +44,17 @@ export function AccountCard() {
     toast.getState().show(t('account.welcome'));
   }
 
+  async function remove() {
+    if (busy) return;
+    setBusy(true);
+    setDeleteError(null);
+    const result = await deleteAccount(composition);
+    setBusy(false);
+    if (result.kind === 'failed') return setDeleteError(`account.delete.error.${result.reason}`);
+    setConfirmDelete(false);
+    toast.getState().show(t('account.delete.done'));
+  }
+
   return (
     <section className={styles.card} aria-label={t('account.title')}>
       <div className={styles.row}>
@@ -54,14 +68,24 @@ export function AccountCard() {
           </div>
         </div>
         {account ? (
-          <button
-            type="button"
-            className={styles.btn}
-            style={{ flex: 'none' }}
-            onClick={() => void auth.signOut()}
-          >
-            {t('account.signOut')}
-          </button>
+          <>
+            <button
+              type="button"
+              className={styles.btn}
+              style={{ flex: 'none' }}
+              onClick={() => void auth.signOut()}
+            >
+              {t('account.signOut')}
+            </button>
+            <button
+              type="button"
+              className={styles.danger}
+              style={{ flex: 'none' }}
+              onClick={() => setConfirmDelete(true)}
+            >
+              {t('account.delete')}
+            </button>
+          </>
         ) : (
           <button
             type="button"
@@ -73,6 +97,43 @@ export function AccountCard() {
           </button>
         )}
       </div>
+
+      {confirmDelete && account && (
+        <Modal
+          title={t('account.delete.title')}
+          onClose={() => {
+            setConfirmDelete(false);
+            setDeleteError(null);
+          }}
+        >
+          <p className={styles.muted}>{t('account.delete.text')}</p>
+          {deleteError && (
+            <p className={styles.muted} role="alert">
+              {t(deleteError)}
+            </p>
+          )}
+          <div className={styles.sheet}>
+            <button
+              type="button"
+              className={styles.danger}
+              disabled={busy}
+              onClick={() => void remove()}
+            >
+              {busy ? t('account.sending') : t('account.delete.confirm')}
+            </button>
+            <button
+              type="button"
+              className={styles.btn}
+              onClick={() => {
+                setConfirmDelete(false);
+                setDeleteError(null);
+              }}
+            >
+              {t('practice.cancel')}
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {open && (
         <Modal title={t(`account.${mode}.title`)} onClose={close}>

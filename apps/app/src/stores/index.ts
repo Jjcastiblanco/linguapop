@@ -16,7 +16,7 @@ export {
   type ProgressStoreOptions,
   type ProgressStoreState,
 } from './progress-store';
-export { startProgressSync, syncProgress, type SyncResult } from './progress-sync';
+export { deleteAccount, startProgressSync, syncProgress, type SyncResult } from './progress-sync';
 export { notifyProgress, startNotifications } from './notifications';
 export {
   TOAST_MS,
