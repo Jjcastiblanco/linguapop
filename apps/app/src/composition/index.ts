@@ -17,7 +17,7 @@ import { createWebUpdate, type WebUpdate } from './adapters/web-update';
 import { createWebSound, type WebSound } from './adapters/web-sound';
 import { createWebSpeech } from './adapters/web-speech';
 import { createCachedContent } from './adapters/cached-content';
-import { createSupabaseServices } from './adapters/supabase';
+import { createSupabaseServices, type NativeGoogle } from './adapters/supabase';
 
 /** Todo lo que la app necesita del exterior, ya conectado. Se crea una sola vez al arrancar. */
 export type Composition = {
@@ -121,7 +121,11 @@ const CONTENT_SCHEMA_VERSION = seedCourse.schemaVersion;
  */
 export async function composeWithContent(
   make: (overrides: CompositionOverrides) => Composition = createComposition,
-  overrides: CompositionOverrides & { contentRemote?: ContentRemote; googleSignIn?: boolean } = {},
+  overrides: CompositionOverrides & {
+    contentRemote?: ContentRemote;
+    googleSignIn?: boolean;
+    nativeGoogle?: NativeGoogle;
+  } = {},
 ): Promise<Composition> {
   const store = overrides.store ?? createLocalStore(overrides.storage);
   const supabase = createSupabaseServices(
@@ -129,7 +133,7 @@ export async function composeWithContent(
       url: import.meta.env.VITE_SUPABASE_URL,
       anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
     },
-    { google: overrides.googleSignIn },
+    { google: overrides.googleSignIn, nativeGoogle: overrides.nativeGoogle },
   );
   const content = createCachedContent({
     store,

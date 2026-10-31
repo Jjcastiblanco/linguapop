@@ -49,11 +49,13 @@ export function AccountCard() {
     setBusy(true);
     setError(null);
     const result = await auth.signInWithGoogle();
-    // Si va bien la página se va a Google; solo hay que seguir aquí si algo falló.
-    if (result.kind === 'failed') {
-      setBusy(false);
-      setError(`account.error.${result.reason}`);
-    }
+    // En la web, si va bien la página se va a Google; solo hay que seguir aquí si algo falló.
+    if (result.kind === 'redirecting') return;
+    setBusy(false);
+    if (result.kind === 'failed') return setError(`account.error.${result.reason}`);
+    if (result.kind === 'cancelled') return;
+    close();
+    toast.getState().show(t('account.welcome'));
   }
 
   async function remove() {
