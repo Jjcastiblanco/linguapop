@@ -1,4 +1,5 @@
 import { LEGACY_STORAGE_KEY, legacyEventId, legacyImportEvent } from '@linguapop/domain';
+import type { DeleteAccountResult } from '@linguapop/domain';
 import type { Composition } from '../composition';
 import type { ProgressStore } from './progress-store';
 
@@ -101,6 +102,20 @@ export async function syncProgress(c: Composition, progress: ProgressStore): Pro
   }
   // También tras un fallo parcial: lo ya traído o descartado debe verse en el progreso.
   await progress.getState().load();
+  return result;
+}
+
+/**
+ * Borra la cuenta y sus datos en el servidor. El progreso de este dispositivo se conserva como el
+ * de un invitado: se olvida a qué cuenta pertenecía y qué se había enviado, así una cuenta nueva
+ * lo recibe completo en su primera sincronización.
+ */
+export async function deleteAccount(c: Composition): Promise<DeleteAccountResult> {
+  const result = await c.auth.deleteAccount();
+  if (result.kind === 'ok') {
+    await c.store.remove(SYNC_OWNER_KEY);
+    await c.store.remove(SYNCED_KEY);
+  }
   return result;
 }
 

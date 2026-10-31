@@ -3,7 +3,7 @@ import type { Account, Auth, PendingEvent, ProgressEvent, ProgressRemote } from 
 import { createComposition } from '../composition';
 import { createServices } from '../composition/context';
 import { memoria, nuevoId, relojFalso } from '../test/helpers';
-import { syncProgress } from './progress-sync';
+import { deleteAccount, syncProgress } from './progress-sync';
 
 const leccion = (n = 10): PendingEvent => ({
   type: 'session_completed@1',
@@ -58,6 +58,10 @@ function authFalso(inicial: Account | null = null) {
     signUp: async () => ({ kind: 'failed', reason: 'error' }),
     signIn: async () => ({ kind: 'failed', reason: 'error' }),
     signOut: async () => void (actual = null),
+    deleteAccount: async () => {
+      actual = null;
+      return { kind: 'ok' };
+    },
   };
   return { auth, entrar: (a: Account | null) => (actual = a) };
 }
@@ -185,6 +189,21 @@ describe('sincronizar el progreso', () => {
     await a.sync();
     expect(a.progress.getState().progress.xp).toBe(0);
     expect(s.eventos('beto').size).toBe(0);
+  });
+
+  it('al borrar la cuenta el progreso del dispositivo pasa a ser de invitado y lo recibe la cuenta nueva', async () => {
+    const s = servidorFalso();
+    const a = await dispositivo(s);
+    await a.progress.getState().record([leccion()]);
+    await a.sync();
+    const xp = a.progress.getState().progress.xp;
+    expect(await deleteAccount(a.composition)).toEqual({ kind: 'ok' });
+    expect(a.composition.auth.account()).toBeNull();
+    expect(a.progress.getState().progress.xp).toBe(xp);
+    a.entrar(beto);
+    await a.sync();
+    expect(s.eventos('beto').size).toBe(a.progress.getState().events.length);
+    expect(a.progress.getState().progress.xp).toBe(xp);
   });
 
   describe('progreso heredado de linguapop.html', () => {

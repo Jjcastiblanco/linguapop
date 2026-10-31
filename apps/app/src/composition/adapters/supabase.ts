@@ -37,7 +37,9 @@ export function createSupabaseServices({ url, anonKey }: SupabaseConfig): {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
   });
   return {
-    auth: createSupabaseAuth(client.auth as unknown as AuthClientLike),
+    auth: createSupabaseAuth(client.auth as unknown as AuthClientLike, () =>
+      client.rpc('delete_my_account'),
+    ),
     progressRemote: createSupabaseProgressRemote(client as unknown as EventsClientLike),
     contentRemote: createSupabaseContentRemote(client as unknown as ContentClientLike),
   };

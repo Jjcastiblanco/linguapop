@@ -136,6 +136,50 @@ describe('cuentas con Supabase Auth', () => {
   });
 });
 
+describe('borrar la cuenta', () => {
+  it('llama a la función del servidor, cierra la sesión y avisa', async () => {
+    const { client, mock } = clienteFalso();
+    const rpc = vi.fn(async () => ({ error: null }));
+    const auth = createSupabaseAuth(client, rpc);
+    await auth.signIn('ana@prueba.test', 'secreto1');
+    const oyente = vi.fn();
+    auth.subscribe(oyente);
+    expect(await auth.deleteAccount()).toEqual({ kind: 'ok' });
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(mock.signOut).toHaveBeenCalled();
+    expect(auth.account()).toBeNull();
+    expect(oyente).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['sin red', { message: 'TypeError: Failed to fetch' }, 'network'],
+    ['un fallo del servidor', { message: 'se necesita una sesión abierta' }, 'error'],
+  ] as const)(
+    'si falla (%s) mantiene la sesión y explica el motivo',
+    async (_caso, error, reason) => {
+      const { client, mock } = clienteFalso();
+      const auth = createSupabaseAuth(client, async () => ({ error }));
+      await auth.signIn('ana@prueba.test', 'secreto1');
+      expect(await auth.deleteAccount()).toEqual({ kind: 'failed', reason });
+      expect(auth.account()).not.toBeNull();
+      expect(mock.signOut).not.toHaveBeenCalled();
+    },
+  );
+
+  it('una excepción de red también es un fallo y sin sesión no llama al servidor', async () => {
+    const { client } = clienteFalso();
+    const rpc = vi.fn(async () => {
+      throw new Error('caído');
+    });
+    const auth = createSupabaseAuth(client, rpc);
+    expect(await auth.deleteAccount()).toEqual({ kind: 'failed', reason: 'error' });
+    expect(rpc).not.toHaveBeenCalled();
+    await auth.signIn('ana@prueba.test', 'secreto1');
+    expect(await auth.deleteAccount()).toEqual({ kind: 'failed', reason: 'network' });
+    expect(auth.account()).not.toBeNull();
+  });
+});
+
 describe('sin servicio de cuentas', () => {
   it('sin URL o sin clave anónima no hay cuentas y la app sigue de invitado', async () => {
     expect(createAuthFromConfig({})).toBe(unavailableAuth);
