@@ -1,3 +1,4 @@
+import { LEGACY_STORAGE_KEY, legacyEventId, legacyImportEvent } from '@linguapop/domain';
 import type { Composition } from '../composition';
 import type { ProgressStore } from './progress-store';
 
@@ -6,6 +7,9 @@ export const SYNCED_KEY = 'linguapop:synced-ids:v1';
 
 /** Espera tras un cambio de progreso antes de sincronizar, para juntar los eventos de una lección. */
 export const SYNC_DELAY_MS = 2000;
+
+/** Una vez por dispositivo: lo heredado de este navegador pertenece a la primera cuenta que entra. */
+export const LEGACY_DONE_KEY = 'linguapop:legacy-imported:v1';
 
 export type SyncResult = 'synced' | 'skipped' | 'offline';
 
@@ -17,6 +21,36 @@ async function readIds(c: Composition): Promise<Set<string>> {
   } catch {
     return new Set();
   }
+}
+
+/**
+ * Convierte una sola vez por dispositivo el progreso de `linguapop.html` guardado en este navegador en
+ * un evento sintético (AD-15). El id depende de la cuenta: si otro dispositivo ya lo subió, llega
+ * en el `pull` y aquí solo se anota; si no, se crea y sube con los demás eventos pendientes.
+ */
+async function importLegacy(c: Composition, accountId: string): Promise<void> {
+  if (await c.store.get(LEGACY_DONE_KEY)) return;
+  const id = legacyEventId(accountId);
+  if ((await c.progressSink.readAll()).some((e) => e.id === id)) {
+    await c.store.set(LEGACY_DONE_KEY, accountId);
+    return;
+  }
+  const raw = await c.store.get(LEGACY_STORAGE_KEY);
+  if (!raw) return;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return; // datos heredados ilegibles: no hay nada que importar
+  }
+  const event = legacyImportEvent(parsed, {
+    id,
+    nowMs: c.clock.now(),
+    contentVersion: c.contentVersion,
+  });
+  if (!event) return;
+  await c.progressSink.append(event);
+  await c.store.set(LEGACY_DONE_KEY, accountId);
 }
 
 /**
@@ -50,6 +84,7 @@ export async function syncProgress(c: Composition, progress: ProgressStore): Pro
       await c.progressSink.append(e);
       synced.add(e.id);
     }
+    await importLegacy(c, account.id);
     const rejected = await c.progressSink.rejectedIds();
     const pending = (await c.progressSink.readAll())
       .filter((e) => !synced.has(e.id) && !rejected.has(e.id))

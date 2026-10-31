@@ -54,6 +54,39 @@ const Payloads = {
     item: z.enum(['hearts', 'streak_shield']),
     costGems: Entero,
   }),
+  /** Progreso de la versión heredada (`linguapop.html`) convertido, importado una vez por cuenta (AD-15). */
+  legacy_imported: z.object({
+    displayName: z.string().trim().min(1).max(40).optional(),
+    dailyGoalXp: z.number().int().min(1).optional(),
+    xp: Entero,
+    /** Gemas que tenía la versión heredada; se suman a las de la app descontando las iniciales. */
+    gems: Entero,
+    /** Lecciones completadas por id de unidad. */
+    lessonsDone: z.record(Id, Entero),
+    chestsOpened: z.array(Id),
+    stats: z.object({
+      lessons: Entero,
+      correct: Entero,
+      total: Entero,
+      perfect: Entero,
+      timedBest: Entero,
+      calls: Entero,
+      seconds: Entero,
+      callSeconds: Entero,
+    }),
+    streak: z.object({
+      streak: Entero,
+      best: Entero,
+      /** Último día con actividad (`AAAA-MM-DD`); vacío si nunca hubo. */
+      lastDay: z.string(),
+      shieldMonth: z.string(),
+    }),
+    xpByDay: z.record(z.string(), Entero),
+    /** Palabras a mejorar y cuántas veces se fallaron. */
+    words: z.record(z.string().min(1), Entero),
+    /** Logros desbloqueados y cuándo (fecha ISO). */
+    achievements: z.record(Id, z.string()),
+  }),
 } as const;
 
 /** Sobre común de todo evento: el tipo lleva su versión (`nombre@1`). */
@@ -75,6 +108,7 @@ export const ProgressEventSchema = z.discriminatedUnion('type', [
   envelope('call_completed'),
   envelope('settings_changed'),
   envelope('purchase'),
+  envelope('legacy_imported'),
 ]);
 
 export type ProgressEvent = z.infer<typeof ProgressEventSchema>;

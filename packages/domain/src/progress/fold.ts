@@ -242,6 +242,63 @@ function onPurchase(state: ProgressState, e: Of<'purchase@1'>, day: DayKey): Pro
   return { ...s, gems: s.gems - costGems, streak: { ...s.streak, shieldMonth: '' } };
 }
 
+/**
+ * Suma el progreso heredado al actual (AD-15). Es aditivo para que el orden de llegada no importe:
+ * XP, gemas y estadísticas se suman, lo completado se une y la racha toma la más reciente. No
+ * paga bonos: las gemas heredadas ya los incluyen.
+ */
+function onLegacyImported(state: ProgressState, e: Of<'legacy_imported@1'>): ProgressState {
+  const p = e.payload;
+  const sum = (a: Record<string, number>, b: Record<string, number>) => {
+    const out = { ...a };
+    for (const [k, v] of Object.entries(b)) out[k] = (out[k] ?? 0) + v;
+    return out;
+  };
+  const lessonsDone = { ...state.lessonsDone };
+  for (const [unit, n] of Object.entries(p.lessonsDone)) {
+    lessonsDone[unit] = Math.max(lessonsDone[unit] ?? 0, n);
+  }
+  const mine = state.streak;
+  const theirs = p.streak;
+  const streak =
+    theirs.lastDay > mine.lastDay
+      ? { ...theirs, best: Math.max(theirs.best, mine.best) }
+      : { ...mine, best: Math.max(theirs.best, mine.best) };
+  const start = initialProgress();
+  return {
+    ...state,
+    xp: state.xp + p.xp,
+    gems: Math.max(0, state.gems + p.gems - start.gems),
+    lessonsDone,
+    chestsOpened: [...new Set([...state.chestsOpened, ...p.chestsOpened])],
+    stats: {
+      lessons: state.stats.lessons + p.stats.lessons,
+      correct: state.stats.correct + p.stats.correct,
+      total: state.stats.total + p.stats.total,
+      perfect: state.stats.perfect + p.stats.perfect,
+      timedBest: Math.max(state.stats.timedBest, p.stats.timedBest),
+      calls: state.stats.calls + p.stats.calls,
+      seconds: state.stats.seconds + p.stats.seconds,
+      callSeconds: state.stats.callSeconds + p.stats.callSeconds,
+    },
+    streak,
+    xpByDay: sum(state.xpByDay, p.xpByDay),
+    words: sum(state.words, p.words),
+    achievements: { ...p.achievements, ...state.achievements },
+    settings: {
+      ...state.settings,
+      displayName:
+        state.settings.displayName === start.settings.displayName && p.displayName
+          ? p.displayName
+          : state.settings.displayName,
+      dailyGoalXp:
+        state.settings.dailyGoalXp === start.settings.dailyGoalXp && p.dailyGoalXp
+          ? p.dailyGoalXp
+          : state.settings.dailyGoalXp,
+    },
+  };
+}
+
 /** Aplica un evento al estado. Pura: no modifica el estado recibido ni revisa ids repetidos. */
 export function applyEvent(
   state: ProgressState,
@@ -262,6 +319,8 @@ export function applyEvent(
       return onSettingsChanged(state, event);
     case 'purchase@1':
       return onPurchase(state, event, day);
+    case 'legacy_imported@1':
+      return onLegacyImported(state, event);
   }
 }
 
