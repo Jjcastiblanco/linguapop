@@ -32,6 +32,26 @@ const validos = {
   },
   'settings_changed@1': { dailyGoalXp: 100 },
   'purchase@1': { item: 'hearts', costGems: 30 },
+  'legacy_imported@1': {
+    xp: 10,
+    gems: 50,
+    lessonsDone: { 'u-saludos': 1 },
+    chestsOpened: [],
+    stats: {
+      lessons: 1,
+      correct: 5,
+      total: 5,
+      perfect: 0,
+      timedBest: 0,
+      calls: 0,
+      seconds: 30,
+      callSeconds: 0,
+    },
+    streak: { streak: 1, best: 1, lastDay: '2026-10-27', shieldMonth: '' },
+    xpByDay: { '2026-10-27': 10 },
+    words: {},
+    achievements: {},
+  },
 } as const;
 
 const evento = (type: string, payload: unknown, extra: Record<string, unknown> = {}) => ({
@@ -42,7 +62,7 @@ const evento = (type: string, payload: unknown, extra: Record<string, unknown> =
 });
 
 describe('catálogo de eventos', () => {
-  it('declara seis eventos, todos con versión 1', () => {
+  it('declara siete eventos, todos con versión 1', () => {
     expect([...EVENT_TYPES].sort()).toEqual(Object.keys(validos).sort());
     for (const t of EVENT_TYPES) expect(t.endsWith('@1')).toBe(true);
   });

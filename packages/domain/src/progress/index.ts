@@ -17,4 +17,5 @@ export {
   type ProgressState,
   type ProgressStats,
 } from './state';
+export { LEGACY_EVENT_TYPE, LEGACY_STORAGE_KEY, legacyEventId, legacyImportEvent } from './legacy';
 export { recentXp, type DayXp } from './recent-xp';

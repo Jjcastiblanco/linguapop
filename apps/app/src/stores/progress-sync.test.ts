@@ -87,6 +87,17 @@ async function dispositivo(
   return { ...services, ...sesion, sync, m };
 }
 
+const heredado = JSON.stringify({
+  name: 'Lucía',
+  xp: 340,
+  gems: 120,
+  done: { 0: 3, 1: 1 },
+  streak: 4,
+  best: 4,
+  lastDay: '2026-10-27',
+  stats: { lessons: 5, correct: 40, total: 50 },
+});
+
 describe('sincronizar el progreso', () => {
   it('dos dispositivos con la misma cuenta ven el mismo progreso', async () => {
     const s = servidorFalso();
@@ -174,5 +185,45 @@ describe('sincronizar el progreso', () => {
     await a.sync();
     expect(a.progress.getState().progress.xp).toBe(0);
     expect(s.eventos('beto').size).toBe(0);
+  });
+
+  describe('progreso heredado de linguapop.html', () => {
+    const importados = (s: ReturnType<typeof servidorFalso>, cuenta: string) =>
+      [...s.eventos(cuenta).values()].filter((e) => e.type === 'legacy_imported@1');
+
+    it('al iniciar sesión se importa una vez y el XP coincide con el heredado', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s, null);
+      a.m.data.set('linguapop_v1', heredado);
+      a.entrar(ana);
+      expect(await a.sync()).toBe('synced');
+      expect(a.progress.getState().progress.xp).toBe(340);
+      expect(importados(s, 'ana')).toHaveLength(1);
+      await a.sync();
+      await a.sync();
+      expect(a.progress.getState().progress.xp).toBe(340);
+      expect(importados(s, 'ana')).toHaveLength(1);
+    });
+
+    it('otro dispositivo con el mismo dato no lo repite', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      a.m.data.set('linguapop_v1', heredado);
+      await a.sync();
+      const b = await dispositivo(s);
+      b.m.data.set('linguapop_v1', heredado);
+      await b.sync();
+      expect(importados(s, 'ana')).toHaveLength(1);
+      expect(b.progress.getState().progress.xp).toBe(340);
+    });
+
+    it('sin datos heredados o ilegibles no importa nada', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.sync();
+      a.m.data.set('linguapop_v1', '{no es json');
+      await a.sync();
+      expect(importados(s, 'ana')).toHaveLength(0);
+    });
   });
 });

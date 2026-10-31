@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
-import type { ProgressEvent } from '@linguapop/domain';
+import { legacyEventId, legacyImportEvent, type ProgressEvent } from '@linguapop/domain';
 import { createSupabaseProgressRemote, type EventsClientLike } from './supabase-progress-remote';
 
 // Contra una base de Supabase real y local: se corre con `pnpm db:test:auth` (y en el CI, job
@@ -58,5 +58,17 @@ describe.skipIf(!url || !anonKey)('copia del progreso contra Supabase local', ()
     const out = await a.push([bueno, malo]);
     expect(out).toEqual({ accepted: [bueno.id], rejected: [malo.id] });
     expect(await a.pull()).toEqual([bueno]);
+  });
+
+  it('guarda la importación heredada con source = legacy y la devuelve completa', async () => {
+    const c = correo();
+    const a = await dispositivo(c);
+    const importado = legacyImportEvent(
+      { xp: 340, gems: 120, done: { 0: 3 }, stats: { lessons: 5 } },
+      { id: legacyEventId(c), nowMs: Date.now(), contentVersion: 0 },
+    )!;
+    expect(await a.push([importado])).toEqual({ accepted: [importado.id], rejected: [] });
+    expect(await a.push([importado])).toEqual({ accepted: [importado.id], rejected: [] });
+    expect(await (await dispositivo(c)).pull()).toEqual([importado]);
   });
 });

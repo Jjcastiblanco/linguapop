@@ -69,6 +69,18 @@ describe('copia del progreso en Supabase', () => {
     );
   });
 
+  it('marca la importación heredada con source = legacy', async () => {
+    const { cliente, upsert } = clienteFalso({});
+    const importado = {
+      ...evento(1),
+      type: 'legacy_imported@1',
+      payload: {},
+    } as unknown as ProgressEvent;
+    await createSupabaseProgressRemote(cliente).push([importado, evento(2)]);
+    const filas = upsert.mock.calls[0]![0] as unknown as Array<{ source: string }>;
+    expect(filas.map((f) => f.source)).toEqual(['legacy', 'app']);
+  });
+
   it('si un lote falla de forma definitiva, aísla el evento malo y acepta el resto', async () => {
     const malo = evento(2).id;
     const { cliente } = clienteFalso({

@@ -1,4 +1,5 @@
 import {
+  LEGACY_EVENT_TYPE,
   parseKnownEvents,
   type ProgressEvent,
   type ProgressRemote,
@@ -20,7 +21,9 @@ type RemoteError = { code?: string; message: string; status?: number };
 export type EventsClientLike = {
   from(table: 'progress_events'): {
     upsert(
-      rows: Array<Omit<EventRow, 'content_version'> & { content_version: string; source: 'app' }>,
+      rows: Array<
+        Omit<EventRow, 'content_version'> & { content_version: string; source: 'app' | 'legacy' }
+      >,
       options: { onConflict: 'id'; ignoreDuplicates: true },
     ): PromiseLike<{ error: RemoteError | null; status?: number }>;
     select(columns: string): OrderedQuery;
@@ -62,7 +65,8 @@ const toRow = (e: ProgressEvent) => ({
   payload: e.payload,
   occurred_at: e.occurredAt,
   content_version: String(e.contentVersion),
-  source: 'app' as const,
+  // La importación de lo heredado se distingue en el servidor del progreso hecho en la app.
+  source: e.type === LEGACY_EVENT_TYPE ? ('legacy' as const) : ('app' as const),
 });
 
 const fromRow = (r: EventRow): unknown => ({
