@@ -81,17 +81,15 @@ export function AccountCard() {
             {account ? t('account.signedIn', { email: account.email ?? '' }) : t('account.guest')}
           </div>
         </div>
-        {!account && (
-          <button
-            type="button"
-            className={styles.btn}
-            style={{ flex: 'none' }}
-            onClick={() => setOpen(true)}
-          >
+      </div>
+
+      {!account && (
+        <div className={styles.row}>
+          <button type="button" className={styles.btn} onClick={() => setOpen(true)}>
             {t('account.open')}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {account && (
         <div className={styles.row}>
