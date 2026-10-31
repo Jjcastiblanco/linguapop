@@ -79,26 +79,7 @@ export function AccountCard() {
             {account ? t('account.signedIn', { email: account.email ?? '' }) : t('account.guest')}
           </div>
         </div>
-        {account ? (
-          <>
-            <button
-              type="button"
-              className={styles.btn}
-              style={{ flex: 'none' }}
-              onClick={() => void auth.signOut()}
-            >
-              {t('account.signOut')}
-            </button>
-            <button
-              type="button"
-              className={styles.danger}
-              style={{ flex: 'none' }}
-              onClick={() => setConfirmDelete(true)}
-            >
-              {t('account.delete')}
-            </button>
-          </>
-        ) : (
+        {!account && (
           <button
             type="button"
             className={styles.btn}
@@ -109,6 +90,22 @@ export function AccountCard() {
           </button>
         )}
       </div>
+
+      {account && (
+        <div className={styles.row}>
+          <button type="button" className={styles.btn} onClick={() => void auth.signOut()}>
+            {t('account.signOut')}
+          </button>
+          <button
+            type="button"
+            className={styles.btn}
+            style={{ color: 'var(--bad)', borderColor: 'var(--bad)' }}
+            onClick={() => setConfirmDelete(true)}
+          >
+            {t('account.delete')}
+          </button>
+        </div>
+      )}
 
       {confirmDelete && account && (
         <Modal
