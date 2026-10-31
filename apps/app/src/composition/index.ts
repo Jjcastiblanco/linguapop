@@ -1,6 +1,14 @@
 import { seedCourse } from '@linguapop/content';
 import type { Course } from '@linguapop/content';
-import type { Auth, Clock, ContentSource, ProgressRemote, Random, Speech } from '@linguapop/domain';
+import type {
+  Auth,
+  Clock,
+  ContentRemote,
+  ContentSource,
+  ProgressRemote,
+  Random,
+  Speech,
+} from '@linguapop/domain';
 import type { ProgressContext } from '@linguapop/domain';
 import { createLocalProgressSink, type LocalProgressSink } from './adapters/local-progress-sink';
 import { createLocalStore, type StorageLike, type WebLocalStore } from './adapters/local-store';
@@ -8,6 +16,7 @@ import { createWebInstall, type WebInstall } from './adapters/web-install';
 import { createWebUpdate, type WebUpdate } from './adapters/web-update';
 import { createWebSound, type WebSound } from './adapters/web-sound';
 import { createWebSpeech } from './adapters/web-speech';
+import { createCachedContent } from './adapters/cached-content';
 import { createSupabaseServices } from './adapters/supabase';
 
 /** Todo lo que la app necesita del exterior, ya conectado. Se crea una sola vez al arrancar. */
@@ -54,6 +63,8 @@ export type CompositionOverrides = Partial<
     | 'update'
     | 'auth'
     | 'progressRemote'
+    | 'store'
+    | 'contentVersion'
   >
 > & {
   storage?: StorageLike | null;
@@ -69,7 +80,7 @@ function deviceTimeZone(): string {
 
 /** Raíz de composición (AD-10): el único lugar que elige adaptadores concretos para esta plataforma. */
 export function createComposition(overrides: CompositionOverrides = {}): Composition {
-  const store = createLocalStore(overrides.storage);
+  const store = overrides.store ?? createLocalStore(overrides.storage);
   const course = overrides.course ?? seedCourse;
   // Un solo cliente de Supabase para las cuentas y la copia del progreso; solo se crea si hace falta.
   const supabase =
@@ -95,7 +106,43 @@ export function createComposition(overrides: CompositionOverrides = {}): Composi
     progressRemote: overrides.progressRemote ?? supabase!.progressRemote,
     progressContext: { units, achievements: course.achievements },
     timeZone: overrides.timeZone ?? deviceTimeZone(),
-    contentVersion: 0,
+    contentVersion: overrides.contentVersion ?? 0,
     newId: overrides.newId ?? (() => crypto.randomUUID()),
   };
+}
+
+/** Versión del esquema de contenido que esta app sabe leer (la del contenido semilla). */
+const CONTENT_SCHEMA_VERSION = seedCourse.schemaVersion;
+
+/**
+ * Arranque con contenido publicado (AD-5): lee del almacenamiento local el último snapshot bueno
+ * (o la semilla), compone con él y pide el vigente al servidor en segundo plano para el próximo
+ * arranque. No espera a la red, así que no retrasa la primera pantalla.
+ */
+export async function composeWithContent(
+  make: (overrides: CompositionOverrides) => Composition = createComposition,
+  overrides: CompositionOverrides & { contentRemote?: ContentRemote } = {},
+): Promise<Composition> {
+  const store = overrides.store ?? createLocalStore(overrides.storage);
+  const supabase = createSupabaseServices({
+    url: import.meta.env.VITE_SUPABASE_URL,
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  });
+  const content = createCachedContent({
+    store,
+    remote: overrides.contentRemote ?? supabase.contentRemote,
+    seed: overrides.course ?? seedCourse,
+    schemaVersion: CONTENT_SCHEMA_VERSION,
+  });
+  const { course, version } = await content.loadLocal();
+  const composition = make({
+    auth: supabase.auth,
+    progressRemote: supabase.progressRemote,
+    ...overrides,
+    store,
+    course,
+    contentVersion: version,
+  });
+  void content.refresh().catch(() => undefined);
+  return composition;
 }

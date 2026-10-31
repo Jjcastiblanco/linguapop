@@ -8,6 +8,10 @@ values
   ('00000000-0000-4000-8000-00000000000a', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'a@prueba.test'),
   ('00000000-0000-4000-8000-00000000000b', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'b@prueba.test');
 
+-- La migración de la semilla ya publicó el snapshot 1; la prueba parte de contenido vacío (todo se deshace al terminar).
+delete from public.content_latest;
+delete from public.content_snapshots;
+
 insert into public.content_snapshots (id, schema_version, version, content, status, published_at)
 values
   ('00000000-0000-4000-8000-0000000000c1', 1, 1, '{"units": []}', 'published', now()),
