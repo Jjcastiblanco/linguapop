@@ -1,6 +1,6 @@
 import { seedCourse } from '@linguapop/content';
 import type { Course } from '@linguapop/content';
-import type { Auth, Clock, ContentSource, Random, Speech } from '@linguapop/domain';
+import type { Auth, Clock, ContentSource, ProgressRemote, Random, Speech } from '@linguapop/domain';
 import type { ProgressContext } from '@linguapop/domain';
 import { createLocalProgressSink, type LocalProgressSink } from './adapters/local-progress-sink';
 import { createLocalStore, type StorageLike, type WebLocalStore } from './adapters/local-store';
@@ -8,7 +8,7 @@ import { createWebInstall, type WebInstall } from './adapters/web-install';
 import { createWebUpdate, type WebUpdate } from './adapters/web-update';
 import { createWebSound, type WebSound } from './adapters/web-sound';
 import { createWebSpeech } from './adapters/web-speech';
-import { createAuthFromConfig } from './adapters/supabase-auth';
+import { createSupabaseServices } from './adapters/supabase';
 
 /** Todo lo que la app necesita del exterior, ya conectado. Se crea una sola vez al arrancar. */
 export type Composition = {
@@ -29,6 +29,8 @@ export type Composition = {
   update: WebUpdate;
   /** Cuentas y sesión; sin Supabase configurado la app es solo de invitado. */
   auth: Auth;
+  /** Copia del progreso en el servidor; sin Supabase configurado no hay nada que sincronizar. */
+  progressRemote: ProgressRemote;
   /** Estructura del contenido que el pliegue de eventos necesita. */
   progressContext: ProgressContext;
   /** Zona horaria del dispositivo, para decidir qué es "hoy". */
@@ -51,6 +53,7 @@ export type CompositionOverrides = Partial<
     | 'install'
     | 'update'
     | 'auth'
+    | 'progressRemote'
   >
 > & {
   storage?: StorageLike | null;
@@ -68,6 +71,14 @@ function deviceTimeZone(): string {
 export function createComposition(overrides: CompositionOverrides = {}): Composition {
   const store = createLocalStore(overrides.storage);
   const course = overrides.course ?? seedCourse;
+  // Un solo cliente de Supabase para las cuentas y la copia del progreso; solo se crea si hace falta.
+  const supabase =
+    overrides.auth && overrides.progressRemote
+      ? null
+      : createSupabaseServices({
+          url: import.meta.env.VITE_SUPABASE_URL,
+          anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        });
   const units = course.units.map((u) => ({ id: u.id, lessonIds: u.lessons.map((l) => l.id) }));
   return {
     clock: overrides.clock ?? { now: () => Date.now() },
@@ -80,12 +91,8 @@ export function createComposition(overrides: CompositionOverrides = {}): Composi
     sound: overrides.sound ?? createWebSound(),
     install: overrides.install ?? createWebInstall(),
     update: overrides.update ?? createWebUpdate(),
-    auth:
-      overrides.auth ??
-      createAuthFromConfig({
-        url: import.meta.env.VITE_SUPABASE_URL,
-        anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      }),
+    auth: overrides.auth ?? supabase!.auth,
+    progressRemote: overrides.progressRemote ?? supabase!.progressRemote,
     progressContext: { units, achievements: course.achievements },
     timeZone: overrides.timeZone ?? deviceTimeZone(),
     contentVersion: 0,
