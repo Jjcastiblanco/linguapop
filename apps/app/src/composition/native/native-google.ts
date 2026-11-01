@@ -19,6 +19,9 @@ const errorText = (e: unknown) => {
   return `${typeof code === 'string' ? code : ''} ${typeof message === 'string' ? message : ''}`;
 };
 
+/** Solo el cierre explícito del selector es silencioso; cualquier otro «cancelado» se muestra como error. */
+const isUserCancel = (e: unknown) => (e as { code?: unknown } | null)?.code === 'USER_CANCELLED';
+
 /**
  * Selector nativo de cuentas de Google del APK (Credential Manager). Solo `webClientId`, nunca el
  * ID del cliente Android. No pide `scopes` ni modo offline: el token por defecto ya trae correo y
@@ -53,8 +56,8 @@ export function createNativeGoogle(
       }
       return { kind: 'ok', idToken: result.idToken, nonce: nonce.raw };
     } catch (e) {
+      if (isUserCancel(e)) return { kind: 'cancelled' };
       const text = errorText(e);
-      if (/USER_CANCELLED|cancel/i.test(text)) return { kind: 'cancelled' };
       if (/network|timeout|unreachable/i.test(text)) return { kind: 'failed', reason: 'network' };
       return { kind: 'failed', reason: 'error' };
     }
