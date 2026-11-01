@@ -105,17 +105,63 @@ export async function syncProgress(c: Composition, progress: ProgressStore): Pro
   return result;
 }
 
+/** Eventos del dispositivo que el servidor aún no tiene (los que rechazó no cuentan). */
+async function pendingEvents(c: Composition) {
+  const synced = await readIds(c);
+  const rejected = await c.progressSink.rejectedIds();
+  return (await c.progressSink.readAll()).filter((e) => !synced.has(e.id) && !rejected.has(e.id));
+}
+
 /**
- * Borra la cuenta y sus datos en el servidor. El progreso de este dispositivo se conserva como el
- * de un invitado: se olvida a qué cuenta pertenecía y qué se había enviado, así una cuenta nueva
- * lo recibe completo en su primera sincronización.
+ * Deja el progreso del dispositivo como el de una app recién instalada (R9): sin eventos, sin dueño
+ * de la sincronización ni lo enviado. No toca los ajustes de la interfaz ni los datos de la versión
+ * heredada, y conserva la marca de importación heredada: lo heredado pertenece a la primera cuenta
+ * del dispositivo y otra cuenta en el mismo navegador no debe recibirlo.
  */
-export async function deleteAccount(c: Composition): Promise<DeleteAccountResult> {
-  const result = await c.auth.deleteAccount();
-  if (result.kind === 'ok') {
-    await c.store.remove(SYNC_OWNER_KEY);
-    await c.store.remove(SYNCED_KEY);
+async function resetDeviceProgress(c: Composition, progress: ProgressStore): Promise<void> {
+  await progress.getState().reset();
+  await c.store.remove(SYNC_OWNER_KEY);
+  await c.store.remove(SYNCED_KEY);
+  await progress.getState().load();
+}
+
+export type SignOutResult =
+  { kind: 'ok' } | { kind: 'unsynced'; pending: number } | { kind: 'failed' };
+
+/**
+ * Cierra la sesión y reinicia el progreso del dispositivo, que es de la cuenta y no de quien
+ * venga después. Antes sube lo pendiente; si no se puede (sin red), no cierra y dice cuántos
+ * eventos se perderían, salvo que la persona elija cerrar igual (`force`).
+ */
+export async function signOut(
+  c: Composition,
+  progress: ProgressStore,
+  { force = false }: { force?: boolean } = {},
+): Promise<SignOutResult> {
+  if (c.auth.account() && c.progressRemote.available()) {
+    await syncProgress(c, progress).catch(() => 'offline');
+    if (!force) {
+      const pending = await pendingEvents(c);
+      if (pending.length > 0) return { kind: 'unsynced', pending: pending.length };
+    }
   }
+  await c.auth.signOut().catch(() => undefined);
+  // Si la sesión sigue abierta, el cierre falló y no se borra nada.
+  if (c.auth.account()) return { kind: 'failed' };
+  await resetDeviceProgress(c, progress);
+  return { kind: 'ok' };
+}
+
+/**
+ * Borra la cuenta y sus datos en el servidor y reinicia el progreso del dispositivo, que era de esa
+ * cuenta. Si el servidor falla, no cambia nada.
+ */
+export async function deleteAccount(
+  c: Composition,
+  progress: ProgressStore,
+): Promise<DeleteAccountResult> {
+  const result = await c.auth.deleteAccount();
+  if (result.kind === 'ok') await resetDeviceProgress(c, progress);
   return result;
 }
 

@@ -191,10 +191,15 @@ export const es = {
   'account.signedIn': 'Sesión iniciada como {email}',
   'account.open': 'Crear cuenta o iniciar sesión',
   'account.signOut': 'Cerrar sesión',
+  'account.signOut.title': 'Tienes progreso sin guardar',
+  'account.signOut.text':
+    'Hay {count} cambios que todavía no se subieron, seguramente por falta de conexión. Si esperas, tu sesión sigue abierta y se subirán solos cuando vuelva la red. Si cierras sesión ahora, se perderán.',
+  'account.signOut.wait': 'Esperar',
+  'account.signOut.force': 'Cerrar sesión y perderlo',
   'account.delete': 'Borrar cuenta',
   'account.delete.title': '¿Borrar tu cuenta?',
   'account.delete.text':
-    'Se borran tu cuenta y tu progreso guardado en el servidor, y no se puede deshacer. El progreso de este dispositivo se queda aquí como invitado.',
+    'Se borran tu cuenta y tu progreso guardado en el servidor, y no se puede deshacer. El progreso de este dispositivo también se reinicia.',
   'account.delete.confirm': 'Sí, borrar mi cuenta',
   'account.delete.done': 'Tu cuenta se borró',
   'account.delete.error.network': 'No hay conexión: tu cuenta no se borró. Inténtalo con red.',

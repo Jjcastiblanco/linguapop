@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useAccount, useServices } from '../../composition/context';
-import { deleteAccount } from '../../stores';
+import { deleteAccount, signOut } from '../../stores';
 import { t, type TextKey } from '../../i18n';
 import { Modal } from '../../ui/Modal';
 import styles from './ProfileScreen.module.css';
@@ -12,7 +12,7 @@ type Mode = 'signUp' | 'signIn';
  * sesión la app sigue como invitado; no se muestra si la plataforma no tiene servicio de cuentas.
  */
 export function AccountCard() {
-  const { composition, toast } = useServices();
+  const { composition, toast, progress } = useServices();
   const { auth } = composition;
   const account = useAccount();
   const [open, setOpen] = useState(false);
@@ -23,6 +23,7 @@ export function AccountCard() {
   const [error, setError] = useState<TextKey | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<TextKey | null>(null);
+  const [unsynced, setUnsynced] = useState<number | null>(null);
 
   if (!auth.available()) return null;
 
@@ -58,11 +59,21 @@ export function AccountCard() {
     toast.getState().show(t('account.welcome'));
   }
 
+  async function leave(force = false) {
+    if (busy) return;
+    setBusy(true);
+    const result = await signOut(composition, progress, { force });
+    setBusy(false);
+    if (result.kind === 'unsynced') return setUnsynced(result.pending);
+    setUnsynced(null);
+    if (result.kind === 'failed') toast.getState().show(t('account.error.error'));
+  }
+
   async function remove() {
     if (busy) return;
     setBusy(true);
     setDeleteError(null);
-    const result = await deleteAccount(composition);
+    const result = await deleteAccount(composition, progress);
     setBusy(false);
     if (result.kind === 'failed') return setDeleteError(`account.delete.error.${result.reason}`);
     setConfirmDelete(false);
@@ -93,7 +104,7 @@ export function AccountCard() {
 
       {account && (
         <div className={styles.row}>
-          <button type="button" className={styles.btn} onClick={() => void auth.signOut()}>
+          <button type="button" className={styles.btn} disabled={busy} onClick={() => void leave()}>
             {t('account.signOut')}
           </button>
           <button
@@ -105,6 +116,25 @@ export function AccountCard() {
             {t('account.delete')}
           </button>
         </div>
+      )}
+
+      {unsynced !== null && account && (
+        <Modal title={t('account.signOut.title')} onClose={() => setUnsynced(null)}>
+          <p className={styles.muted}>{t('account.signOut.text', { count: unsynced })}</p>
+          <div className={styles.sheet}>
+            <button type="button" className={styles.btn} onClick={() => setUnsynced(null)}>
+              {t('account.signOut.wait')}
+            </button>
+            <button
+              type="button"
+              className={styles.danger}
+              disabled={busy}
+              onClick={() => void leave(true)}
+            >
+              {t('account.signOut.force')}
+            </button>
+          </div>
+        </Modal>
       )}
 
       {confirmDelete && account && (

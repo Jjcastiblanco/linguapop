@@ -3,7 +3,7 @@ import type { Account, Auth, PendingEvent, ProgressEvent, ProgressRemote } from 
 import { createComposition } from '../composition';
 import { createServices } from '../composition/context';
 import { memoria, nuevoId, relojFalso } from '../test/helpers';
-import { deleteAccount, syncProgress } from './progress-sync';
+import { deleteAccount, signOut, syncProgress } from './progress-sync';
 
 const leccion = (n = 10): PendingEvent => ({
   type: 'session_completed@1',
@@ -193,19 +193,112 @@ describe('sincronizar el progreso', () => {
     expect(s.eventos('beto').size).toBe(0);
   });
 
-  it('al borrar la cuenta el progreso del dispositivo pasa a ser de invitado y lo recibe la cuenta nueva', async () => {
+  it('al borrar la cuenta el progreso del dispositivo se reinicia', async () => {
+    const s = servidorFalso();
+    const a = await dispositivo(s);
+    await a.progress.getState().record([leccion()]);
+    await a.sync();
+    expect(a.progress.getState().progress.xp).toBeGreaterThan(0);
+    expect(await deleteAccount(a.composition, a.progress)).toEqual({ kind: 'ok' });
+    expect(a.composition.auth.account()).toBeNull();
+    expect(a.progress.getState().progress.xp).toBe(0);
+    expect(a.m.data.has('linguapop:sync-owner:v1')).toBe(false);
+    expect(a.m.data.has('linguapop:synced-ids:v1')).toBe(false);
+  });
+
+  it('si el borrado falla no se reinicia nada', async () => {
     const s = servidorFalso();
     const a = await dispositivo(s);
     await a.progress.getState().record([leccion()]);
     await a.sync();
     const xp = a.progress.getState().progress.xp;
-    expect(await deleteAccount(a.composition)).toEqual({ kind: 'ok' });
-    expect(a.composition.auth.account()).toBeNull();
+    a.composition.auth.deleteAccount = async () => ({ kind: 'failed', reason: 'network' });
+    expect(await deleteAccount(a.composition, a.progress)).toEqual({
+      kind: 'failed',
+      reason: 'network',
+    });
     expect(a.progress.getState().progress.xp).toBe(xp);
-    a.entrar(beto);
-    await a.sync();
-    expect(s.eventos('beto').size).toBe(a.progress.getState().events.length);
-    expect(a.progress.getState().progress.xp).toBe(xp);
+  });
+
+  describe('cerrar sesión', () => {
+    it('con todo subido cierra, reinicia y al volver a entrar recupera el progreso', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      await a.sync();
+      const xp = a.progress.getState().progress.xp;
+      expect(await signOut(a.composition, a.progress)).toEqual({ kind: 'ok' });
+      expect(a.composition.auth.account()).toBeNull();
+      expect(a.progress.getState().progress.xp).toBe(0);
+      expect(a.m.data.has('linguapop:sync-owner:v1')).toBe(false);
+      a.entrar(ana);
+      await a.sync();
+      expect(a.progress.getState().progress.xp).toBe(xp);
+    });
+
+    it('con pendientes y red los sube antes de cerrar', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      expect(await signOut(a.composition, a.progress)).toEqual({ kind: 'ok' });
+      expect(a.progress.getState().progress.xp).toBe(0);
+      expect(s.eventos('ana').size).toBeGreaterThan(0);
+    });
+
+    it('con pendientes sin red avisa y no cambia nada; forzar cierra y reinicia', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      s.estado.enLinea = false;
+      const xp = a.progress.getState().progress.xp;
+      const aviso = await signOut(a.composition, a.progress);
+      expect(aviso).toMatchObject({ kind: 'unsynced' });
+      expect(a.composition.auth.account()).toEqual(ana);
+      expect(a.progress.getState().progress.xp).toBe(xp);
+      expect(await signOut(a.composition, a.progress, { force: true })).toEqual({ kind: 'ok' });
+      expect(a.composition.auth.account()).toBeNull();
+      expect(a.progress.getState().progress.xp).toBe(0);
+    });
+
+    it('los eventos que el servidor rechazó no impiden cerrar', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      for (const e of a.progress.getState().events) s.estado.rechazar.add(e.id);
+      s.estado.enLinea = true;
+      await a.sync();
+      s.estado.enLinea = false;
+      expect(await signOut(a.composition, a.progress)).toEqual({ kind: 'ok' });
+    });
+
+    it('un invitado que crea cuenta sigue subiendo su progreso, y otra cuenta no hereda el de la anterior', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s, null);
+      await a.progress.getState().record([leccion()]);
+      a.entrar(ana);
+      await a.sync();
+      expect(s.eventos('ana').size).toBeGreaterThan(0);
+      await signOut(a.composition, a.progress);
+      a.entrar(beto);
+      await a.sync();
+      expect(a.progress.getState().progress.xp).toBe(0);
+      expect(s.eventos('beto').size).toBeLessThanOrEqual(1);
+    });
+
+    it('conserva la marca de importación heredada: otra cuenta no la recibe', async () => {
+      const s = servidorFalso();
+      const m = memoria();
+      m.data.set('linguapop_v1', heredado);
+      const a = await dispositivo(s, ana, m);
+      await a.sync();
+      expect(m.data.get('linguapop:legacy-imported:v1')).toBe('ana');
+      await signOut(a.composition, a.progress);
+      a.entrar(beto);
+      await a.sync();
+      expect(
+        [...s.eventos('beto').values()].filter((e) => e.type === 'legacy_imported@1'),
+      ).toHaveLength(0);
+    });
   });
 
   describe('progreso heredado de linguapop.html', () => {
