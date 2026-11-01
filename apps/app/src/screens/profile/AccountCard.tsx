@@ -54,7 +54,7 @@ export function AccountCard() {
     if (result.kind === 'redirecting') return;
     setBusy(false);
     if (result.kind === 'failed') return setError(`account.error.${result.reason}`);
-    if (result.kind === 'cancelled') return;
+    if (result.kind === 'cancelled') return toast.getState().show(t('account.google.cancelled'));
     close();
     toast.getState().show(t('account.welcome'));
   }
