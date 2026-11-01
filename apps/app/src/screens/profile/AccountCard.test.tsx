@@ -187,6 +187,69 @@ describe('cuenta en el perfil', () => {
     });
   });
 
+  describe('cerrar sesión con progreso sin guardar', () => {
+    const cambio = {
+      type: 'session_completed@1',
+      payload: {
+        mode: 'lesson',
+        unitId: 'u-saludos',
+        lessonId: 'u-saludos-l1',
+        correct: 10,
+        wrong: 0,
+        answered: 10,
+        durationSec: 60,
+        outOfHearts: false,
+      },
+    } as const;
+
+    async function sinRed() {
+      const { auth } = authFalso();
+      const servicios = await crearServicios({
+        storage: memoria().storage,
+        auth,
+        progressRemote: {
+          available: () => true,
+          push: async () => {
+            throw new Error('sin red');
+          },
+          pull: async () => {
+            throw new Error('sin red');
+          },
+        },
+      });
+      renderApp(servicios, '/perfil');
+      await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+      await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@prueba.test');
+      await userEvent.type(screen.getByLabelText('Contraseña'), 'secreto1');
+      await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+      await screen.findByText('Sesión iniciada como ana@prueba.test');
+      await servicios.progress.getState().record([cambio]);
+      return servicios;
+    }
+
+    it('avisa, «Esperar» deja la sesión abierta y el progreso intacto', async () => {
+      const servicios = await sinRed();
+      const xp = servicios.progress.getState().progress.xp;
+      await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+      expect(await screen.findByText('Tienes progreso sin guardar')).toBeInTheDocument();
+      expect(screen.getByText(/se subirán solos cuando vuelva la red/)).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Esperar' }));
+      expect(screen.queryByText('Tienes progreso sin guardar')).not.toBeInTheDocument();
+      expect(screen.getByText('Sesión iniciada como ana@prueba.test')).toBeInTheDocument();
+      expect(servicios.progress.getState().progress.xp).toBe(xp);
+    });
+
+    it('«Cerrar sesión y perderlo» cierra y reinicia el progreso', async () => {
+      const servicios = await sinRed();
+      await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Cerrar sesión y perderlo' }),
+      );
+      expect(await screen.findByText(/Estás como invitado/)).toBeInTheDocument();
+      expect(servicios.progress.getState().progress.xp).toBe(0);
+    });
+  });
+
   describe('borrar la cuenta', () => {
     async function conSesion(fake = authFalso()) {
       const services = await abrir(fake.auth);

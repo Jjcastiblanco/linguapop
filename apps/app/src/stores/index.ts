@@ -16,7 +16,14 @@ export {
   type ProgressStoreOptions,
   type ProgressStoreState,
 } from './progress-store';
-export { deleteAccount, startProgressSync, syncProgress, type SyncResult } from './progress-sync';
+export {
+  deleteAccount,
+  signOut,
+  startProgressSync,
+  syncProgress,
+  type SignOutResult,
+  type SyncResult,
+} from './progress-sync';
 export { notifyProgress, startNotifications } from './notifications';
 export {
   TOAST_MS,
