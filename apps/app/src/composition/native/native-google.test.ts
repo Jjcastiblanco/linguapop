@@ -72,6 +72,17 @@ describe('selector nativo de Google', () => {
     });
   });
 
+  it('un cancelado sin el código del plugin es un error visible, no silencio', async () => {
+    const { plugin, mock } = pluginFalso();
+    mock.login.mockRejectedValueOnce(
+      new Error('Google Sign-In failed: activity is cancelled by the user.'),
+    );
+    expect(await createNativeGoogle('web-id', plugin, () => true)()).toEqual({
+      kind: 'failed',
+      reason: 'error',
+    });
+  });
+
   it('los otros fallos se traducen y una respuesta sin token es un error', async () => {
     const { plugin, mock } = pluginFalso();
     const entrar = createNativeGoogle('web-id', plugin, () => true);
