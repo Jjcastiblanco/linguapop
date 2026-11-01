@@ -29,6 +29,7 @@ describe('selector nativo de Google', () => {
     expect(enviado.options.nonce).not.toBe(result.nonce);
     // Sin scopes: pedirlos exigiría modificar MainActivity.
     expect(enviado.options.scopes).toBeUndefined();
+    expect(enviado.options).toMatchObject({ style: 'bottom', forcePrompt: true });
   });
 
   it('inicializa con el ID del cliente web, una sola vez, y cada entrada usa un nonce nuevo', async () => {
