@@ -49,7 +49,7 @@ export function createNativeGoogle(
       const nonce = await newNonce();
       const { result } = await plugin.login({
         provider: 'google',
-        options: { nonce: nonce.hashed },
+        options: { nonce: nonce.hashed, style: 'bottom', forcePrompt: true },
       });
       if (result.responseType !== 'online' || !result.idToken) {
         return { kind: 'failed', reason: 'error' };
