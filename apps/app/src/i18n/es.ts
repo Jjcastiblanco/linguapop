@@ -217,6 +217,7 @@ export const es = {
   'account.switch.toSignUp': 'Quiero crear una cuenta',
   'account.sending': 'Un momento…',
   'account.welcome': 'Sesión iniciada',
+  'account.google.cancelled': 'Se canceló el inicio con Google. Inténtalo de nuevo.',
   'account.error.invalid-credentials': 'El correo o la contraseña no son correctos.',
   'account.error.email-taken': 'Ese correo ya tiene una cuenta. Prueba iniciar sesión.',
   'account.error.invalid-email': 'Escribe un correo válido.',
