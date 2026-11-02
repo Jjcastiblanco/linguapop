@@ -21,4 +21,6 @@ export type {
   SpeakOptions,
   Speech,
   SpeechCapabilities,
+  VoicePack,
+  VoicePackState,
 } from './speech';

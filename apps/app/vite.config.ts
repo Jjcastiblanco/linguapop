@@ -38,7 +38,17 @@ export const pwaOptions = {
   },
   workbox: {
     globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
-    globIgnores: ['legacy/**'],
+    // La voz de respaldo (worker de 2 MB y su .wasm de 21 MB) solo la baja quien la acepta: no va al
+    // precaché y se guarda en la caché de ejecución de abajo al usarla la primera vez.
+    globIgnores: ['legacy/**', 'assets/kokoro-worker-*.js'],
+    runtimeCaching: [
+      {
+        urlPattern: ({ url }: { url: URL }) =>
+          /\/assets\/(kokoro-worker|ort-wasm)[^/]*\.(js|wasm)$/.test(url.pathname),
+        handler: 'CacheFirst' as const,
+        options: { cacheName: 'voice-pack-runtime' },
+      },
+    ],
     // El alojamiento (Cloudflare Pages) redirige /index.html a /. Precachear esa dirección deja un
     // servicio que, si no encuentra la copia, devuelve una respuesta redirigida y el navegador
     // falla al abrir cualquier ruta (p. ej. al volver de Google a /perfil). Se precachea `/`.
