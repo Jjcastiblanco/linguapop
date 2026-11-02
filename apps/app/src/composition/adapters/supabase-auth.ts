@@ -40,7 +40,7 @@ export type DeleteAccountRpc = () => PromiseLike<{
 export type NativeGoogleCredential =
   | { kind: 'ok'; idToken: string; nonce: string }
   | { kind: 'cancelled' }
-  | { kind: 'failed'; reason: 'network' | 'error' };
+  | { kind: 'failed'; reason: 'network' | 'error'; detail?: string };
 
 /**
  * Entrar con Google: redirigiendo a Google, donde `redirectTo` es adonde vuelve la persona (web), o
@@ -164,16 +164,23 @@ export function createSupabaseAuth(
       if ('native' in google) {
         const credential = await google.native();
         if (credential.kind !== 'ok') return credential;
+        let detail: string | undefined;
         const result = await finish(async () => {
           const { data, error } = await client.signInWithIdToken({
             provider: 'google',
             token: credential.idToken,
             nonce: credential.nonce,
           });
+          if (error) detail = `supabase${error.status ? ` ${error.status}` : ''}: ${error.message}`;
           return { session: data.session, error };
         });
         if (result.kind === 'ok') return result;
-        return { kind: 'failed', reason: result.reason === 'network' ? 'network' : 'error' };
+        console.error('[google] signInWithIdToken falló', detail);
+        return {
+          kind: 'failed',
+          reason: result.reason === 'network' ? 'network' : 'error',
+          detail,
+        };
       }
       try {
         const { error } = await client.signInWithOAuth({

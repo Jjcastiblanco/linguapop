@@ -21,6 +21,7 @@ export function AccountCard() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<TextKey | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<TextKey | null>(null);
   const [unsynced, setUnsynced] = useState<number | null>(null);
@@ -30,6 +31,7 @@ export function AccountCard() {
   const close = () => {
     setOpen(false);
     setError(null);
+    setErrorDetail(null);
     setPassword('');
   };
 
@@ -38,6 +40,7 @@ export function AccountCard() {
     if (busy) return;
     setBusy(true);
     setError(null);
+    setErrorDetail(null);
     const result = await auth[mode](email.trim(), password);
     setBusy(false);
     if (result.kind === 'failed') return setError(`account.error.${result.reason}`);
@@ -49,11 +52,15 @@ export function AccountCard() {
     if (busy) return;
     setBusy(true);
     setError(null);
+    setErrorDetail(null);
     const result = await auth.signInWithGoogle();
     // En la web, si va bien la página se va a Google; solo hay que seguir aquí si algo falló.
     if (result.kind === 'redirecting') return;
     setBusy(false);
-    if (result.kind === 'failed') return setError(`account.error.${result.reason}`);
+    if (result.kind === 'failed') {
+      setErrorDetail(result.detail ?? null);
+      return setError(`account.error.${result.reason}`);
+    }
     if (result.kind === 'cancelled') return toast.getState().show(t('account.google.cancelled'));
     close();
     toast.getState().show(t('account.welcome'));
@@ -209,6 +216,7 @@ export function AccountCard() {
             {error && (
               <p className={styles.muted} role="alert">
                 {t(error)}
+                {errorDetail && <small className={styles.muted}> ({errorDetail})</small>}
               </p>
             )}
             <button

@@ -48,7 +48,7 @@ describe('selector nativo de Google', () => {
     const { plugin, mock } = pluginFalso();
     mock.initialize.mockRejectedValueOnce(new Error('fallo'));
     const entrar = createNativeGoogle('web-id', plugin, () => true);
-    expect(await entrar()).toEqual({ kind: 'failed', reason: 'error' });
+    expect(await entrar()).toMatchObject({ kind: 'failed', reason: 'error', detail: 'fallo' });
     expect(await entrar()).toMatchObject({ kind: 'ok' });
     expect(mock.initialize).toHaveBeenCalledTimes(2);
   });
@@ -81,6 +81,7 @@ describe('selector nativo de Google', () => {
     expect(await createNativeGoogle('web-id', plugin, () => true)()).toEqual({
       kind: 'failed',
       reason: 'error',
+      detail: 'Google Sign-In failed: activity is cancelled by the user.',
     });
   });
 
@@ -88,10 +89,14 @@ describe('selector nativo de Google', () => {
     const { plugin, mock } = pluginFalso();
     const entrar = createNativeGoogle('web-id', plugin, () => true);
     mock.login.mockRejectedValueOnce(new Error('Network error'));
-    expect(await entrar()).toEqual({ kind: 'failed', reason: 'network' });
+    expect(await entrar()).toMatchObject({ kind: 'failed', reason: 'network' });
     mock.login.mockRejectedValueOnce(new Error('28444 Developer console is not set up correctly'));
-    expect(await entrar()).toEqual({ kind: 'failed', reason: 'error' });
+    expect(await entrar()).toEqual({
+      kind: 'failed',
+      reason: 'error',
+      detail: '28444 Developer console is not set up correctly',
+    });
     mock.login.mockResolvedValueOnce(respuesta(null));
-    expect(await entrar()).toEqual({ kind: 'failed', reason: 'error' });
+    expect(await entrar()).toMatchObject({ kind: 'failed', reason: 'error' });
   });
 });
