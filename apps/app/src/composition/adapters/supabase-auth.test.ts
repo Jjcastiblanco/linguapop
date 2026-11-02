@@ -223,7 +223,11 @@ describe('entrar con Google con el selector nativo', () => {
       data: { session: null },
       error: error('bad_jwt', 'nonce mismatch', 400),
     });
-    expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'error' });
+    expect(await auth.signInWithGoogle()).toEqual({
+      kind: 'failed',
+      reason: 'error',
+      detail: 'supabase 400: nonce mismatch',
+    });
     mock.signInWithIdToken.mockRejectedValueOnce(new Error('caído'));
     expect(await auth.signInWithGoogle()).toEqual({ kind: 'failed', reason: 'network' });
     expect(auth.account()).toBeNull();

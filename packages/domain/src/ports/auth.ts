@@ -15,13 +15,13 @@ export type AuthResult = { kind: 'ok'; account: Account } | { kind: 'failed'; re
 /**
  * Entrar con Google: en la web redirige a la página de Google y la sesión llega al volver a la app
  * (`redirecting`); en el APK el selector de cuentas es nativo y termina aquí (`ok`, o `cancelled`
- * si la persona lo cierra).
+ * si la persona lo cierra). `detail` es el texto técnico del fallo, para diagnosticar.
  */
 export type GoogleSignInResult =
   | { kind: 'redirecting' }
   | { kind: 'ok'; account: Account }
   | { kind: 'cancelled' }
-  | { kind: 'failed'; reason: 'network' | 'error' };
+  | { kind: 'failed'; reason: 'network' | 'error'; detail?: string };
 
 export type DeleteAccountResult = { kind: 'ok' } | { kind: 'failed'; reason: 'network' | 'error' };
 

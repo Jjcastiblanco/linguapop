@@ -52,14 +52,18 @@ export function createNativeGoogle(
         options: { nonce: nonce.hashed, style: 'bottom', forcePrompt: true },
       });
       if (result.responseType !== 'online' || !result.idToken) {
-        return { kind: 'failed', reason: 'error' };
+        return { kind: 'failed', reason: 'error', detail: 'sin idToken en la respuesta de Google' };
       }
       return { kind: 'ok', idToken: result.idToken, nonce: nonce.raw };
     } catch (e) {
       if (isUserCancel(e)) return { kind: 'cancelled' };
-      const text = errorText(e);
-      if (/network|timeout|unreachable/i.test(text)) return { kind: 'failed', reason: 'network' };
-      return { kind: 'failed', reason: 'error' };
+      const text = errorText(e).trim();
+      console.error('[google] selector nativo falló', e);
+      const detail = text || undefined;
+      if (/network|timeout|unreachable/i.test(text)) {
+        return { kind: 'failed', reason: 'network', detail };
+      }
+      return { kind: 'failed', reason: 'error', detail };
     }
   };
 }
