@@ -58,6 +58,13 @@ export const es = {
   'listen.slow': 'Escuchar despacio',
   'listen.placeholder': 'Escribe lo que escuchas…',
   'listen.novoice': 'Este dispositivo no puede reproducir voz. La frase es:',
+  'voicepack.offer':
+    'Este navegador no tiene una voz en inglés. Puedes descargar una al dispositivo: son unos {size} MB, una sola vez.',
+  'voicepack.download': 'Descargar voz',
+  'voicepack.bar': 'Avance de la descarga de la voz',
+  'voicepack.downloading': 'Descargando voz… {percent} %',
+  'voicepack.failed': 'No se pudo descargar la voz. Revisa tu conexión e inténtalo de nuevo.',
+  'voicepack.retry': 'Reintentar',
   'speak.title': 'Repite esta frase',
   'speak.hear': 'Escuchar',
   'speak.mic': 'Hablar',
@@ -69,11 +76,11 @@ export const es = {
   'speak.skip': 'Omitir ejercicio',
   'speak.typed.placeholder': 'Escribe la frase…',
   'speak.unavailable.unsupported':
-    'Este dispositivo no admite reconocimiento de voz. Puedes escribir la frase o omitir el ejercicio.',
+    'Este navegador no admite reconocimiento de voz (Firefox no lo incluye). Prueba en Chrome, Edge o Safari, o escribe la frase.',
   'speak.unavailable.not-allowed':
     'Permiso de micrófono denegado. Puedes escribir la frase o omitir el ejercicio.',
   'speak.unavailable.network':
-    'Este navegador no puede usar el servicio de voz. Prueba en Chrome o Edge, o escribe la frase.',
+    'Este navegador no puede usar el servicio de voz. Prueba en Chrome, Edge o Safari, o escribe la frase.',
   'speak.unavailable.no-microphone':
     'No se detecta ningún micrófono. Puedes escribir la frase o omitir el ejercicio.',
   'speak.unavailable.error':

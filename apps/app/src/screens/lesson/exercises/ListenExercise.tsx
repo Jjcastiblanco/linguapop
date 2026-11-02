@@ -1,6 +1,7 @@
 import type { ExerciseOf } from '@linguapop/domain';
 import { useState } from 'react';
 import { useServices } from '../../../composition/context';
+import { useCanSpeak, VoicePackPrompt } from '../VoicePackPrompt';
 import { t } from '../../../i18n';
 import styles from './Exercise.module.css';
 import type { ExerciseProps } from './types';
@@ -19,13 +20,14 @@ export function ListenExercise({
   onSubmit,
 }: ExerciseProps<ExerciseOf<'listen'>>) {
   const { composition } = useServices();
-  const [noVoice, setNoVoice] = useState(() => !composition.speech.capabilities().canSpeak);
+  const { canSpeak, refresh } = useCanSpeak();
+  const noVoice = !canSpeak;
   const [text, setText] = useState('');
 
   const play = async (rate: number) => {
     const ok = await composition.speech.speak(exercise.en, { rate });
     // Un "no" suele ser solo una voz cortada por otra; si la voz se dio por averiada, se enseña la frase.
-    if (!ok && !composition.speech.capabilities().canSpeak) setNoVoice(true);
+    if (!ok) refresh();
   };
 
   return (
@@ -56,6 +58,7 @@ export function ListenExercise({
           {t('listen.novoice')} <b>{exercise.en}</b>
         </p>
       )}
+      <VoicePackPrompt />
       <textarea
         className={styles.field}
         value={text}

@@ -333,7 +333,7 @@ describe('hablar', () => {
     ['not-allowed', 'Permiso de micrófono denegado.'],
     ['network', 'Este navegador no puede usar el servicio de voz.'],
     ['no-microphone', 'No se detecta ningún micrófono.'],
-    ['unsupported', 'Este dispositivo no admite reconocimiento de voz.'],
+    ['unsupported', 'Este navegador no admite reconocimiento de voz'],
     ['error', 'No se pudo iniciar el micrófono.'],
   ] as const)(
     'si el micrófono no está disponible (%s) lo explica y ofrece escribir la frase',
@@ -349,7 +349,7 @@ describe('hablar', () => {
   it('sin reconocimiento de voz desde el principio se escribe la frase, con el parecido exigido a lo escrito', async () => {
     await abrir([SPEAK], { canListen: false });
     expect(screen.getByRole('note')).toHaveTextContent(
-      'Este dispositivo no admite reconocimiento de voz.',
+      'Este navegador no admite reconocimiento de voz',
     );
     await userEvent.type(screen.getByRole('textbox'), e.en);
     await comprobar();
