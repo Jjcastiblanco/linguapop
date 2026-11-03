@@ -94,6 +94,18 @@ describe('voz de respaldo', () => {
     expect(almacen.data.has(VOICE_PACK_KEY)).toBe(false);
   });
 
+  it('si la voz cargada no puede sonar guarda el motivo, sigue lista y lo borra al sonar', async () => {
+    const motor = motorFalso();
+    const pack = createVoicePack(motor, 92, storageFalso());
+    await pack.download();
+    motor.speak.mockRejectedValueOnce(new Error('el navegador bloqueó el audio'));
+    expect(await pack.speak('hi')).toBe(false);
+    expect(pack.error()).toBe('el navegador bloqueó el audio');
+    expect(pack.state()).toBe('ready');
+    expect(await pack.speak('hi')).toBe(true);
+    expect(pack.error()).toBeNull();
+  });
+
   it('sin descargar no habla', async () => {
     const motor = motorFalso();
     const pack = createVoicePack(motor, 92, storageFalso());

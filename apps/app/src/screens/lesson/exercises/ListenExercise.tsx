@@ -23,6 +23,7 @@ export function ListenExercise({
   const { canSpeak, refresh } = useCanSpeak();
   const noVoice = !canSpeak;
   const [text, setText] = useState('');
+  const [revealed, setRevealed] = useState(false);
 
   const play = async (rate: number) => {
     const ok = await composition.speech.speak(exercise.en, { rate });
@@ -53,10 +54,14 @@ export function ListenExercise({
           <span aria-hidden="true">🐢</span>
         </button>
       </div>
-      {noVoice && (
+      {noVoice || revealed ? (
         <p className={styles.notice} role="note">
-          {t('listen.novoice')} <b>{exercise.en}</b>
+          {t(noVoice ? 'listen.novoice' : 'listen.reveal')} <b>{exercise.en}</b>
         </p>
+      ) : (
+        <button type="button" className={styles.reveal} onClick={() => setRevealed(true)}>
+          {t('listen.reveal.button')}
+        </button>
       )}
       <VoicePackPrompt />
       <textarea

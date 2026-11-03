@@ -16,6 +16,10 @@ export type AudioPlayer = {
   stop(): void;
 };
 
+/** Espera máxima (milisegundos) a que el worker genere una frase, y a que el audio del navegador despierte. */
+export const SPEAK_TIMEOUT_MS = 30_000;
+export const RESUME_TIMEOUT_MS = 3_000;
+
 /** Tamaño aproximado de la descarga: modelo `q8` de Kokoro 82M más sus voces. */
 export const KOKORO_SIZE_MB = 92;
 
@@ -46,7 +50,15 @@ function createAudioPlayer(): AudioPlayer {
     async play(samples, rate) {
       stop();
       ctx ??= new AudioContext();
-      if (ctx.state === 'suspended') await ctx.resume();
+      if (ctx.state === 'suspended') {
+        // Si el navegador no deja despertar el audio, `resume` no responde nunca: se avisa en vez de quedar mudo.
+        await Promise.race([
+          ctx.resume(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('el navegador bloqueó el audio')), RESUME_TIMEOUT_MS),
+          ),
+        ]);
+      }
       const buffer = ctx.createBuffer(1, samples.length, rate);
       buffer.copyToChannel(new Float32Array(samples), 0);
       await new Promise<void>((resolve) => {
@@ -69,7 +81,8 @@ function createAudioPlayer(): AudioPlayer {
 /**
  * Voz de respaldo (AD-11): Kokoro 82M en un worker, con las muestras reproducidas por Web Audio.
  * El modelo lo baja y guarda la propia biblioteca en la caché del navegador. Se crea el worker al
- * cargar y se ocupa una sola frase a la vez: pedir otra corta la anterior.
+ * cargar y se ocupa una sola frase a la vez: pedir otra corta la anterior. Los fallos de síntesis o
+ * de audio se lanzan para que quien lo usa pueda mostrarlos.
  */
 export function createKokoroEngine(env: EngineEnv = browserEngineEnv()): TtsEngine {
   let worker: ReturnType<EngineEnv['createWorker']> | null = null;
@@ -77,13 +90,14 @@ export function createKokoroEngine(env: EngineEnv = browserEngineEnv()): TtsEngi
   let nextId = 0;
   let onProgress: ((f: number) => void) | null = null;
   let loading: { resolve: () => void; reject: (e: Error) => void } | null = null;
-  const speaking = new Map<number, (samples: Float32Array | null, rate: number) => void>();
+  type Heard = { samples: Float32Array; rate: number };
+  const speaking = new Map<number, (result: Heard | Error) => void>();
 
   const send = (m: ToWorker) => worker?.postMessage(m);
   const fail = (e: Error) => {
     loading?.reject(e);
     loading = null;
-    for (const done of speaking.values()) done(null, 0);
+    for (const done of speaking.values()) done(e);
     speaking.clear();
     worker?.terminate();
     worker = null;
@@ -106,10 +120,10 @@ export function createKokoroEngine(env: EngineEnv = browserEngineEnv()): TtsEngi
           else if (m.type === 'ready') {
             loading?.resolve();
             loading = null;
-          } else if (m.type === 'audio') speaking.get(m.id)?.(m.samples, m.rate);
+          } else if (m.type === 'audio') speaking.get(m.id)?.({ samples: m.samples, rate: m.rate });
           else if (m.type === 'error') {
             if (m.id === undefined) fail(new Error(m.message));
-            else speaking.get(m.id)?.(null, 0);
+            else speaking.get(m.id)?.(new Error(m.message));
           }
         };
         send({ type: 'load' });
@@ -120,13 +134,20 @@ export function createKokoroEngine(env: EngineEnv = browserEngineEnv()): TtsEngi
       player ??= env.createPlayer();
       player.stop();
       const id = ++nextId;
-      const heard = await new Promise<{ samples: Float32Array; rate: number } | null>((resolve) => {
-        speaking.set(id, (samples, rate) => resolve(samples ? { samples, rate } : null));
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const heard = await new Promise<Heard | Error>((resolve) => {
+        speaking.set(id, resolve);
+        timer = setTimeout(
+          () => resolve(new Error('tiempo agotado generando la voz')),
+          SPEAK_TIMEOUT_MS,
+        );
         send({ type: 'speak', id, text, speed: options.rate ?? 1 });
       });
+      clearTimeout(timer);
       speaking.delete(id);
       // Otra frase pidió su turno mientras esta se generaba: esta ya no suena.
-      if (!heard || id !== nextId) return false;
+      if (id !== nextId) return false;
+      if (heard instanceof Error) throw heard;
       await player.play(heard.samples, heard.rate);
       return true;
     },

@@ -46,6 +46,8 @@ export interface VoicePack {
   subscribe(listener: () => void): () => void;
   /** Descarga y prepara la voz; devuelve si quedó lista. */
   download(): Promise<boolean>;
+  /** Por qué falló la última frase o la carga, o `null` si va bien. Sirve para mostrarlo. */
+  error(): string | null;
   /** La persona eligió esta voz aunque el navegador tenga una propia (p. ej. porque no suena). */
   preferred(): boolean;
   setPreferred(on: boolean): void;

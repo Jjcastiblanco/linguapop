@@ -238,6 +238,19 @@
   box-shadow: none;
 }
 
+.reveal {
+  display: block;
+  margin: 4px auto 8px;
+  border: 0;
+  background: none;
+  padding: 4px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .notice {
   text-align: center;
   color: var(--muted);

@@ -13,6 +13,7 @@ function respaldoFalso() {
   let state: VoicePackState = 'idle';
   let progress = 0;
   let preferida = false;
+  let fallo: string | null = null;
   const listeners = new Set<() => void>();
   const cambiar = (s: VoicePackState, p = progress) => {
     state = s;
@@ -24,6 +25,7 @@ function respaldoFalso() {
     sizeMb: 92,
     state: () => state,
     progress: () => progress,
+    error: () => fallo,
     preferred: () => preferida,
     setPreferred: vi.fn((on: boolean) => {
       preferida = on;
@@ -43,7 +45,11 @@ function respaldoFalso() {
       });
     }),
   };
-  return { pack, cambiar, terminar: (ok: boolean) => terminar(ok) };
+  const fallar = (motivo: string | null) => {
+    fallo = motivo;
+    listeners.forEach((l) => l());
+  };
+  return { pack, cambiar, fallar, terminar: (ok: boolean) => terminar(ok) };
 }
 
 async function abrir({ nativa = false }: { nativa?: boolean } = {}) {
@@ -131,5 +137,16 @@ describe('enlace «¿No se escucha?» cuando el navegador sí tiene voz', () => 
     act(() => terminar(false));
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo descargar la voz');
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+});
+
+describe('cuando la voz de respaldo no suena', () => {
+  it('muestra el motivo del fallo de reproducción', async () => {
+    const { fallar } = await abrir({ nativa: true });
+    expect(screen.queryByText(/No se pudo reproducir la voz/)).toBeNull();
+    act(() => fallar('el navegador bloqueó el audio'));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudo reproducir la voz: el navegador bloqueó el audio',
+    );
   });
 });

@@ -57,6 +57,8 @@ export const es = {
   'listen.play': 'Escuchar',
   'listen.slow': 'Escuchar despacio',
   'listen.placeholder': 'Escribe lo que escuchas…',
+  'listen.reveal.button': 'No puedo escuchar: mostrar la frase',
+  'listen.reveal': 'La frase es:',
   'listen.novoice': 'Este dispositivo no puede reproducir voz. La frase es:',
   'voicepack.offer':
     'Este navegador no tiene una voz en inglés. Puedes descargar una al dispositivo: son unos {size} MB, una sola vez.',
@@ -67,6 +69,7 @@ export const es = {
   'voicepack.retry': 'Reintentar',
   'voicepack.switch': '¿No se escucha? Usar otra voz (descarga unos {size} MB)',
   'voicepack.switchReady': '¿No se escucha? Usar otra voz',
+  'voicepack.error': 'No se pudo reproducir la voz: {detail}',
   'voicepack.back': 'Volver a la voz del navegador',
   'speak.title': 'Repite esta frase',
   'speak.hear': 'Escuchar',
