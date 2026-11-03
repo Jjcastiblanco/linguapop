@@ -3,7 +3,8 @@ import { registerSW } from 'virtual:pwa-register';
 import { startApp } from './bootstrap';
 import { composeWithContent } from './composition';
 import { createWebUpdate } from './composition/adapters/web-update';
-import { createBrowserSpeech } from './composition/adapters/web-voice';
+import { browserRecordingsEnv, withRecordings } from './composition/adapters/recorded-speech';
+import { createWebSpeech } from './composition/adapters/web-speech';
 import { appRoutes } from './routes';
 
 const update = createWebUpdate();
@@ -26,6 +27,7 @@ if (import.meta.env.PROD) {
   });
 }
 
-void composeWithContent(undefined, { update, speech: createBrowserSpeech() }).then((composition) =>
-  startApp(composition, { router: createBrowserRouter(appRoutes) }),
-);
+void composeWithContent(undefined, {
+  update,
+  speech: withRecordings(createWebSpeech(), browserRecordingsEnv()),
+}).then((composition) => startApp(composition, { router: createBrowserRouter(appRoutes) }));
