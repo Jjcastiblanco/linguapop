@@ -69,7 +69,7 @@ export const es = {
   'voicepack.retry': 'Reintentar',
   'voicepack.switch': '¿No se escucha? Usar otra voz (descarga unos {size} MB)',
   'voicepack.switchReady': '¿No se escucha? Usar otra voz',
-  'voicepack.error': 'No se pudo reproducir la voz: {detail}',
+  'voicepack.error': 'Problema con la voz: {detail}',
   'voicepack.back': 'Volver a la voz del navegador',
   'speak.title': 'Repite esta frase',
   'speak.hear': 'Escuchar',
