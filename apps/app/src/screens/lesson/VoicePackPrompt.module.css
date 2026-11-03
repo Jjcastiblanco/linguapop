@@ -40,3 +40,14 @@
   background: var(--primary, #ff7a1a);
   transition: width 0.2s;
 }
+
+.link {
+  border: 0;
+  background: none;
+  padding: 4px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}

@@ -16,15 +16,18 @@ export function useCanSpeak(): { canSpeak: boolean; refresh: () => void } {
 }
 
 /**
- * Ofrece bajar la voz de respaldo cuando el navegador no tiene voz en inglés. Nunca descarga sola:
- * el botón es la aceptación. No pinta nada si ya se puede hablar o si no hay voz de respaldo.
+ * Voz de respaldo. Cuando el navegador no puede hablar en inglés ofrece bajarla; cuando sí puede
+ * deja un enlace para quien no oye nada (los navegadores no avisan si una voz suena o no). Nunca
+ * descarga sola: tocar el botón o el enlace es la aceptación, y el enlace dice cuánto pesa.
+ * No pinta nada si no hay voz de respaldo.
  */
 export function VoicePackPrompt() {
   const { composition } = useServices();
   const { canSpeak } = useCanSpeak();
   const pack = composition.speech.voicePack;
-  if (!pack || canSpeak) return null;
+  if (!pack) return null;
   const state = pack.state();
+  const preferred = pack.preferred();
 
   if (state === 'downloading') {
     const percent = Math.round(pack.progress() * 100);
@@ -45,13 +48,55 @@ export function VoicePackPrompt() {
     );
   }
 
+  if (!canSpeak) {
+    return (
+      <div className={styles.box}>
+        <p className={styles.text} role={state === 'failed' ? 'alert' : undefined}>
+          {state === 'failed' ? t('voicepack.failed') : t('voicepack.offer', { size: pack.sizeMb })}
+        </p>
+        <button type="button" className={styles.button} onClick={() => void pack.download()}>
+          {state === 'failed' ? t('voicepack.retry') : t('voicepack.download')}
+        </button>
+      </div>
+    );
+  }
+
+  if (state === 'failed' && preferred) {
+    return (
+      <div className={styles.box}>
+        <p className={styles.text} role="alert">
+          {t('voicepack.failed')}
+        </p>
+        <button type="button" className={styles.button} onClick={() => void pack.download()}>
+          {t('voicepack.retry')}
+        </button>
+      </div>
+    );
+  }
+
+  if (state === 'ready' && preferred) {
+    return (
+      <div className={styles.box}>
+        <button type="button" className={styles.link} onClick={() => pack.setPreferred(false)}>
+          {t('voicepack.back')}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.box}>
-      <p className={styles.text} role={state === 'failed' ? 'alert' : undefined}>
-        {state === 'failed' ? t('voicepack.failed') : t('voicepack.offer', { size: pack.sizeMb })}
-      </p>
-      <button type="button" className={styles.button} onClick={() => void pack.download()}>
-        {state === 'failed' ? t('voicepack.retry') : t('voicepack.download')}
+      <button
+        type="button"
+        className={styles.link}
+        onClick={() => {
+          pack.setPreferred(true);
+          void pack.download();
+        }}
+      >
+        {state === 'ready'
+          ? t('voicepack.switchReady')
+          : t('voicepack.switch', { size: pack.sizeMb })}
       </button>
     </div>
   );

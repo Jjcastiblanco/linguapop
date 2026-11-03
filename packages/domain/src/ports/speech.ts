@@ -46,6 +46,9 @@ export interface VoicePack {
   subscribe(listener: () => void): () => void;
   /** Descarga y prepara la voz; devuelve si quedó lista. */
   download(): Promise<boolean>;
+  /** La persona eligió esta voz aunque el navegador tenga una propia (p. ej. porque no suena). */
+  preferred(): boolean;
+  setPreferred(on: boolean): void;
 }
 
 /** Voz de entrada y salida (AD-11): siempre degrada, nunca bloquea una lección. */
