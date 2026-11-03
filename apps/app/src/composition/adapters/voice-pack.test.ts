@@ -4,6 +4,7 @@ import {
   createVoicePack,
   nativeEnglishVoice,
   VOICE_PACK_KEY,
+  VOICE_PREFER_KEY,
   VOICES_GRACE_MS,
   withVoicePack,
   type PackStorage,
@@ -185,6 +186,49 @@ describe('voz del navegador con respaldo', () => {
     expect(motor.speak).toHaveBeenCalledWith('hi', { rate: 0.5 });
     await speech.listen();
     expect(base.listen).toHaveBeenCalled();
+  });
+
+  it('si la persona la prefiere y ya está lista, habla con ella aunque el navegador pueda', async () => {
+    const motor = motorFalso();
+    const pack = createVoicePack(motor, 92, storageFalso());
+    const base = baseFalsa(true);
+    const speech = withVoicePack(base, pack, () => true);
+    await pack.download();
+    expect(await speech.speak('hi')).toBe(true);
+    expect(base.speak).toHaveBeenCalledTimes(1); // aún sin preferirla, habla el navegador
+    pack.setPreferred(true);
+    expect(await speech.speak('hi')).toBe(true);
+    expect(base.speak).toHaveBeenCalledTimes(1);
+    expect(motor.speak).toHaveBeenCalledTimes(1);
+    pack.setPreferred(false);
+    await speech.speak('hi');
+    expect(base.speak).toHaveBeenCalledTimes(2);
+  });
+
+  it('preferirla sin tenerla descargada sigue hablando con la del navegador', async () => {
+    const motor = motorFalso();
+    const pack = createVoicePack(motor, 92, storageFalso());
+    const base = baseFalsa(true);
+    const speech = withVoicePack(base, pack, () => true);
+    pack.setPreferred(true);
+    expect(await speech.speak('hi')).toBe(true);
+    expect(base.speak).toHaveBeenCalled();
+    expect(motor.speak).not.toHaveBeenCalled();
+  });
+
+  it('la preferencia se recuerda en el dispositivo y avisa a quien escucha', () => {
+    const almacen = storageFalso();
+    const pack = createVoicePack(motorFalso(), 92, almacen);
+    const avisos = vi.fn();
+    pack.subscribe(avisos);
+    pack.setPreferred(true);
+    expect(almacen.data.get(VOICE_PREFER_KEY)).toBe('1');
+    expect(avisos).toHaveBeenCalledTimes(1);
+    pack.setPreferred(true); // sin cambio, sin aviso
+    expect(avisos).toHaveBeenCalledTimes(1);
+    expect(createVoicePack(motorFalso(), 92, almacen).preferred()).toBe(true);
+    pack.setPreferred(false);
+    expect(almacen.data.has(VOICE_PREFER_KEY)).toBe(false);
   });
 
   it('cancel corta las dos voces', () => {

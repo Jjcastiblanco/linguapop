@@ -14,6 +14,8 @@ export type TtsEngine = {
 export type PackStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 export const VOICE_PACK_KEY = 'linguapop:voicepack:v1';
+/** Dónde se recuerda que la persona prefiere esta voz a la del navegador. */
+export const VOICE_PREFER_KEY = 'linguapop:voicepack:prefer:v1';
 
 /** Tiempo (milisegundos) que se espera a que el navegador publique sus voces antes de darlas por vacías. */
 export const VOICES_GRACE_MS = 1500;
@@ -34,7 +36,8 @@ export function createVoicePack(
   storage: PackStorage | null = safeStorage(),
 ): VoicePackController {
   const listeners = new Set<() => void>();
-  let state: VoicePackState = read(storage) ? 'ready' : 'idle';
+  let state: VoicePackState = read(storage, VOICE_PACK_KEY) ? 'ready' : 'idle';
+  let preferred = read(storage, VOICE_PREFER_KEY);
   let progress = 0;
   let loaded: Promise<void> | null = null;
   let downloading: Promise<boolean> | null = null;
@@ -58,6 +61,13 @@ export function createVoicePack(
     sizeMb,
     state: () => state,
     progress: () => progress,
+    preferred: () => preferred,
+    setPreferred(on) {
+      if (on === preferred) return;
+      preferred = on;
+      write(storage, VOICE_PREFER_KEY, on);
+      notify();
+    },
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -68,7 +78,7 @@ export function createVoicePack(
         set('downloading', 0);
         try {
           await ensureLoaded();
-          write(storage, true);
+          write(storage, VOICE_PACK_KEY, true);
           set('ready', 1);
           return true;
         } catch {
@@ -89,7 +99,7 @@ export function createVoicePack(
       } catch {
         // La copia guardada ya no sirve (caché borrada): se pide de nuevo en vez de quedar muda.
         loaded = null;
-        write(storage, false);
+        write(storage, VOICE_PACK_KEY, false);
         set('idle', 0);
         return false;
       }
@@ -105,17 +115,17 @@ function safeStorage(): PackStorage | null {
     return null;
   }
 }
-function read(storage: PackStorage | null): boolean {
+function read(storage: PackStorage | null, key: string): boolean {
   try {
-    return storage?.getItem(VOICE_PACK_KEY) === '1';
+    return storage?.getItem(key) === '1';
   } catch {
     return false;
   }
 }
-function write(storage: PackStorage | null, on: boolean) {
+function write(storage: PackStorage | null, key: string, on: boolean) {
   try {
-    if (on) storage?.setItem(VOICE_PACK_KEY, '1');
-    else storage?.removeItem(VOICE_PACK_KEY);
+    if (on) storage?.setItem(key, '1');
+    else storage?.removeItem(key);
   } catch {
     /* sin almacenamiento: se vuelve a preguntar en la próxima visita */
   }
@@ -148,12 +158,15 @@ export function withVoicePack(
   hasNativeVoice: () => boolean,
 ): Speech {
   const nativeOk = () => base.capabilities().canSpeak && hasNativeVoice();
+  // La de respaldo habla si ya está lista y la persona la prefirió, o si el navegador no puede.
+  const usePack = () => pack.state() === 'ready' && (pack.preferred() || !nativeOk());
   return {
     capabilities: () => ({
       canSpeak: nativeOk() || pack.state() === 'ready',
       canListen: base.capabilities().canListen,
     }),
     async speak(text, options) {
+      if (usePack()) return pack.speak(text, options);
       if (nativeOk()) {
         const ok = await base.speak(text, options);
         if (ok || nativeOk()) return ok; // si la voz del sistema se dio por averiada, se prueba la otra

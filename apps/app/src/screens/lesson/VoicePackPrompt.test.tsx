@@ -12,6 +12,7 @@ const TARJETAS = [{ en: 'Hello', es: 'Hola' }];
 function respaldoFalso() {
   let state: VoicePackState = 'idle';
   let progress = 0;
+  let preferida = false;
   const listeners = new Set<() => void>();
   const cambiar = (s: VoicePackState, p = progress) => {
     state = s;
@@ -23,6 +24,11 @@ function respaldoFalso() {
     sizeMb: 92,
     state: () => state,
     progress: () => progress,
+    preferred: () => preferida,
+    setPreferred: vi.fn((on: boolean) => {
+      preferida = on;
+      listeners.forEach((l) => l());
+    }),
     subscribe: (l) => {
       listeners.add(l);
       return () => listeners.delete(l);
@@ -40,10 +46,10 @@ function respaldoFalso() {
   return { pack, cambiar, terminar: (ok: boolean) => terminar(ok) };
 }
 
-async function abrir() {
+async function abrir({ nativa = false }: { nativa?: boolean } = {}) {
   const r = respaldoFalso();
   const speech = {
-    capabilities: () => ({ canSpeak: r.pack.state() === 'ready', canListen: false }),
+    capabilities: () => ({ canSpeak: nativa || r.pack.state() === 'ready', canListen: false }),
     speak: vi.fn(async () => true),
     listen: vi.fn(async () => ({ kind: 'unavailable', reason: 'unsupported' }) as const),
     cancel: vi.fn(),
@@ -88,5 +94,42 @@ describe('oferta de la voz de respaldo', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo descargar la voz');
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
     expect(pack.download).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('enlace «¿No se escucha?» cuando el navegador sí tiene voz', () => {
+  it('muestra el enlace con el tamaño y no descarga sola', async () => {
+    const { pack } = await abrir({ nativa: true });
+    expect(
+      screen.getByRole('button', {
+        name: /¿No se escucha\? Usar otra voz \(descarga unos 92 MB\)/,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Escuchar la palabra' })).toBeInTheDocument();
+    expect(pack.download).not.toHaveBeenCalled();
+  });
+
+  it('al tocarlo la elige y la descarga; al terminar ofrece volver a la del navegador', async () => {
+    const { pack, terminar } = await abrir({ nativa: true });
+    await userEvent.click(screen.getByRole('button', { name: /¿No se escucha\?/ }));
+    expect(pack.setPreferred).toHaveBeenCalledWith(true);
+    expect(pack.download).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('status')).toHaveTextContent('Descargando voz');
+    act(() => terminar(true));
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Volver a la voz del navegador' }),
+    );
+    expect(pack.setPreferred).toHaveBeenLastCalledWith(false);
+    expect(
+      await screen.findByRole('button', { name: /¿No se escucha\? Usar otra voz$/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('si la descarga elegida falla lo dice y deja reintentar', async () => {
+    const { terminar } = await abrir({ nativa: true });
+    await userEvent.click(screen.getByRole('button', { name: /¿No se escucha\?/ }));
+    act(() => terminar(false));
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo descargar la voz');
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });
