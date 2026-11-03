@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useServices } from '../../../composition/context';
 import { t, type TextKey } from '../../../i18n';
 import styles from './Exercise.module.css';
+import { RecognitionPackPrompt, usePackUpdates } from './RecognitionPackPrompt';
 import type { ExerciseProps } from './types';
 
 type Unavailable = Extract<ListenResult, { kind: 'unavailable' }>['reason'];
@@ -33,6 +34,18 @@ export function SpeakExercise({
   const [status, setStatus] = useState<string>(t('speak.prompt'));
   const [typed, setTyped] = useState('');
   const mounted = useRef(true);
+  const pack = speech.recognitionPack;
+  usePackUpdates(pack);
+
+  // Cuando el reconocimiento de respaldo queda listo, el micrófono vuelve a ofrecerse.
+  const serviceDown = unavailable === 'network' || unavailable === 'unsupported';
+  const packReady = pack?.state() === 'ready';
+  useEffect(() => {
+    if (serviceDown && packReady) {
+      setUnavailable(null);
+      setStatus(t('speak.prompt'));
+    }
+  }, [serviceDown, packReady]);
 
   // Al salir de este ejercicio se corta cualquier voz o escucha en curso.
   useEffect(() => {
@@ -104,6 +117,12 @@ export function SpeakExercise({
           <p className={styles.notice} role="note">
             {t(UNAVAILABLE[unavailable])}
           </p>
+          {serviceDown && <RecognitionPackPrompt pack={pack} />}
+          {unavailable === 'error' && pack?.error() && (
+            <p className={styles.notice} role="alert">
+              {t('recpack.error', { detail: pack.error() ?? '' })}
+            </p>
+          )}
           <textarea
             className={`${styles.field} ${styles.typed}`}
             value={typed}

@@ -70,6 +70,15 @@ export const es = {
   'speak.heard': '“{text}”',
   'speak.skip': 'Omitir ejercicio',
   'speak.typed.placeholder': 'Escribe la frase…',
+  'recpack.offer':
+    'Puedes descargar un reconocimiento de voz al dispositivo: son unos {size} MB, una sola vez. Tarda unos segundos en entender lo que dices.',
+  'recpack.download': 'Descargar reconocimiento de voz',
+  'recpack.downloading': 'Descargando reconocimiento de voz… {percent} %',
+  'recpack.bar': 'Avance de la descarga del reconocimiento de voz',
+  'recpack.failed':
+    'No se pudo descargar el reconocimiento de voz. Revisa tu conexión e inténtalo de nuevo.',
+  'recpack.retry': 'Reintentar',
+  'recpack.error': 'Problema con el reconocimiento de voz: {detail}',
   'speak.unavailable.unsupported':
     'Este navegador no admite reconocimiento de voz (Firefox no lo incluye). Prueba en Chrome, Edge o Safari, o escribe la frase.',
   'speak.unavailable.not-allowed':

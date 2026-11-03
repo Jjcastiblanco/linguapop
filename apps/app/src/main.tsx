@@ -5,6 +5,7 @@ import { composeWithContent } from './composition';
 import { createWebUpdate } from './composition/adapters/web-update';
 import { browserRecordingsEnv, withRecordings } from './composition/adapters/recorded-speech';
 import { createWebSpeech } from './composition/adapters/web-speech';
+import { withWhisperRecognition } from './composition/adapters/web-recognition';
 import { appRoutes } from './routes';
 
 const update = createWebUpdate();
@@ -29,5 +30,5 @@ if (import.meta.env.PROD) {
 
 void composeWithContent(undefined, {
   update,
-  speech: withRecordings(createWebSpeech(), browserRecordingsEnv()),
+  speech: withRecordings(withWhisperRecognition(createWebSpeech()), browserRecordingsEnv()),
 }).then((composition) => startApp(composition, { router: createBrowserRouter(appRoutes) }));
