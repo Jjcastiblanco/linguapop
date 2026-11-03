@@ -1,7 +1,6 @@
 import type { TeachCard } from '@linguapop/content';
 import { useState } from 'react';
 import { useServices } from '../../composition/context';
-import { useCanSpeak, VoicePackPrompt } from './VoicePackPrompt';
 import { t } from '../../i18n';
 import styles from './LessonScreen.module.css';
 import card from './TeachIntro.module.css';
@@ -25,7 +24,7 @@ type Props = {
 export function TeachIntro({ cards, onDone, onClose }: Props) {
   const { composition } = useServices();
   const [index, setIndex] = useState(0);
-  const { canSpeak, refresh } = useCanSpeak();
+  const [canSpeak, setCanSpeak] = useState(() => composition.speech.capabilities().canSpeak);
   const current = cards[index];
   if (!current) return null;
   const last = index === cards.length - 1;
@@ -33,7 +32,7 @@ export function TeachIntro({ cards, onDone, onClose }: Props) {
 
   const play = async (rate: number) => {
     const ok = await composition.speech.speak(current.en, { rate });
-    if (!ok) refresh();
+    if (!ok && !composition.speech.capabilities().canSpeak) setCanSpeak(false);
   };
 
   return (
@@ -72,7 +71,6 @@ export function TeachIntro({ cards, onDone, onClose }: Props) {
             {current.en}
           </p>
           <p className={card.es}>{current.es}</p>
-          <VoicePackPrompt />
           {canSpeak && (
             <div className={card.speakers}>
               <button

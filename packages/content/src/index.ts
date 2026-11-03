@@ -1,3 +1,4 @@
+export * from './audio';
 export * from './schema';
 export * from './teach';
 export * from './tolerant';
