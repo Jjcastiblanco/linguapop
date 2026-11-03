@@ -102,5 +102,6 @@ export function withRecordings(base: Speech, env: RecordingsEnv): Speech {
       env.player.stop();
       base.cancel();
     },
+    ...(base.recognitionPack ? { recognitionPack: base.recognitionPack } : {}),
   };
 }

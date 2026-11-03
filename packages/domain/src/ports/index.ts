@@ -18,6 +18,8 @@ export type { Sound, SoundEffect } from './sound';
 export type {
   ListenOptions,
   ListenResult,
+  ModelPack,
+  ModelPackState,
   SpeakOptions,
   Speech,
   SpeechCapabilities,

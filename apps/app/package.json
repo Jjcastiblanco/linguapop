@@ -16,6 +16,7 @@
     "@capacitor/core": "8.5.3",
     "@capgo/capacitor-social-login": "8.7.5",
     "@capgo/capacitor-speech-recognition": "8.4.6",
+    "@huggingface/transformers": "3.8.1",
     "@linguapop/content": "workspace:*",
     "@linguapop/domain": "workspace:*",
     "@supabase/supabase-js": "2.118.0",
