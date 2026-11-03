@@ -79,12 +79,14 @@ export function createVoicePack(
       downloading ??= (async () => {
         set('downloading', 0);
         try {
+          lastError = null;
           await ensureLoaded();
           write(storage, VOICE_PACK_KEY, true);
           set('ready', 1);
           return true;
-        } catch {
+        } catch (e) {
           loaded = null;
+          lastError = describe(e);
           set('failed', 0);
           return false;
         } finally {

@@ -143,10 +143,10 @@ describe('enlace «¿No se escucha?» cuando el navegador sí tiene voz', () => 
 describe('cuando la voz de respaldo no suena', () => {
   it('muestra el motivo del fallo de reproducción', async () => {
     const { fallar } = await abrir({ nativa: true });
-    expect(screen.queryByText(/No se pudo reproducir la voz/)).toBeNull();
+    expect(screen.queryByText(/Problema con la voz/)).toBeNull();
     act(() => fallar('el navegador bloqueó el audio'));
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'No se pudo reproducir la voz: el navegador bloqueó el audio',
+      'Problema con la voz: el navegador bloqueó el audio',
     );
   });
 });
