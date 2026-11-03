@@ -5,7 +5,7 @@ import { pickVoice, type SpeechEnv } from './web-speech';
 export type TtsEngine = {
   /** Descarga (la primera vez) y prepara el modelo; `onProgress` recibe de 0 a 1. */
   load(onProgress: (fraction: number) => void): Promise<void>;
-  /** Termina al acabar de sonar; devuelve false si no se pudo reproducir. */
+  /** Termina al acabar de sonar; devuelve false si otra frase la cortó y lanza si no pudo sonar. */
   speak(text: string, options?: SpeakOptions): Promise<boolean>;
   cancel(): void;
 };
@@ -39,6 +39,7 @@ export function createVoicePack(
   let state: VoicePackState = read(storage, VOICE_PACK_KEY) ? 'ready' : 'idle';
   let preferred = read(storage, VOICE_PREFER_KEY);
   let progress = 0;
+  let lastError: string | null = null;
   let loaded: Promise<void> | null = null;
   let downloading: Promise<boolean> | null = null;
 
@@ -61,6 +62,7 @@ export function createVoicePack(
     sizeMb,
     state: () => state,
     progress: () => progress,
+    error: () => lastError,
     preferred: () => preferred,
     setPreferred(on) {
       if (on === preferred) return;
@@ -95,18 +97,34 @@ export function createVoicePack(
       if (state !== 'ready') return false;
       try {
         await ensureLoaded();
-        return await engine.speak(text, options);
-      } catch {
+      } catch (e) {
         // La copia guardada ya no sirve (caché borrada): se pide de nuevo en vez de quedar muda.
         loaded = null;
         write(storage, VOICE_PACK_KEY, false);
+        lastError = describe(e);
         set('idle', 0);
+        return false;
+      }
+      try {
+        const ok = await engine.speak(text, options);
+        if (ok && lastError !== null) {
+          lastError = null;
+          notify();
+        }
+        return ok;
+      } catch (e) {
+        // La voz está cargada pero no pudo sonar: se guarda el motivo para mostrarlo.
+        lastError = describe(e);
+        notify();
         return false;
       }
     },
     cancel: () => engine.cancel(),
   };
 }
+
+const describe = (e: unknown) =>
+  (e instanceof Error ? e.message : String(e)) || 'error desconocido';
 
 function safeStorage(): PackStorage | null {
   try {

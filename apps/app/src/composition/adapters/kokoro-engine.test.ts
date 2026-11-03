@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createKokoroEngine, type AudioPlayer, type EngineEnv } from './kokoro-engine';
+import {
+  createKokoroEngine,
+  SPEAK_TIMEOUT_MS,
+  type AudioPlayer,
+  type EngineEnv,
+} from './kokoro-engine';
 import type { FromWorker, ToWorker } from './kokoro-worker';
 
 function entornoFalso() {
@@ -70,11 +75,24 @@ describe('motor de voz de respaldo', () => {
     expect(player.tocado).toEqual([muestras]);
   });
 
-  it('si la síntesis da error, devuelve false', async () => {
+  it('si la síntesis da error, lo lanza con el motivo', async () => {
     const { motor, emitir } = await listo();
     const dicho = motor.speak('hello');
-    emitir({ type: 'error', id: 1, message: 'x' });
-    expect(await dicho).toBe(false);
+    emitir({ type: 'error', id: 1, message: 'fallo de onnx' });
+    await expect(dicho).rejects.toThrow('fallo de onnx');
+  });
+
+  it('si el worker nunca responde, se rinde con tiempo agotado', async () => {
+    vi.useFakeTimers();
+    try {
+      const { motor } = await listo();
+      const dicho = motor.speak('hello');
+      const resultado = expect(dicho).rejects.toThrow('tiempo agotado');
+      await vi.advanceTimersByTimeAsync(SPEAK_TIMEOUT_MS);
+      await resultado;
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('cancelar descarta lo que aún se genera', async () => {

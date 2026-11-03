@@ -256,6 +256,21 @@ describe('escuchar', () => {
     expect(await screen.findByRole('note')).toHaveTextContent(e.en);
   });
 
+  it('«No puedo escuchar» muestra la frase y deja continuar aunque el audio no suene', async () => {
+    const { speech } = await abrir([LISTEN]);
+    speech.speak.mockImplementation(async () => false);
+    await userEvent.click(
+      screen.getByRole('button', { name: 'No puedo escuchar: mostrar la frase' }),
+    );
+    expect(screen.getByRole('note')).toHaveTextContent(`La frase es: ${e.en}`);
+    expect(
+      screen.queryByRole('button', { name: 'No puedo escuchar: mostrar la frase' }),
+    ).toBeNull();
+    await userEvent.type(screen.getByRole('textbox'), e.en);
+    await comprobar();
+    expect(screen.getByTestId('bubble')).toHaveTextContent('¡Bien hecho!');
+  });
+
   it('una voz cortada por otra (sin avería) no muestra la frase', async () => {
     const { speech } = await abrir([LISTEN]);
     speech.speak.mockImplementation(async () => false);

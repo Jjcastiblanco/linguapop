@@ -23,6 +23,24 @@ export function useCanSpeak(): { canSpeak: boolean; refresh: () => void } {
  */
 export function VoicePackPrompt() {
   const { composition } = useServices();
+  useCanSpeak(); // vuelve a pintar cuando cambia el estado de la voz
+  const pack = composition.speech.voicePack;
+  if (!pack) return null;
+  const detail = pack.error();
+  return (
+    <>
+      {detail && pack.state() !== 'downloading' && (
+        <p className={styles.error} role="alert">
+          {t('voicepack.error', { detail })}
+        </p>
+      )}
+      <VoicePackBody />
+    </>
+  );
+}
+
+function VoicePackBody() {
+  const { composition } = useServices();
   const { canSpeak } = useCanSpeak();
   const pack = composition.speech.voicePack;
   if (!pack) return null;
