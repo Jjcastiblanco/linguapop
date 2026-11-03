@@ -9,6 +9,9 @@ export const SYNCED_KEY = 'linguapop:synced-ids:v1';
 /** Espera tras un cambio de progreso antes de sincronizar, para juntar los eventos de una lección. */
 export const SYNC_DELAY_MS = 2000;
 
+/** Cada cuánto vuelve a mirar el servidor una pestaña visible, para ver lo hecho en otro dispositivo. */
+export const SYNC_POLL_MS = 60_000;
+
 /** Una vez por dispositivo: lo heredado de este navegador pertenece a la primera cuenta que entra. */
 export const LEGACY_DONE_KEY = 'linguapop:legacy-imported:v1';
 
@@ -210,10 +213,19 @@ export function startProgressSync(c: Composition, progress: ProgressStore): () =
   if (typeof window !== 'undefined') {
     const onOnline = () => schedule(0);
     const onVisible = () => document.visibilityState === 'visible' && schedule(0);
+    // Pasar a otra ventana no oculta la pestaña (no hay `visibilitychange`): al volver, `focus` avisa.
+    const onFocus = () => schedule(0);
+    // Una pestaña que sigue abierta y a la vista tampoco se entera sola de lo que hizo otro dispositivo.
+    const poll = setInterval(() => {
+      if (document.visibilityState === 'visible') schedule(0);
+    }, SYNC_POLL_MS);
     window.addEventListener('online', onOnline);
+    window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisible);
     stops.push(() => {
+      clearInterval(poll);
       window.removeEventListener('online', onOnline);
+      window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisible);
     });
   }
