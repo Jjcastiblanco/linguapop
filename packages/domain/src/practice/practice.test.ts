@@ -23,6 +23,7 @@ import {
   buildTimedList,
   practiceConfig,
   currentUnitId,
+  isLessonUnlocked,
   isUnitComplete,
   isUnitUnlocked,
   type PracticeInput,
@@ -58,6 +59,17 @@ describe('unidades abiertas', () => {
     expect(isUnitUnlocked(units, { 'u-saludos': 3 }, 'u-comida')).toBe(true);
     expect(isUnitUnlocked(units, { 'u-saludos': 3 }, 'u-familia')).toBe(false);
     expect(isUnitUnlocked(units, {}, 'u-no-existe')).toBe(false);
+  });
+
+  it('una lección se abre hasta la siguiente por hacer y solo en una unidad abierta', () => {
+    expect(isLessonUnlocked(units, {}, 'u-saludos', 'u-saludos-l1')).toBe(true);
+    expect(isLessonUnlocked(units, {}, 'u-saludos', 'u-saludos-l2')).toBe(false);
+    expect(isLessonUnlocked(units, { 'u-saludos': 1 }, 'u-saludos', 'u-saludos-l2')).toBe(true);
+    expect(isLessonUnlocked(units, { 'u-saludos': 1 }, 'u-saludos', 'u-saludos-l1')).toBe(true);
+    expect(isLessonUnlocked(units, { 'u-saludos': 1 }, 'u-saludos', 'u-saludos-l3')).toBe(false);
+    expect(isLessonUnlocked(units, { 'u-saludos': 2 }, 'u-comida', 'u-comida-l1')).toBe(false);
+    expect(isLessonUnlocked(units, { 'u-saludos': 3 }, 'u-comida', 'u-comida-l1')).toBe(true);
+    expect(isLessonUnlocked(units, {}, 'u-saludos', 'u-no-existe')).toBe(false);
   });
 
   it('una unidad está completa con todas sus lecciones', () => {

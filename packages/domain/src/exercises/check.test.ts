@@ -109,7 +109,26 @@ describe('escribir (write)', () => {
   it('tolera una errata de una letra en respuestas de más de 5 letras', () => {
     const r = checkAnswer(write, { type: 'write', text: 'Nice to meat you' });
     expect(r).toMatchObject({ ok: true, typo: true, correctAnswer: 'Nice to meet you' });
-    expect(checkAnswer(write, { type: 'write', text: 'Pleased to meet yu' })).toMatchObject({
+    expect(checkAnswer(write, { type: 'write', text: 'Pleasd to meet you' })).toMatchObject({
+      ok: true,
+      typo: true,
+    });
+  });
+
+  it('no acepta cambiar una palabra corta por otra, aunque sea una sola letra', () => {
+    const pronombre: ExerciseOf<'write'> = { ...write, en: 'he is happy', alternatives: [] };
+    expect(checkAnswer(pronombre, { type: 'write', text: 'she is happy' }).ok).toBe(false);
+    const gato: ExerciseOf<'write'> = { ...write, en: 'I have a cat', alternatives: [] };
+    expect(checkAnswer(gato, { type: 'write', text: 'I have a car' }).ok).toBe(false);
+    expect(checkAnswer(write, { type: 'write', text: 'Nice to meet yu' }).ok).toBe(false);
+  });
+
+  it('tolera un espacio omitido o de más', () => {
+    expect(checkAnswer(write, { type: 'write', text: 'Nice tomeet you' })).toMatchObject({
+      ok: true,
+      typo: true,
+    });
+    expect(checkAnswer(write, { type: 'write', text: 'Nice to me et you' })).toMatchObject({
       ok: true,
       typo: true,
     });

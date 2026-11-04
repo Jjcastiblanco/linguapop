@@ -1,5 +1,6 @@
 import type { Achievement } from '@linguapop/content';
 import { ProgressEventSchema, type ProgressEvent } from '../events';
+import { canPlayLesson } from '../practice/unlock';
 import { ACHIEVEMENT_GEM_BONUS, dailyGoalBonus, scoreCall, scoreSession } from '../scoring';
 import { dayKey, monthKey, registerActivity, type DayKey } from '../streak';
 import {
@@ -139,6 +140,13 @@ function onSessionCompleted(
   const unit = ctx.units.find((u) => u.id === p.unitId);
   const lessonIndex = unit && p.lessonId ? unit.lessonIds.indexOf(p.lessonId) : -1;
   const done = unit ? (state.lessonsDone[unit.id] ?? 0) : 0;
+  // Una lección adelantada (o de una unidad cerrada) no se puede jugar: el evento no cambia nada.
+  if (p.mode === 'lesson' && unit && lessonIndex >= 0) {
+    const unitIndex = ctx.units.indexOf(unit);
+    const before = ctx.units[unitIndex - 1];
+    const unitOpen = !before || (state.lessonsDone[before.id] ?? 0) >= before.lessonIds.length;
+    if (!canPlayLesson(lessonIndex, done, unitOpen)) return state;
+  }
   const score = scoreSession({
     mode: p.mode,
     correct: p.correct,
@@ -214,7 +222,8 @@ function onCallCompleted(
     },
   };
   s = addXp(s, day, score.xp);
-  s = { ...s, streak: registerActivity(s.streak, day, s.settings.plan).state };
+  // Una llamada que no cuenta (colgar al instante, sin intentos) no es práctica y no extiende la racha.
+  if (score.counted) s = { ...s, streak: registerActivity(s.streak, day, s.settings.plan).state };
   return unlockAchievements(s, ctx, day, e.occurredAt);
 }
 

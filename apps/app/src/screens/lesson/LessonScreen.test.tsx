@@ -385,3 +385,23 @@ describe('desde la pantalla Aprender', () => {
     expect(screen.getByRole('heading', { name: '¡Lección completada!' })).toBeInTheDocument();
   });
 });
+
+describe('lecciones cerradas', () => {
+  async function abrirRuta(ruta: string) {
+    const services = await crearServicios({ storage: memoria().storage, clock: relojFalso() });
+    const app = renderApp(services, ruta);
+    return { services, ...app };
+  }
+
+  it('una lección adelantada de la unidad abierta redirige al camino y no empieza sesión', async () => {
+    const { services, router } = await abrirRuta('/leccion/u-saludos/u-saludos-l3');
+    await waitFor(() => expect(router.state.location.pathname).toBe('/aprender'));
+    expect(services.lesson.getState().lesson).toBeNull();
+    expect(services.progress.getState().events).toHaveLength(0);
+  });
+
+  it('una lección de una unidad cerrada redirige al camino', async () => {
+    const { router } = await abrirRuta('/leccion/u-comida/u-comida-l1');
+    await waitFor(() => expect(router.state.location.pathname).toBe('/aprender'));
+  });
+});

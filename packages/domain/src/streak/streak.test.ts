@@ -68,6 +68,12 @@ describe('registerActivity', () => {
     expect(registerActivity(s, hoy, 'pro').state).toBe(s);
   });
 
+  it('si el día retrocede, la racha y el último día no cambian', () => {
+    const s = { streak: 5, best: 7, lastDay: hoy, shieldMonth: '' };
+    expect(registerActivity(s, '2026-10-26', 'free').state).toBe(s);
+    expect(registerActivity(s, '2026-10-20', 'pro').state).toBe(s);
+  });
+
   it('el estado inicial empieza la racha en 1', () => {
     expect(registerActivity(INITIAL_STREAK, hoy, 'free').state).toMatchObject({
       streak: 1,

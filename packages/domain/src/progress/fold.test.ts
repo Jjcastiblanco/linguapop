@@ -3,6 +3,7 @@ import puntuacion from '../../fixtures/puntuacion.json';
 import { ProgressEventSchema } from '../events';
 import { applyEvent, foldEvents, parseKnownEvents } from './fold';
 import { MAX_HEARTS, PRICES, currentHearts, initialProgress, type ProgressState } from './state';
+import { isLessonUnlocked } from '../practice';
 import { TEST_CONTEXT as ctx, UNIT_IDS, evento, sesion } from './test-support';
 
 const HOY = '2026-10-27';
@@ -141,7 +142,7 @@ describe('pliegue: idempotencia y orden', () => {
     const rechazado = new Set([lecciones[1]!.id]);
     const resultado = foldEvents(lecciones, ctx, { rejectedIds: rechazado });
     expect(resultado.lessonsDone['u-saludos']).toBe(1); // la 3 ya no es la siguiente sin la 2
-    expect(resultado.stats.correct).toBe(19); // 10 de la lección 1 y 9 de la 3, sin los 8 rechazados
+    expect(resultado.stats.correct).toBe(10); // solo la lección 1: la 2 se rechazó y la 3 quedó adelantada y no se juega
   });
 
   it('un cliente ignora los eventos de tipos o versiones que no conoce', () => {
@@ -569,5 +570,90 @@ describe('pliegue: tienda de gemas', () => {
     const compra = comprar('hearts', 30);
     const s = foldEvents([compra, compra], ctx, { initial: gratisSinVidas() });
     expect(s.gems).toBe(70);
+  });
+});
+
+// ---------- Lecciones cerradas y llamadas vacías ----------
+
+describe('pliegue: lo que no se puede jugar no da premio', () => {
+  const leccion = (unitId: string, n: number, hora = 10) =>
+    sesion(
+      { mode: 'lesson', unitId, lessonId: `${unitId}-l${n}`, correct: 10, wrong: 0, answered: 10 },
+      `2026-10-27T${String(hora).padStart(2, '0')}:00:00.000Z`,
+    );
+
+  it('una lección adelantada no cambia nada: ni XP, ni gemas, ni racha, ni progreso', () => {
+    const s = foldEvents([leccion('u-saludos', 3)], ctx);
+    expect(s).toEqual(foldEvents([], ctx));
+  });
+
+  it('una lección de una unidad todavía cerrada no cambia nada', () => {
+    expect(foldEvents([leccion('u-comida', 1)], ctx)).toEqual(foldEvents([], ctx));
+  });
+
+  it('repetir la misma lección adelantada no se puede farmear', () => {
+    const s = foldEvents([leccion('u-saludos', 2, 10), leccion('u-saludos', 2, 11)], ctx);
+    expect(s.xp).toBe(0);
+    expect(s.gems).toBe(initialProgress().gems);
+    expect(s.lessonsDone['u-saludos'] ?? 0).toBe(0);
+  });
+
+  it('la siguiente por hacer sí da premio y abre la que sigue', () => {
+    const s = foldEvents([leccion('u-saludos', 1, 10), leccion('u-saludos', 2, 11)], ctx);
+    expect(s.lessonsDone['u-saludos']).toBe(2);
+    expect(s.xp).toBeGreaterThan(0);
+  });
+
+  it('al completar una unidad se abre la siguiente', () => {
+    const s = foldEvents(
+      [
+        leccion('u-saludos', 1, 9),
+        leccion('u-saludos', 2, 10),
+        leccion('u-saludos', 3, 11),
+        leccion('u-comida', 1, 12),
+      ],
+      ctx,
+    );
+    expect(s.lessonsDone['u-comida']).toBe(1);
+  });
+
+  it('una llamada que no cuenta no extiende la racha', () => {
+    const vacia = evento('call_completed@1', {
+      topicId: 't-presentarse',
+      durationSec: 3,
+      completed: false,
+      firstTry: 0,
+      later: 0,
+      gaveUp: 0,
+      weakWords: [],
+      aiExchanges: 0,
+    });
+    expect(foldEvents([vacia], ctx).streak.streak).toBe(0);
+  });
+
+  it('el pliegue y la pantalla aplican la misma regla de desbloqueo', () => {
+    const unidades = ctx.units.map((u) => ({
+      id: u.id,
+      lessons: u.lessonIds.map((id) => ({ id })),
+    })) as unknown as Parameters<typeof isLessonUnlocked>[0];
+    for (const [u, unit] of ctx.units.entries()) {
+      for (const hechas of [0, 1, 2, 3]) {
+        for (const anterior of [0, 2, 3]) {
+          const lessonsDone = {
+            ...Object.fromEntries(ctx.units.slice(0, u).map((x) => [x.id, anterior])),
+            [unit.id]: hechas,
+          };
+          for (const lessonId of unit.lessonIds) {
+            const [, , n] = lessonId.match(/^(.*)-l(\d)$/) ?? [];
+            const inicial = { ...initialProgress(), lessonsDone };
+            const jugada = foldEvents([leccion(unit.id, Number(n))], ctx, { initial: inicial });
+            const pago = jugada.xp > inicial.xp;
+            expect(pago, `${lessonId} con ${JSON.stringify(lessonsDone)}`).toBe(
+              isLessonUnlocked(unidades, lessonsDone, unit.id, lessonId),
+            );
+          }
+        }
+      }
+    }
   });
 });

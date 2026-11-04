@@ -5,6 +5,7 @@ export {
   SPEAK_TYPED_PASS_SIMILARITY,
   TYPO_MAX_DISTANCE,
   TYPO_MIN_LENGTH,
+  TYPO_MIN_WORD_LENGTH,
   checkAnswer,
   correctAnswerOf,
   isCorrectPair,

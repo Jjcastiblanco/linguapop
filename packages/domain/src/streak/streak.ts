@@ -38,6 +38,8 @@ export function registerActivity(
   let { streak, shieldMonth } = state;
   let shieldUsed = false;
   const gap = state.lastDay ? daysBetween(state.lastDay, today) : null;
+  // El día retrocedió (zona horaria al oeste o reloj atrasado): la racha y el último día no cambian.
+  if (gap !== null && gap < 0) return { state, shieldUsed: false };
   if (!state.lastDay || gap === null) {
     streak = 1;
   } else if (gap === 1) {
