@@ -18,4 +18,6 @@ export interface ProgressRemote {
   push(events: readonly ProgressEvent[]): Promise<PushOutcome>;
   /** Todos los eventos de la cuenta que esta versión entiende, también los de otros dispositivos. */
   pull(): Promise<ProgressEvent[]>;
+  /** Ids de los eventos de la cuenta que el servidor guardó como rechazados (AD-7): no cuentan. */
+  rejected(): Promise<string[]>;
 }

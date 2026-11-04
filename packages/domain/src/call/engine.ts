@@ -186,6 +186,7 @@ function end(
           gaveUp: state.gaveUp,
           weakWords: state.weakWords,
           aiExchanges,
+          xp: score.xp,
         },
       },
     },

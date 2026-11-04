@@ -215,6 +215,9 @@ describe('cuenta en el perfil', () => {
           pull: async () => {
             throw new Error('sin red');
           },
+          rejected: async () => {
+            throw new Error('sin red');
+          },
         },
       });
       renderApp(servicios, '/perfil');

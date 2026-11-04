@@ -1,11 +1,19 @@
+import { seedDialogues, seedUnits } from '@linguapop/content';
 import { describe, expect, it } from 'vitest';
 import puntuacion from '../../fixtures/puntuacion.json';
+import { AI_MAX_EXCHANGES } from '../call';
+import { CHEST_XP } from '../path';
+import { PERSONALIZED_SIZE, PLACEMENT_SIZE, REVIEW_SIZE, TIMED_SIZE } from '../practice';
 import {
   ACHIEVEMENT_GEM_BONUS,
   dailyGoalBonus,
+  scoreCall,
   scoreSession,
   type SessionScoreInput,
 } from './index';
+
+/** Tope de XP por evento de la migración `20261104000000_tope_de_xp.sql` (AD-7). */
+const SERVER_MAX_XP_PER_EVENT = 250;
 
 // Los escenarios de referencia salen de linguapop.html: guardan el estado antes y después de
 // terminar una sesión. Aquí se comprueba lo que las reglas de puntuación explican de ese cambio.
@@ -118,5 +126,49 @@ describe('dailyGoalBonus', () => {
   it('no repite el bono si la meta ya estaba cumplida', () => {
     expect(dailyGoalBonus(50, 20, 50)).toBe(0);
     expect(dailyGoalBonus(80, 20, 50)).toBe(0);
+  });
+});
+
+describe('el tope de XP por evento del servidor', () => {
+  it('queda por encima del mayor premio que puede dar una sesión, una llamada o un cofre', () => {
+    const xp = (mode: SessionScoreInput['mode'], n: number, perfect = true) =>
+      scoreSession({
+        mode,
+        correct: n,
+        wrong: perfect ? 0 : 1,
+        answered: perfect ? n : n + 1,
+        outOfHearts: false,
+      }).xp;
+    const mayorLeccion = Math.max(
+      ...seedUnits.flatMap((u) => u.lessons.map((l) => l.exerciseIds.length)),
+    );
+    const mayorTurnos = Math.max(...seedDialogues.map((d) => d.turns.length));
+    const premios = {
+      lección: xp('lesson', mayorLeccion),
+      cronometrada: xp('timed', TIMED_SIZE),
+      repaso: xp('review', REVIEW_SIZE),
+      personalizada: xp('practice', PERSONALIZED_SIZE),
+      prueba: xp('test', PLACEMENT_SIZE),
+      llamada: scoreCall({
+        firstTry: mayorTurnos,
+        later: 0,
+        gaveUp: 0,
+        aiExchanges: 0,
+        completed: true,
+        durationSec: 300,
+      }).xp,
+      llamadaIa: scoreCall({
+        firstTry: 0,
+        later: 0,
+        gaveUp: 0,
+        aiExchanges: AI_MAX_EXCHANGES,
+        completed: true,
+        durationSec: 300,
+      }).xp,
+      cofre: CHEST_XP,
+    };
+    for (const [nombre, valor] of Object.entries(premios)) {
+      expect(valor, nombre).toBeLessThanOrEqual(SERVER_MAX_XP_PER_EVENT);
+    }
   });
 });

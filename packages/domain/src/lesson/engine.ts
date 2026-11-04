@@ -186,6 +186,7 @@ function finish(state: LessonState, nowMs: number): LessonStep {
             answered: state.answered,
             durationSec,
             outOfHearts: state.outOfHearts,
+            xp: score.xp,
           },
         },
       },

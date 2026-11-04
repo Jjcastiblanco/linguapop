@@ -31,6 +31,8 @@ export type EventsClientLike = {
 };
 
 type OrderedQuery = {
+  /** Solo las filas con ese estado: el servidor guarda `rejected` los eventos que pasan el tope (AD-7). */
+  eq(column: 'status', value: 'accepted' | 'rejected'): OrderedQuery;
   order(column: 'occurred_at' | 'id', options: { ascending: true }): OrderedQuery;
   range(
     from: number,
@@ -46,6 +48,7 @@ export const unavailableRemote: ProgressRemote = {
   available: () => false,
   push: async () => ({ accepted: [], rejected: [] }),
   pull: async () => [],
+  rejected: async () => [],
 };
 
 /**
@@ -116,6 +119,7 @@ export function createSupabaseProgressRemote(client: EventsClientLike): Progress
         const { data, error } = await client
           .from('progress_events')
           .select('id, type, payload, occurred_at, content_version')
+          .eq('status', 'accepted')
           .order('occurred_at', { ascending: true })
           .order('id', { ascending: true })
           .range(from, from + PAGE_SIZE - 1);
@@ -124,6 +128,21 @@ export function createSupabaseProgressRemote(client: EventsClientLike): Progress
         if ((data?.length ?? 0) < PAGE_SIZE) break;
       }
       return parseKnownEvents(rows.map(fromRow));
+    },
+    async rejected() {
+      const ids: string[] = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await client
+          .from('progress_events')
+          .select('id')
+          .eq('status', 'rejected')
+          .order('id', { ascending: true })
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw new Error(error.message);
+        ids.push(...(data ?? []).map((r) => r.id));
+        if ((data?.length ?? 0) < PAGE_SIZE) break;
+      }
+      return ids;
     },
   };
 }

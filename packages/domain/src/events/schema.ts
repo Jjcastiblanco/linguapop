@@ -23,6 +23,8 @@ const Payloads = {
     answered: Entero,
     durationSec: Entero,
     outOfHearts: z.boolean(),
+    /** XP que dio la sesión; el servidor lo valida contra un tope (AD-7). Los eventos viejos no lo traen. */
+    xp: Entero.optional(),
   }),
   chest_opened: z.object({
     unitId: Id,
@@ -39,6 +41,8 @@ const Payloads = {
     weakWords: z.array(z.string().trim().min(1)),
     /** Intercambios de la conversación libre con IA; 0 si se usó el árbol de diálogo. */
     aiExchanges: Entero,
+    /** XP que dio la llamada; el servidor lo valida contra un tope (AD-7). Los eventos viejos no lo traen. */
+    xp: Entero.optional(),
   }),
   settings_changed: z
     .object({
