@@ -20,33 +20,46 @@ type Respuesta = { error: { code?: string; message: string } | null; status?: nu
 function clienteFalso(opciones: {
   upsert?: (rows: Array<{ id: string }>) => Respuesta;
   filas?: unknown[];
+  rechazados?: string[];
 }) {
   const upsert = vi.fn(async (rows: Array<{ id: string }>) =>
     (opciones.upsert ?? (() => ({ error: null, status: 201 })))(rows),
   );
   const consultas: Array<[number, number]> = [];
+  const filtros: string[] = [];
   const cliente = {
     from: () => ({
       upsert,
-      select: () => {
+      select: (columnas: string) => {
+        let estado = '';
         const q = {
+          eq: (_columna: string, valor: string) => {
+            estado = valor;
+            filtros.push(`${columnas}:${valor}`);
+            return q;
+          },
           order: () => q,
           range: async (from: number, to: number) => {
             consultas.push([from, to]);
-            return { data: (opciones.filas ?? []).slice(from, to + 1), error: null };
+            const fuente =
+              estado === 'rejected'
+                ? (opciones.rechazados ?? []).map((id) => ({ id }))
+                : (opciones.filas ?? []);
+            return { data: fuente.slice(from, to + 1), error: null };
           },
         };
         return q;
       },
     }),
   } as unknown as EventsClientLike;
-  return { cliente, upsert, consultas };
+  return { cliente, upsert, consultas, filtros };
 }
 
 describe('copia del progreso en Supabase', () => {
   it('sin servidor no está disponible y no hace nada', async () => {
     expect(unavailableRemote.available()).toBe(false);
     expect(await unavailableRemote.pull()).toEqual([]);
+    expect(await unavailableRemote.rejected()).toEqual([]);
   });
 
   it('envía los eventos de forma idempotente, con el contenido como texto y sin user_id', async () => {
@@ -116,6 +129,43 @@ describe('copia del progreso en Supabase', () => {
     const traidos = await createSupabaseProgressRemote(cliente).pull();
     expect(traidos).toHaveLength(PAGE_SIZE + 1);
     expect(traidos[0]).toMatchObject({ occurredAt: '2026-10-28T12:00:00.000Z', contentVersion: 3 });
+    expect(consultas).toEqual([
+      [0, PAGE_SIZE - 1],
+      [PAGE_SIZE, 2 * PAGE_SIZE - 1],
+    ]);
+  });
+
+  it('pide solo los eventos aceptados y trae aparte los ids de los rechazados', async () => {
+    const { cliente, filtros } = clienteFalso({ rechazados: [evento(5).id, evento(6).id] });
+    const remoto = createSupabaseProgressRemote(cliente);
+    expect(await remoto.pull()).toEqual([]);
+    expect(await remoto.rejected()).toEqual([evento(5).id, evento(6).id]);
+    expect(filtros).toEqual([
+      'id, type, payload, occurred_at, content_version:accepted',
+      'id:rejected',
+    ]);
+  });
+
+  it('un fallo al pedir los rechazados lanza para reintentar en la próxima pasada', async () => {
+    const cliente = {
+      from: () => ({
+        select: () => {
+          const q = {
+            eq: () => q,
+            order: () => q,
+            range: async () => ({ data: null, error: { message: 'sin red' } }),
+          };
+          return q;
+        },
+      }),
+    } as unknown as EventsClientLike;
+    await expect(createSupabaseProgressRemote(cliente).rejected()).rejects.toThrow('sin red');
+  });
+
+  it('trae los ids rechazados por páginas cuando son más que una página', async () => {
+    const rechazados = Array.from({ length: PAGE_SIZE + 3 }, (_v, i) => evento(i + 1).id);
+    const { cliente, consultas } = clienteFalso({ rechazados });
+    expect(await createSupabaseProgressRemote(cliente).rejected()).toEqual(rechazados);
     expect(consultas).toEqual([
       [0, PAGE_SIZE - 1],
       [PAGE_SIZE, 2 * PAGE_SIZE - 1],

@@ -98,6 +98,10 @@ export async function syncProgress(c: Composition, progress: ProgressStore): Pro
       outcome.accepted.forEach((id) => synced.add(id));
       await c.progressSink.reject(outcome.rejected);
     }
+    // El servidor guarda como rechazados los eventos fuera de tope (AD-7), también los que acaba de
+    // recibir: se marcan para que no cuenten. Solo los que este dispositivo tiene.
+    const held = new Set((await c.progressSink.readAll()).map((e) => e.id));
+    await c.progressSink.reject((await c.progressRemote.rejected()).filter((id) => held.has(id)));
   } catch {
     result = 'offline'; // sin red o servidor caído: lo pendiente se envía en la próxima pasada
   } finally {

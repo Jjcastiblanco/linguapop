@@ -62,6 +62,48 @@ describe.skipIf(!url || !anonKey)('copia del progreso contra Supabase local', ()
     expect(await a.pull()).toEqual([bueno]);
   });
 
+  it('un evento con xp sobre el tope se guarda rechazado: no se baja y se reporta aparte', async () => {
+    const c = correo();
+    const a = await dispositivo(c);
+    const sesion = (xp: number) =>
+      evento({
+        type: 'session_completed@1',
+        payload: {
+          mode: 'lesson',
+          correct: 10,
+          wrong: 0,
+          answered: 10,
+          durationSec: 60,
+          outOfHearts: false,
+          xp,
+        },
+      } as never);
+    const bueno = sesion(120);
+    const forjado = sesion(1_000_000);
+    // El servidor lo acepta al insertar (no lo descarta) y lo deja `rejected`.
+    expect(await a.push([bueno, forjado])).toEqual({
+      accepted: [bueno.id, forjado.id],
+      rejected: [],
+    });
+    expect(await a.pull()).toEqual([bueno]);
+    expect(await a.rejected()).toEqual([forjado.id]);
+    // Otro dispositivo de la misma cuenta ve lo mismo.
+    const b = await dispositivo(c);
+    expect(await b.pull()).toEqual([bueno]);
+    expect(await b.rejected()).toEqual([forjado.id]);
+  });
+
+  it('un payload de más de 8 KB se rechaza al enviarlo', async () => {
+    const a = await dispositivo(correo());
+    const enorme = evento({ type: 'exercise_answered@1' });
+    (enorme as { payload: unknown }).payload = { pad: 'x'.repeat(9000) };
+    const bueno = evento();
+    expect(await a.push([bueno, enorme])).toEqual({
+      accepted: [bueno.id],
+      rejected: [enorme.id],
+    });
+  });
+
   it('guarda la importación heredada con source = legacy y la devuelve completa', async () => {
     const c = correo();
     const a = await dispositivo(c);

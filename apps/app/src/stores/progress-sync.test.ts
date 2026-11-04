@@ -22,7 +22,13 @@ const leccion = (n = 10): PendingEvent => ({
 /** El servidor: guarda los eventos de cada cuenta, ignora ids repetidos y puede rechazar o caerse. */
 function servidorFalso() {
   const porCuenta = new Map<string, Map<string, ProgressEvent>>();
-  const estado = { enLinea: true, rechazar: new Set<string>(), envios: 0 };
+  const estado = {
+    enLinea: true,
+    rechazar: new Set<string>(),
+    /** Ids que el servidor guardó como rechazados (fuera de tope). */
+    rechazadosEnServidor: new Set<string>(),
+    envios: 0,
+  };
   const eventos = (id: string) => porCuenta.get(id) ?? porCuenta.set(id, new Map()).get(id)!;
   const remoto = (cuenta: () => Account | null): ProgressRemote => ({
     available: () => true,
@@ -43,6 +49,10 @@ function servidorFalso() {
     async pull() {
       if (!estado.enLinea) throw new Error('sin red');
       return [...eventos(cuenta()!.id).values()];
+    },
+    async rejected() {
+      if (!estado.enLinea) throw new Error('sin red');
+      return [...estado.rechazadosEnServidor];
     },
   });
   return { estado, eventos, remoto };
@@ -161,6 +171,42 @@ describe('sincronizar el progreso', () => {
     // Sigue sin contar tras recargar la app.
     const otra = await dispositivo(s, ana, a.m);
     expect(otra.progress.getState().progress.xp).toBe(0);
+  });
+
+  it('un evento que el servidor guardó como rechazado (fuera de tope) deja de contar al sincronizar', async () => {
+    const s = servidorFalso();
+    const a = await dispositivo(s);
+    await a.progress.getState().record([leccion()]);
+    const fuera = a.progress.getState().events.find((e) => e.type === 'session_completed@1')!;
+    expect(a.progress.getState().progress.xp).toBeGreaterThan(0);
+    await a.sync();
+    expect(a.progress.getState().progress.xp).toBeGreaterThan(0);
+    // El servidor lo aceptó al insertar y luego lo dejó `rejected`; la siguiente pasada lo trae.
+    s.estado.rechazadosEnServidor.add(fuera.id);
+    await a.sync();
+    expect(a.progress.getState().progress.xp).toBe(0);
+    expect(a.progress.getState().events.some((e) => e.id === fuera.id)).toBe(true);
+    const otra = await dispositivo(s, ana, a.m);
+    expect(otra.progress.getState().progress.xp).toBe(0);
+  });
+
+  it('el evento que el servidor rechaza al recibirlo deja de contar en la misma pasada', async () => {
+    const s = servidorFalso();
+    const a = await dispositivo(s);
+    await a.progress.getState().record([leccion()]);
+    const fuera = a.progress.getState().events.find((e) => e.type === 'session_completed@1')!;
+    s.estado.rechazadosEnServidor.add(fuera.id);
+    await a.sync();
+    expect(a.progress.getState().progress.xp).toBe(0);
+  });
+
+  it('solo se anotan como rechazados los ids que el dispositivo tiene', async () => {
+    const s = servidorFalso();
+    const a = await dispositivo(s);
+    await a.progress.getState().record([leccion()]);
+    s.estado.rechazadosEnServidor.add('00000000-0000-4000-8000-0000000000ff');
+    await a.sync();
+    expect([...(await a.composition.progressSink.rejectedIds())]).toEqual([]);
   });
 
   it('el invitado que inicia sesión sube su progreso local a la cuenta', async () => {

@@ -18,6 +18,7 @@ const validos = {
     answered: 10,
     durationSec: 95,
     outOfHearts: false,
+    xp: 110,
   },
   'chest_opened@1': { unitId: 'u-saludos', gems: 41, xp: 20 },
   'call_completed@1': {
@@ -29,6 +30,7 @@ const validos = {
     gaveUp: 1,
     weakWords: ['thank'],
     aiExchanges: 0,
+    xp: 140,
   },
   'settings_changed@1': { dailyGoalXp: 100 },
   'purchase@1': { item: 'hearts', costGems: 30 },
@@ -115,6 +117,14 @@ describe('catálogo de eventos', () => {
       'decimal donde va un entero',
       evento('chest_opened@1', { unitId: 'u-saludos', gems: 4.5, xp: 20 }),
     ],
+    [
+      'xp negativo en una sesión',
+      evento('session_completed@1', { ...validos['session_completed@1'], xp: -1 }),
+    ],
+    [
+      'xp decimal en una llamada',
+      evento('call_completed@1', { ...validos['call_completed@1'], xp: 4.5 }),
+    ],
     ['artículo de tienda desconocido', evento('purchase@1', { item: 'diamantes', costGems: 10 })],
     ['settings_changed vacío', evento('settings_changed@1', {})],
     ['plan desconocido', evento('settings_changed@1', { plan: 'oro' })],
@@ -127,5 +137,21 @@ describe('catálogo de eventos', () => {
     expect(e.id).toBe(base.id);
     expect(e.type).toBe('purchase@1');
     expect(e.contentVersion).toBe(3);
+  });
+});
+
+describe('xp de las sesiones y llamadas (AD-7)', () => {
+  it.each(['session_completed@1', 'call_completed@1'] as const)(
+    'el esquema conserva el xp de %s: el servidor lo valida y no debe perderse al leer',
+    (tipo) => {
+      const e = evento(tipo, validos[tipo]);
+      const r = ProgressEventSchema.parse(e);
+      expect('xp' in r.payload && r.payload.xp).toBe((validos[tipo] as { xp: number }).xp);
+    },
+  );
+
+  it('los eventos viejos sin xp siguen siendo válidos', () => {
+    const { xp: _xp, ...sinXp } = validos['session_completed@1'];
+    expect(ProgressEventSchema.safeParse(evento('session_completed@1', sinXp)).success).toBe(true);
   });
 });

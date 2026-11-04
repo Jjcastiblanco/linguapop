@@ -147,6 +147,7 @@ describe('lección perfecta (plan PRO)', () => {
         answered: 10,
         durationSec: 50,
         outOfHearts: false,
+        xp: 120, // 10 aciertos × 10 + 20 por lección perfecta
       },
     });
   });
@@ -349,6 +350,9 @@ describe('con el pliegue de eventos', () => {
     const estado = foldEvents(eventos, TEST_CONTEXT);
     expect(estado.lessonsDone['u-saludos']).toBe(1);
     expect(estado.xp).toBe(120);
+    // El `xp` del evento (lo que valida el servidor) es el mismo que suma el pliegue local.
+    const sesion = eventos.find((e) => e.type === 'session_completed@1');
+    expect(sesion?.type === 'session_completed@1' && sesion.payload.xp).toBe(estado.xp);
     expect(estado.stats).toMatchObject({ lessons: 1, perfect: 1, correct: 10, total: 10 });
     expect(estado.streak.streak).toBe(1);
     expect(initialProgress().xp).toBe(0);

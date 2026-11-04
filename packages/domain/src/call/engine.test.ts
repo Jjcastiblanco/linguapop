@@ -119,6 +119,7 @@ describe('llamada perfecta', () => {
           gaveUp: 0,
           weakWords: [],
           aiExchanges: 0,
+          xp: 8 * 15 + 20, // 8 aciertos al primer intento y llamada completa
         },
       },
     ]);
@@ -290,6 +291,8 @@ describe('colgar', () => {
     });
     const estado = foldEvents([evento], TEST_CONTEXT);
     expect(estado.xp).toBe(15);
+    // El `xp` del evento (lo que valida el servidor) es el mismo que suma el pliegue local.
+    expect(evento.type === 'call_completed@1' && evento.payload.xp).toBe(estado.xp);
     expect(estado.stats.calls).toBe(1);
     expect(estado.words).toEqual({ fine: 1, thank: 1 });
     expect(estado.achievements['nova']).toBeDefined();
