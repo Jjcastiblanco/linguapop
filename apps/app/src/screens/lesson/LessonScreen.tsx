@@ -1,5 +1,5 @@
 import { taughtThrough } from '@linguapop/content';
-import { currentHearts, dayKey, exercisesOfLesson } from '@linguapop/domain';
+import { currentHearts, dayKey, exercisesOfLesson, isLessonUnlocked } from '@linguapop/domain';
 import { useEffect, useMemo } from 'react';
 import { Navigate, useParams } from 'react-router';
 import { useProgress, useServices } from '../../composition/context';
@@ -13,6 +13,11 @@ export function LessonScreen() {
 
   const unit = composition.course.units.find((u) => u.id === unitId);
   const lessonDef = unit?.lessons.find((l) => l.id === lessonId);
+  // Una lección cerrada no se abre por URL: el camino la deja bloqueada y aquí tampoco se juega.
+  const unlocked =
+    unit !== undefined &&
+    lessonDef !== undefined &&
+    isLessonUnlocked(composition.course.units, progress.lessonsDone, unit.id, lessonDef.id);
   const exercises = useMemo(
     () => (unit && lessonDef ? exercisesOfLesson(unit, lessonDef) : []),
     [unit, lessonDef],
@@ -20,7 +25,7 @@ export function LessonScreen() {
 
   // Se empieza una sola vez al abrir la pantalla; al salir se cierra la sesión.
   useEffect(() => {
-    if (!unit || !lessonDef || exercises.length === 0) return;
+    if (!unlocked || !unit || !lessonDef || exercises.length === 0) return;
     const state = sessionStore.getState();
     const today = dayKey(composition.clock.now(), progress.settings.timeZone);
     const done = progress.lessonsDone[unit.id] ?? 0;
@@ -37,7 +42,8 @@ export function LessonScreen() {
     // La sesión se arma con el progreso del momento de abrir; no debe reiniciarse al registrar eventos.
   }, [unit, lessonDef, exercises]);
 
-  if (!unit || !lessonDef || exercises.length === 0) return <Navigate to="/aprender" replace />;
+  if (!unlocked || !unit || !lessonDef || exercises.length === 0)
+    return <Navigate to="/aprender" replace />;
   return (
     <SessionView
       unit={unit}

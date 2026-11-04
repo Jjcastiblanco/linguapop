@@ -4,10 +4,12 @@ import type { Answer, AnswerResult, ExerciseOf } from './answer';
 
 /** Cuántos intentos fallidos admite emparejar y aun así cuenta como acierto. */
 export const MATCH_MAX_MISTAKES = 2;
-/** Una errata solo se tolera en respuestas de más de 5 letras. */
+/** Una errata solo se tolera en respuestas de más de 5 letras y, dentro de ellas, en palabras de 4 o más (`TYPO_MIN_WORD_LENGTH`). */
 export const TYPO_MIN_LENGTH = 6;
 /** Una errata tolerada es una sola letra de diferencia. */
 export const TYPO_MAX_DISTANCE = 1;
+/** La palabra donde cae la errata tiene al menos 4 letras: en una más corta una letra ya es otra palabra. */
+export const TYPO_MIN_WORD_LENGTH = 4;
 /** Parecido mínimo (0 a 1) para dar por buena una frase dicha con voz. */
 export const SPEAK_PASS_SIMILARITY = 0.72;
 /** Parecido mínimo (0 a 1) cuando la frase se escribe en lugar de decirla. */
@@ -30,14 +32,26 @@ export function isCorrectPair(exercise: ExerciseOf<'match'>, es: string, en: str
   return exercise.pairs.some((p) => p.es === es && p.en === en);
 }
 
-/** Igual al objetivo, o a una letra de distancia si es lo bastante larga. Devuelve si hubo errata. */
+/**
+ * ¿Es `given` una errata de `target` (ya normalizados)? Una letra de diferencia dentro de una
+ * palabra de 4 letras o más, o un espacio de más o de menos. Cambiar una palabra corta por otra
+ * («he» por «she», «cat» por «car») no es una errata.
+ */
+function isTypoOf(given: string, target: string): boolean {
+  if (levenshtein(given, target) > TYPO_MAX_DISTANCE) return false;
+  const g = given.split(' ');
+  const t = target.split(' ');
+  if (g.length !== t.length) return g.join('') === t.join('');
+  const i = g.findIndex((word, k) => word !== t[k]);
+  return i >= 0 && (t[i]?.length ?? 0) >= TYPO_MIN_WORD_LENGTH;
+}
+
+/** Igual al objetivo, o con una errata si la frase es lo bastante larga. Devuelve si hubo errata. */
 function compareTolerant(text: string, targets: readonly string[]): { ok: boolean; typo: boolean } {
   const given = normalizeText(text);
   const normalizedTargets = targets.map(normalizeText);
   if (normalizedTargets.includes(given)) return { ok: true, typo: false };
-  const near =
-    given.length >= TYPO_MIN_LENGTH &&
-    normalizedTargets.some((t) => levenshtein(given, t) <= TYPO_MAX_DISTANCE);
+  const near = given.length >= TYPO_MIN_LENGTH && normalizedTargets.some((t) => isTypoOf(given, t));
   return { ok: near, typo: near };
 }
 

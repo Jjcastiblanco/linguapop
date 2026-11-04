@@ -16,4 +16,4 @@ export {
   type PracticeKind,
   type PracticeResult,
 } from './start';
-export { currentUnitId, isUnitComplete, isUnitUnlocked } from './unlock';
+export { currentUnitId, isLessonUnlocked, isUnitComplete, isUnitUnlocked } from './unlock';
