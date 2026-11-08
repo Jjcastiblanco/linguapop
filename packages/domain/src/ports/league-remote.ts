@@ -21,4 +21,11 @@ export interface LeagueRemote {
   available(): boolean;
   /** Mete a la persona en su cohorte de la semana (una vez) y devuelve la tabla, ordenada por puesto. */
   open(): Promise<LeagueStanding[]>;
+  /** Vuelve a leer la tabla sin abrir la liga: para después de un aviso. Lanza igual que `open`. */
+  refresh(): Promise<LeagueStanding[]>;
+  /**
+   * Avisa cuando algo cambió en la cohorte de la persona (7.5). El aviso no trae datos: quien lo
+   * recibe llama a `refresh`. Si no se puede escuchar no hace nada. Devuelve cómo dejar de escuchar.
+   */
+  watch(onChange: () => void): () => void;
 }

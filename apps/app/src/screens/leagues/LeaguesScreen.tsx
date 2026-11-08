@@ -11,6 +11,7 @@ import {
 import { Fragment, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useAccount, useProgress, useServices } from '../../composition/context';
+import { pendingXp } from '../../stores';
 import { t, type TextKey } from '../../i18n';
 import styles from './LeaguesScreen.module.css';
 
@@ -31,6 +32,11 @@ type Real = { kind: 'loading' } | { kind: 'ready'; rows: LeagueStanding[] } | { 
 
 /** Cuánto se espera al servidor antes de quedarse con la liga simulada. */
 const OPEN_TIMEOUT_MS = 10_000;
+
+/** Tras un aviso de la liga se espera este rato por si llegan más y se vuelve a leer una sola vez. */
+export const REFRESH_DELAY_MS = 1_500;
+/** Con avisos sin pausa la espera no se alarga más que esto: la tabla no se queda sin actualizar. */
+export const REFRESH_MAX_WAIT_MS = 5_000;
 
 /**
  * Pantalla Ligas (7.4). Con sesión muestra la tabla semanal que calcula el servidor, con los bots
@@ -67,6 +73,60 @@ export function LeaguesScreen() {
       clearTimeout(timer);
     };
   }, [online, accountId, leagueRemote]);
+
+  // Con la tabla a la vista se escucha la cohorte: cada aviso (sin datos) lleva a leer la vista otra vez.
+  const showing = online && real.kind === 'ready';
+  useEffect(() => {
+    if (!showing || accountId === null) return;
+    let current = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let firstPing: number | undefined;
+    let latest = 0;
+    const read = () => {
+      firstPing = undefined;
+      // Una lectura lenta no pisa a una más nueva.
+      const mine = ++latest;
+      leagueRemote.refresh().then(
+        async (rows) => {
+          // Una lectura sin la propia fila no es de esta persona: se queda la tabla que ya se ve.
+          if (!current || mine !== latest || !rows.some((r) => r.isMe)) return;
+          // Lo pendiente se vuelve a medir justo después de leer el servidor: lo que ya llegó a él
+          // deja de contarse aparte.
+          const xp = await pendingXp(composition).catch(() => 0);
+          if (!current || mine !== latest) return;
+          setPending(xp);
+          setAnswer({ accountId, real: { kind: 'ready', rows } });
+        },
+        () => undefined,
+      );
+    };
+    const stop = leagueRemote.watch(() => {
+      clearTimeout(timer);
+      const now = Date.now();
+      firstPing ??= now;
+      const wait = Math.max(0, Math.min(REFRESH_DELAY_MS, firstPing + REFRESH_MAX_WAIT_MS - now));
+      timer = setTimeout(read, wait);
+    });
+    return () => {
+      current = false;
+      clearTimeout(timer);
+      stop();
+    };
+  }, [showing, accountId, leagueRemote, composition]);
+
+  // XP propio que el servidor aún no tiene: se suma a la fila propia y desaparece al sincronizar.
+  const [pending, setPending] = useState(0);
+  useEffect(() => {
+    if (!online) return;
+    let current = true;
+    pendingXp(composition).then(
+      (xp) => current && setPending(xp),
+      () => undefined,
+    );
+    return () => {
+      current = false;
+    };
+  }, [online, composition, progress]);
 
   const tier = TIERS[leagueTier(progress.xp)];
   const head = (days: string | null) => (
@@ -126,7 +186,7 @@ export function LeaguesScreen() {
                     {row.isMe ? t('league.me', { name: row.name }) : row.name}
                     {row.isBot && <span className={styles.bot}>{t('league.bot')}</span>}
                   </span>
-                  <span>{t('league.xp', { xp: row.xp })}</span>
+                  <span>{t('league.xp', { xp: row.xp + (row.isMe ? pending : 0) })}</span>
                 </li>
               </Fragment>
             );

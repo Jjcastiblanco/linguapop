@@ -18,6 +18,7 @@ export {
 } from './progress-store';
 export {
   deleteAccount,
+  pendingXp,
   signOut,
   startProgressSync,
   syncProgress,
