@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Auth, ContentRemote, ProgressRemote } from '@linguapop/domain';
+import type { Auth, ContentRemote, LeagueRemote, ProgressRemote } from '@linguapop/domain';
 import {
   createSupabaseAuth,
   unavailableAuth,
@@ -13,6 +13,11 @@ import {
   unavailableContentRemote,
   type ContentClientLike,
 } from './supabase-content-remote';
+import {
+  createSupabaseLeagueRemote,
+  unavailableLeagueRemote,
+  type LeagueClientLike,
+} from './supabase-league-remote';
 import {
   createSupabaseProgressRemote,
   unavailableRemote,
@@ -33,12 +38,14 @@ export function createSupabaseServices(
   auth: Auth;
   progressRemote: ProgressRemote;
   contentRemote: ContentRemote;
+  leagueRemote: LeagueRemote;
 } {
   if (!url || !anonKey) {
     return {
       auth: unavailableAuth,
       progressRemote: unavailableRemote,
       contentRemote: unavailableContentRemote,
+      leagueRemote: unavailableLeagueRemote,
     };
   }
   const googleOption: GoogleOption | undefined = nativeGoogle
@@ -63,5 +70,6 @@ export function createSupabaseServices(
     ),
     progressRemote: createSupabaseProgressRemote(client as unknown as EventsClientLike),
     contentRemote: createSupabaseContentRemote(client as unknown as ContentClientLike),
+    leagueRemote: createSupabaseLeagueRemote(client as unknown as LeagueClientLike),
   };
 }

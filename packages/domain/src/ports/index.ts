@@ -10,6 +10,7 @@ export type { Clock } from './clock';
 export type { ContentRemote, ContentSnapshot } from './content-remote';
 export type { ContentSource } from './content-source';
 export type { DialogueAgent, DialogueMessage } from './dialogue-agent';
+export type { LeagueRemote, LeagueStanding } from './league-remote';
 export type { LocalStore } from './local-store';
 export type { ProgressRemote, PushOutcome } from './progress-remote';
 export type { ProgressSink } from './progress-sink';

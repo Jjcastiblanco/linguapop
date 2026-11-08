@@ -5,6 +5,7 @@ export {
   PROMOTION_ZONE_SIZE,
   SILVER_XP,
   leagueTable,
+  leagueZone,
   leagueTier,
   weekStart,
   weekXp,

@@ -56,7 +56,8 @@ export function leagueTier(totalXp: number): LeagueTier {
   return totalXp < SILVER_XP ? 'bronze' : totalXp < GOLD_XP ? 'silver' : 'gold';
 }
 
-function zoneOf(rank: number): LeagueZone {
+/** Zona de un puesto: los primeros suben, los últimos bajan. */
+export function leagueZone(rank: number): LeagueZone {
   return rank <= PROMOTION_ZONE_SIZE
     ? 'promotion'
     : rank >= DEMOTION_ZONE_START
@@ -91,6 +92,6 @@ export function leagueTable(input: LeagueInput): League {
     tier: leagueTier(input.totalXp),
     daysLeft: 7 - dow,
     weekStart: start,
-    rows: players.map((p, i) => ({ ...p, rank: i + 1, zone: zoneOf(i + 1) })),
+    rows: players.map((p, i) => ({ ...p, rank: i + 1, zone: leagueZone(i + 1) })),
   };
 }

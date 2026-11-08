@@ -1,12 +1,16 @@
 import {
   dayKey,
   leagueTable,
+  leagueTier,
+  leagueZone,
   localHour,
+  type LeagueStanding,
   type LeagueTier,
   type LeagueZone,
 } from '@linguapop/domain';
-import { Fragment } from 'react';
-import { useProgress, useServices } from '../../composition/context';
+import { Fragment, useEffect, useState } from 'react';
+import { Link } from 'react-router';
+import { useAccount, useProgress, useServices } from '../../composition/context';
 import { t, type TextKey } from '../../i18n';
 import styles from './LeaguesScreen.module.css';
 
@@ -22,8 +26,151 @@ const ZONES: Record<LeagueZone, { label: TextKey; style: string }> = {
   demotion: { label: 'league.zone.down', style: styles.down! },
 };
 
-/** Pantalla Ligas: tabla semanal simulada con bots, el puesto del estudiante y las zonas de ascenso y descenso. */
+/** La tabla real: cargando, lista o sin poder obtenerla (se cae a la simulada). */
+type Real = { kind: 'loading' } | { kind: 'ready'; rows: LeagueStanding[] } | { kind: 'offline' };
+
+/** Cuánto se espera al servidor antes de quedarse con la liga simulada. */
+const OPEN_TIMEOUT_MS = 10_000;
+
+/**
+ * Pantalla Ligas (7.4). Con sesión muestra la tabla semanal que calcula el servidor, con los bots
+ * marcados; como invitado, un aviso para iniciar sesión sobre la tabla simulada; y si el servidor no
+ * responde, la tabla simulada. El cliente no calcula semana ni puestos de la tabla real.
+ */
 export function LeaguesScreen() {
+  const { composition } = useServices();
+  const account = useAccount();
+  const progress = useProgress((s) => s.progress);
+  const { leagueRemote, auth } = composition;
+  const online = account !== null && leagueRemote.available();
+  // La respuesta lleva la cuenta a la que pertenece: la tabla de otra cuenta nunca se pinta.
+  const [answer, setAnswer] = useState<{ accountId: string; real: Real } | null>(null);
+
+  const accountId = account?.id ?? null;
+  const real: Real = answer && answer.accountId === accountId ? answer.real : { kind: 'loading' };
+  useEffect(() => {
+    if (!online || accountId === null) return;
+    let current = true;
+    const settle = (value: Real) => {
+      if (!current) return;
+      clearTimeout(timer);
+      setAnswer({ accountId, real: value });
+    };
+    const timer = setTimeout(() => settle({ kind: 'offline' }), OPEN_TIMEOUT_MS);
+    leagueRemote.open().then(
+      // Sin la propia fila la tabla no es de esta persona: se trata como sin respuesta.
+      (rows) => settle(rows.some((r) => r.isMe) ? { kind: 'ready', rows } : { kind: 'offline' }),
+      () => settle({ kind: 'offline' }),
+    );
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [online, accountId, leagueRemote]);
+
+  const tier = TIERS[leagueTier(progress.xp)];
+  const head = (days: string | null) => (
+    <section className={`${styles.card} ${styles.head}`}>
+      <div className={styles.medal} aria-hidden="true">
+        {tier.medal}
+      </div>
+      <h2 data-testid="league-tier">{t('league.title', { tier: t(tier.name) })}</h2>
+      {days && (
+        <div className={styles.muted} data-testid="league-days">
+          {days}
+        </div>
+      )}
+    </section>
+  );
+
+  if (online && real.kind === 'loading') {
+    return (
+      <div>
+        <h1 className={styles.srOnly}>{t('screen.leagues.title')}</h1>
+        {head(null)}
+        <p className={`${styles.muted} ${styles.note}`} role="status">
+          {t('league.loading')}
+        </p>
+      </div>
+    );
+  }
+
+  if (online && real.kind === 'ready') {
+    return (
+      <div>
+        <h1 className={styles.srOnly}>{t('screen.leagues.title')}</h1>
+        {head(t('league.week'))}
+        <ol className={`${styles.card} ${styles.table}`} aria-label={t('league.table')}>
+          {real.rows.map((row, i) => {
+            const zone = leagueZone(row.rank);
+            const first = i === 0 || leagueZone(real.rows[i - 1]!.rank) !== zone;
+            return (
+              <Fragment key={i}>
+                {first && (
+                  <li className={`${styles.zone} ${ZONES[zone].style}`} aria-hidden="true">
+                    {t(ZONES[zone].label)}
+                  </li>
+                )}
+                <li
+                  className={`${styles.row} ${row.isMe ? styles.me : ''}`}
+                  data-testid={`league-row-${i + 1}`}
+                  data-me={row.isMe}
+                  data-bot={row.isBot}
+                  data-zone={zone}
+                >
+                  <span className={styles.rank}>{row.rank}</span>
+                  <span className={styles.avatar} aria-hidden="true">
+                    {row.isMe ? '🦊' : row.isBot ? '🤖' : '🙂'}
+                  </span>
+                  <span className={styles.name}>
+                    {row.isMe ? t('league.me', { name: row.name }) : row.name}
+                    {row.isBot && <span className={styles.bot}>{t('league.bot')}</span>}
+                  </span>
+                  <span>{t('league.xp', { xp: row.xp })}</span>
+                </li>
+              </Fragment>
+            );
+          })}
+        </ol>
+        <p className={`${styles.muted} ${styles.note}`}>{t('league.real')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <Simulated
+      head={head}
+      below={
+        online ? (
+          <p className={`${styles.muted} ${styles.note}`} role="status">
+            {t('league.offline')}
+          </p>
+        ) : null
+      }
+      above={
+        account === null && auth.available() ? (
+          <section className={styles.card} data-testid="league-signin">
+            <p className={styles.signinText}>{t('league.signin')}</p>
+            <Link className={styles.signinLink} to="/perfil">
+              {t('league.signin.action')}
+            </Link>
+          </section>
+        ) : null
+      }
+    />
+  );
+}
+
+/** La tabla simulada con bots de siempre: el respaldo cuando no hay tabla real. */
+function Simulated({
+  head,
+  above,
+  below,
+}: {
+  head: (days: string | null) => React.ReactNode;
+  above: React.ReactNode;
+  below: React.ReactNode;
+}) {
   const { composition } = useServices();
   const progress = useProgress((s) => s.progress);
   const now = composition.clock.now();
@@ -35,20 +182,12 @@ export function LeaguesScreen() {
     totalXp: progress.xp,
     playerName: progress.settings.displayName,
   });
-  const tier = TIERS[league.tier];
 
   return (
     <div>
       <h1 className={styles.srOnly}>{t('screen.leagues.title')}</h1>
-      <section className={`${styles.card} ${styles.head}`}>
-        <div className={styles.medal} aria-hidden="true">
-          {tier.medal}
-        </div>
-        <h2 data-testid="league-tier">{t('league.title', { tier: t(tier.name) })}</h2>
-        <div className={styles.muted} data-testid="league-days">
-          {t(league.daysLeft === 1 ? 'league.days.one' : 'league.days', { n: league.daysLeft })}
-        </div>
-      </section>
+      {above}
+      {head(t(league.daysLeft === 1 ? 'league.days.one' : 'league.days', { n: league.daysLeft }))}
 
       <ol className={`${styles.card} ${styles.table}`} aria-label={t('league.table')}>
         {league.rows.map((row, i) => {
@@ -85,6 +224,7 @@ export function LeaguesScreen() {
         })}
       </ol>
       <p className={`${styles.muted} ${styles.note}`}>{t('league.simulated')}</p>
+      {below}
     </div>
   );
 }

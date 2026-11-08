@@ -5,6 +5,7 @@ import type {
   Clock,
   ContentRemote,
   ContentSource,
+  LeagueRemote,
   ProgressRemote,
   Random,
   Speech,
@@ -40,6 +41,8 @@ export type Composition = {
   auth: Auth;
   /** Copia del progreso en el servidor; sin Supabase configurado no hay nada que sincronizar. */
   progressRemote: ProgressRemote;
+  /** La liga semanal real; sin Supabase configurado la pantalla usa la simulada. */
+  leagueRemote: LeagueRemote;
   /** Estructura del contenido que el pliegue de eventos necesita. */
   progressContext: ProgressContext;
   /** Zona horaria del dispositivo, para decidir qué es "hoy". */
@@ -63,6 +66,7 @@ export type CompositionOverrides = Partial<
     | 'update'
     | 'auth'
     | 'progressRemote'
+    | 'leagueRemote'
     | 'store'
     | 'contentVersion'
   >
@@ -82,9 +86,9 @@ function deviceTimeZone(): string {
 export function createComposition(overrides: CompositionOverrides = {}): Composition {
   const store = overrides.store ?? createLocalStore(overrides.storage);
   const course = overrides.course ?? seedCourse;
-  // Un solo cliente de Supabase para las cuentas y la copia del progreso; solo se crea si hace falta.
+  // Un solo cliente de Supabase para las cuentas, la copia del progreso y la liga; solo se crea si hace falta.
   const supabase =
-    overrides.auth && overrides.progressRemote
+    overrides.auth && overrides.progressRemote && overrides.leagueRemote
       ? null
       : createSupabaseServices({
           url: import.meta.env.VITE_SUPABASE_URL,
@@ -104,6 +108,7 @@ export function createComposition(overrides: CompositionOverrides = {}): Composi
     update: overrides.update ?? createWebUpdate(),
     auth: overrides.auth ?? supabase!.auth,
     progressRemote: overrides.progressRemote ?? supabase!.progressRemote,
+    leagueRemote: overrides.leagueRemote ?? supabase!.leagueRemote,
     progressContext: { units, achievements: course.achievements },
     timeZone: overrides.timeZone ?? deviceTimeZone(),
     contentVersion: overrides.contentVersion ?? 0,
@@ -145,6 +150,7 @@ export async function composeWithContent(
   const composition = make({
     auth: supabase.auth,
     progressRemote: supabase.progressRemote,
+    leagueRemote: supabase.leagueRemote,
     ...overrides,
     store,
     course,
