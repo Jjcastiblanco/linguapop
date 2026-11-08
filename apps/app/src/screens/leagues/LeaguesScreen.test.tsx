@@ -3,6 +3,8 @@ import { screen, waitFor, within } from '@testing-library/react';
 import type { Account, Auth, LeagueRemote, LeagueStanding, PendingEvent } from '@linguapop/domain';
 import { describe, expect, it, vi } from 'vitest';
 import { crearServicios, memoria, relojFalso, renderApp } from '../../test/helpers';
+import { SYNCED_KEY } from '../../stores/progress-sync';
+import { REFRESH_DELAY_MS, REFRESH_MAX_WAIT_MS } from './LeaguesScreen';
 
 // 2026-10-28 12:00 UTC es miércoles: quedan 5 días de la semana.
 const MIERCOLES = Date.UTC(2026, 9, 28, 12, 0, 0);
@@ -118,17 +120,37 @@ const fila = (rank: number, extra: Partial<LeagueStanding> = {}): LeagueStanding
 const tablaDe30 = () =>
   Array.from({ length: 30 }, (_, i) => fila(i + 1, { isBot: i % 2 === 1, isMe: i === 3 }));
 
-function ligaFalsa(
-  respuesta: LeagueStanding[] | Error | Promise<LeagueStanding[]>,
-  disponible = true,
-): LeagueRemote & { open: ReturnType<typeof vi.fn> } {
-  return {
-    available: () => disponible,
-    open: vi.fn(async () => {
-      if (respuesta instanceof Error) throw respuesta;
-      return respuesta;
-    }),
+type Respuesta = LeagueStanding[] | Error | Promise<LeagueStanding[]>;
+
+/** Un servidor de liga falso: `cambiar` fija lo que lee `refresh` y `avisar` simula el aviso en vivo. */
+function ligaFalsa(respuesta: Respuesta, disponible = true) {
+  let actual: Respuesta = respuesta;
+  const oyentes = new Set<() => void>();
+  const leer = async () => {
+    const r = await actual;
+    if (r instanceof Error) throw r;
+    return r;
   };
+  const parados = vi.fn();
+  const liga = {
+    available: () => disponible,
+    open: vi.fn(leer),
+    refresh: vi.fn(leer),
+    watch: vi.fn((cb: () => void) => {
+      oyentes.add(cb);
+      return () => {
+        oyentes.delete(cb);
+        parados();
+      };
+    }),
+    cambiar: (nueva: Respuesta) => {
+      actual = nueva;
+    },
+    avisar: () => oyentes.forEach((cb) => cb()),
+    oyentes: () => oyentes.size,
+    parados,
+  };
+  return liga satisfies LeagueRemote;
 }
 
 async function abrirReal(
@@ -260,7 +282,10 @@ describe('pantalla Ligas con la tabla real', () => {
       Promise.resolve(tablaDe30()),
       new Promise<LeagueStanding[]>(() => undefined),
     ];
-    const liga: LeagueRemote = { available: () => true, open: vi.fn(() => respuestas.shift()!) };
+    const liga: LeagueRemote = {
+      ...ligaFalsa([]),
+      open: vi.fn(() => respuestas.shift()!),
+    };
     await abrirReal(auth, liga);
     expect(await screen.findByTestId('league-row-1')).toBeInTheDocument();
     abrirSesion({ id: 'u2', email: 'bea@prueba.test' });
@@ -311,5 +336,193 @@ describe('pantalla Ligas con la tabla real', () => {
     const { unmount } = await abrirReal(authFalso(ANA).auth, liga);
     unmount();
     expect(() => responder(tablaDe30())).not.toThrow();
+  });
+
+  describe('en vivo', () => {
+    const conXp = (xp: number): PendingEvent =>
+      ({ ...sesion(10), payload: { ...sesion(10).payload, xp } }) as PendingEvent;
+    const nombres = () => filas().map((f) => f.textContent);
+    /** La tabla se pinta antes de que el efecto empiece a escuchar: se espera a que escuche. */
+    const escuchando = (liga: { oyentes: () => number }) =>
+      waitFor(() => expect(liga.oyentes()).toBe(1));
+
+    async function conRelojFalso<T>(prueba: () => Promise<T>) {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        return await prueba();
+      } finally {
+        vi.useRealTimers();
+      }
+    }
+
+    it('un aviso actualiza la tabla sin recargar', async () => {
+      await conRelojFalso(async () => {
+        const liga = ligaFalsa(tablaDe30());
+        await abrirReal(authFalso(ANA).auth, liga);
+        await screen.findByTestId('league-row-1');
+        await escuchando(liga);
+        liga.cambiar(
+          tablaDe30().map((f, i) => (i === 0 ? { ...f, name: 'Recién llegada', xp: 999 } : f)),
+        );
+        liga.avisar();
+        await vi.advanceTimersByTimeAsync(REFRESH_DELAY_MS);
+        await waitFor(() =>
+          expect(screen.getByTestId('league-row-1')).toHaveTextContent('Recién llegada'),
+        );
+        expect(liga.open).toHaveBeenCalledTimes(1);
+        expect(liga.refresh).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('una ráfaga de avisos hace una sola lectura', async () => {
+      await conRelojFalso(async () => {
+        const liga = ligaFalsa(tablaDe30());
+        await abrirReal(authFalso(ANA).auth, liga);
+        await screen.findByTestId('league-row-1');
+        await escuchando(liga);
+        liga.avisar();
+        await vi.advanceTimersByTimeAsync(REFRESH_DELAY_MS / 2);
+        liga.avisar();
+        liga.avisar();
+        expect(liga.refresh).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(REFRESH_DELAY_MS);
+        expect(liga.refresh).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('si la lectura del aviso falla, la tabla se queda como estaba', async () => {
+      await conRelojFalso(async () => {
+        const liga = ligaFalsa(tablaDe30());
+        await abrirReal(authFalso(ANA).auth, liga);
+        await screen.findByTestId('league-row-1');
+        const antes = nombres();
+        await escuchando(liga);
+        liga.cambiar(new Error('sin red'));
+        liga.avisar();
+        await vi.advanceTimersByTimeAsync(REFRESH_DELAY_MS);
+        expect(liga.refresh).toHaveBeenCalledTimes(1);
+        expect(nombres()).toEqual(antes);
+        expect(screen.queryByText(/No hay conexión con la liga/)).not.toBeInTheDocument();
+      });
+    });
+
+    it('una lectura sin la fila propia no sustituye la tabla', async () => {
+      await conRelojFalso(async () => {
+        const liga = ligaFalsa(tablaDe30());
+        await abrirReal(authFalso(ANA).auth, liga);
+        await screen.findByTestId('league-row-1');
+        const antes = nombres();
+        await escuchando(liga);
+        liga.cambiar([fila(1), fila(2)]);
+        liga.avisar();
+        await vi.advanceTimersByTimeAsync(REFRESH_DELAY_MS);
+        expect(nombres()).toEqual(antes);
+      });
+    });
+
+    it('al salir de la pantalla deja de escuchar y cancela la lectura pendiente', async () => {
+      await conRelojFalso(async () => {
+        const liga = ligaFalsa(tablaDe30());
+        const { unmount } = await abrirReal(authFalso(ANA).auth, liga);
+        await screen.findByTestId('league-row-1');
+        await escuchando(liga);
+        liga.avisar();
+        unmount();
+        expect(liga.parados).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(REFRESH_DELAY_MS * 2);
+        expect(liga.refresh).not.toHaveBeenCalled();
+      });
+    });
+
+    it('no escucha mientras carga, como invitado ni sin servidor', async () => {
+      const cargando = ligaFalsa(new Promise<LeagueStanding[]>(() => undefined));
+      await abrirReal(authFalso(ANA).auth, cargando);
+      await screen.findByText('Cargando la liga…');
+      expect(cargando.watch).not.toHaveBeenCalled();
+      const invitado = ligaFalsa(tablaDe30());
+      await abrirReal(authFalso(null).auth, invitado);
+      expect(invitado.watch).not.toHaveBeenCalled();
+      const sinServidor = ligaFalsa(tablaDe30(), false);
+      await abrirReal(authFalso(ANA).auth, sinServidor);
+      expect(sinServidor.watch).not.toHaveBeenCalled();
+      expect(sinServidor.open).not.toHaveBeenCalled();
+    });
+
+    it('el XP propio suma lo que el servidor aún no tiene y no toca las demás filas', async () => {
+      await abrirReal(authFalso(ANA).auth, ligaFalsa(tablaDe30()), [conXp(30)]);
+      const propia = await screen.findByTestId('league-row-4');
+      // El servidor dice 300 - 4 × 5 = 280; se suman los 30 pendientes.
+      await waitFor(() => expect(propia).toHaveTextContent('310 XP'));
+      expect(screen.getByTestId('league-row-5')).toHaveTextContent('275 XP');
+      expect(screen.getByTestId('league-row-3')).toHaveTextContent('285 XP');
+      expect(filas().map((f) => f.getAttribute('data-testid'))).toHaveLength(30);
+    });
+
+    it('sin XP pendiente muestra el del servidor tal cual', async () => {
+      await abrirReal(authFalso(ANA).auth, ligaFalsa(tablaDe30()));
+      expect(await screen.findByTestId('league-row-4')).toHaveTextContent('280 XP');
+    });
+
+    it('con avisos sin pausa la tabla se actualiza igual, sin esperar al final', async () => {
+      await conRelojFalso(async () => {
+        const liga = ligaFalsa(tablaDe30());
+        await abrirReal(authFalso(ANA).auth, liga);
+        await screen.findByTestId('league-row-1');
+        await escuchando(liga);
+        for (let ms = 0; ms < REFRESH_MAX_WAIT_MS + 1_000; ms += 1_000) {
+          liga.avisar();
+          await vi.advanceTimersByTimeAsync(1_000);
+        }
+        expect(liga.refresh).toHaveBeenCalled();
+      });
+    });
+
+    it('una lectura lenta no pisa a una más nueva', async () => {
+      await conRelojFalso(async () => {
+        const liga = ligaFalsa(tablaDe30());
+        await abrirReal(authFalso(ANA).auth, liga);
+        await screen.findByTestId('league-row-1');
+        await escuchando(liga);
+        let soltarLenta!: (r: LeagueStanding[]) => void;
+        const vieja = tablaDe30().map((f, i) => (i === 0 ? { ...f, name: 'Vieja' } : f));
+        const nueva = tablaDe30().map((f, i) => (i === 0 ? { ...f, name: 'Nueva' } : f));
+        liga.refresh
+          .mockImplementationOnce(() => new Promise<LeagueStanding[]>((ok) => (soltarLenta = ok)))
+          .mockImplementationOnce(async () => nueva);
+        liga.avisar();
+        await vi.advanceTimersByTimeAsync(REFRESH_DELAY_MS);
+        liga.avisar();
+        await vi.advanceTimersByTimeAsync(REFRESH_DELAY_MS);
+        await waitFor(() => expect(screen.getByTestId('league-row-1')).toHaveTextContent('Nueva'));
+        soltarLenta(vieja);
+        await vi.advanceTimersByTimeAsync(10);
+        expect(screen.getByTestId('league-row-1')).toHaveTextContent('Nueva');
+      });
+    });
+
+    it('lo que ya llegó al servidor deja de contarse como pendiente al volver a leer', async () => {
+      await conRelojFalso(async () => {
+        const liga = ligaFalsa(tablaDe30());
+        const services = await crearServicios({
+          storage: memoria().storage,
+          clock: relojFalso(MIERCOLES),
+          auth: authFalso(ANA).auth,
+          leagueRemote: liga,
+        });
+        await services.progress.getState().record([conXp(30)]);
+        renderApp(services, '/ligas');
+        // El servidor dice 280 y hay 30 sin enviar.
+        await waitFor(() => expect(screen.getByTestId('league-row-4')).toHaveTextContent('310 XP'));
+        await escuchando(liga);
+        // El envío termina: el servidor ya lo tiene, pero el progreso local no cambia.
+        const ids = (await services.composition.progressSink.readAll()).map((e) => e.id);
+        await services.composition.store.set(SYNCED_KEY, JSON.stringify(ids));
+        liga.cambiar(tablaDe30().map((f, i) => (i === 3 ? { ...f, xp: 310 } : f)));
+        liga.avisar();
+        await vi.advanceTimersByTimeAsync(REFRESH_DELAY_MS);
+        await waitFor(() => expect(screen.getByTestId('league-row-4')).toHaveTextContent('310 XP'));
+        expect(screen.getByTestId('league-row-4')).not.toHaveTextContent('340 XP');
+      });
+    });
   });
 });

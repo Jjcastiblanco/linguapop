@@ -119,6 +119,24 @@ async function pendingEvents(c: Composition) {
   return (await c.progressSink.readAll()).filter((e) => !synced.has(e.id) && !rejected.has(e.id));
 }
 
+/** Los eventos que dan XP a la liga (AD-7): el servidor suma solo estos tres y solo si traen `xp`. */
+const XP_EVENT_TYPES = new Set(['session_completed@1', 'call_completed@1', 'chest_opened@1']);
+
+/**
+ * XP de lo hecho en este dispositivo que el servidor aún no tiene (7.5): sirve para mostrar el XP
+ * propio de la liga sin esperar a la sincronización. Al llegar al servidor deja de ser pendiente, así
+ * que el número se corrige solo y nunca se cuenta dos veces.
+ */
+export async function pendingXp(c: Composition): Promise<number> {
+  let sum = 0;
+  for (const e of await pendingEvents(c)) {
+    if (!XP_EVENT_TYPES.has(e.type)) continue;
+    const xp = (e.payload as { xp?: unknown }).xp;
+    if (typeof xp === 'number' && Number.isInteger(xp) && xp > 0) sum += xp;
+  }
+  return sum;
+}
+
 /**
  * Deja el progreso del dispositivo como el de una app recién instalada (R9): sin eventos, sin dueño
  * de la sincronización ni lo enviado. No toca los ajustes de la interfaz ni los datos de la versión

@@ -3,7 +3,7 @@ import type { Account, Auth, PendingEvent, ProgressEvent, ProgressRemote } from 
 import { createComposition } from '../composition';
 import { createServices } from '../composition/context';
 import { memoria, nuevoId, relojFalso } from '../test/helpers';
-import { deleteAccount, signOut, syncProgress } from './progress-sync';
+import { deleteAccount, pendingXp, signOut, syncProgress } from './progress-sync';
 
 const leccion = (n = 10): PendingEvent => ({
   type: 'session_completed@1',
@@ -102,6 +102,31 @@ async function dispositivo(
   const sync = () => syncProgress(services.composition, services.progress);
   return { ...services, ...sesion, sync, m };
 }
+
+/** Un evento válido de cada clase, con el `xp` que se le diga (puede ser inválido a propósito). */
+const conXp = (
+  xp: unknown,
+  clase: 'session' | 'call' | 'chest' | 'purchase' = 'session',
+): PendingEvent =>
+  ({
+    session: { type: 'session_completed@1', payload: { ...leccion().payload, xp } },
+    call: {
+      type: 'call_completed@1',
+      payload: {
+        topicId: 'saludos',
+        durationSec: 30,
+        completed: true,
+        firstTry: 1,
+        later: 0,
+        gaveUp: 0,
+        weakWords: [],
+        aiExchanges: 0,
+        xp,
+      },
+    },
+    chest: { type: 'chest_opened@1', payload: { unitId: 'u-saludos', gems: 5, xp } },
+    purchase: { type: 'purchase@1', payload: { item: 'hearts', costGems: 10, xp } },
+  })[clase] as PendingEvent;
 
 const heredado = JSON.stringify({
   name: 'Lucía',
@@ -384,6 +409,50 @@ describe('sincronizar el progreso', () => {
       a.m.data.set('linguapop_v1', '{no es json');
       await a.sync();
       expect(importados(s, 'ana')).toHaveLength(0);
+    });
+  });
+
+  describe('XP pendiente de la liga', () => {
+    it('suma el xp de lo que el servidor aún no tiene y deja de contarlo al sincronizar', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      expect(await pendingXp(a.composition)).toBe(0);
+      await a.progress.getState().record([conXp(30), conXp(12, 'call'), conXp(8, 'chest')]);
+      expect(await pendingXp(a.composition)).toBe(50);
+      await a.sync();
+      expect(await pendingXp(a.composition)).toBe(0);
+    });
+
+    it('sin red sigue pendiente', async () => {
+      const s = servidorFalso();
+      s.estado.enLinea = false;
+      const a = await dispositivo(s);
+      await a.progress.getState().record([conXp(25)]);
+      await a.sync();
+      expect(await pendingXp(a.composition)).toBe(25);
+    });
+
+    it('no cuenta lo que el servidor rechazó', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([conXp(25)]);
+      const [e] = await a.composition.progressSink.readAll();
+      s.estado.rechazar.add(e!.id);
+      await a.sync();
+      expect(await pendingXp(a.composition)).toBe(0);
+    });
+
+    it.each([
+      ['otro tipo de evento', conXp(50, 'purchase')],
+      ['xp en texto', conXp('50')],
+      ['xp decimal', conXp(5.5)],
+      ['xp negativo', conXp(-5)],
+      ['xp cero', conXp(0)],
+      ['sin xp', leccion()],
+    ])('no cuenta %s', async (_caso, evento) => {
+      const a = await dispositivo(servidorFalso());
+      await a.progress.getState().record([evento]);
+      expect(await pendingXp(a.composition)).toBe(0);
     });
   });
 });
