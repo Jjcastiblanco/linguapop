@@ -147,30 +147,31 @@ describe('copia del progreso en Supabase', () => {
     ]);
   });
 
-  it('sin cursor pide todo; con cursor pide desde cinco minutos antes', async () => {
+  it('sin cursor pide todo; con cursor pide desde treinta segundos antes', async () => {
     const { cliente, desdes } = clienteFalso({ filas: [fila(1)] });
     const remoto = createSupabaseProgressRemote(cliente);
     await remoto.pull(null);
     await remoto.pull('2026-11-11T12:10:00.000Z');
-    expect(desdes).toEqual([null, '2026-11-11T12:05:00.000Z']);
-    expect(PULL_OVERLAP_MS).toBe(5 * 60 * 1000);
+    expect(desdes).toEqual([null, '2026-11-11T12:09:30.000Z']);
+    expect(PULL_OVERLAP_MS).toBe(30 * 1000);
   });
 
   it('el filtro del cursor se aplica en todas las páginas', async () => {
     const filas = Array.from({ length: PAGE_SIZE + 5 }, (_v, i) =>
-      fila(i + 1, { received_at: '2026-11-11T12:08:00+00:00' }),
+      fila(i + 1, { received_at: '2026-11-11T12:09:45+00:00' }),
     );
     const { cliente, desdesPorPagina } = clienteFalso({ filas });
     const out = await createSupabaseProgressRemote(cliente).pull('2026-11-11T12:10:00.000Z');
     expect(out.events).toHaveLength(PAGE_SIZE + 5);
-    expect(desdesPorPagina).toEqual(['2026-11-11T12:05:00.000Z', '2026-11-11T12:05:00.000Z']);
+    expect(desdesPorPagina).toEqual(['2026-11-11T12:09:30.000Z', '2026-11-11T12:09:30.000Z']);
   });
 
   it('con cursor no baja lo anterior al solape y el cursor sigue al último recibido', async () => {
     const viejo = fila(1, { received_at: '2026-11-11T11:00:00+00:00' });
-    const reciente = fila(2, { received_at: '2026-11-11T12:08:00+00:00' });
+    const fueraDelSolape = fila(4, { received_at: '2026-11-11T12:09:00+00:00' });
+    const reciente = fila(2, { received_at: '2026-11-11T12:09:45+00:00' });
     const nuevo = fila(3, { received_at: '2026-11-11T12:20:00.654321+00:00' });
-    const { cliente } = clienteFalso({ filas: [viejo, reciente, nuevo] });
+    const { cliente } = clienteFalso({ filas: [viejo, fueraDelSolape, reciente, nuevo] });
     const out = await createSupabaseProgressRemote(cliente).pull('2026-11-11T12:10:00.000Z');
     expect(out.events.map((e) => e.id)).toEqual([reciente.id, nuevo.id]);
     expect(out.cursor).toBe('2026-11-11T12:20:00.654Z');
