@@ -3,6 +3,7 @@ import {
   parseKnownEvents,
   type ProgressEvent,
   type ProgressRemote,
+  type PullResult,
   type PushOutcome,
 } from '@linguapop/domain';
 
@@ -13,6 +14,8 @@ type EventRow = {
   payload: unknown;
   occurred_at: string;
   content_version: string | number;
+  received_at: string;
+  status: 'accepted' | 'rejected';
 };
 
 type RemoteError = { code?: string; message: string; status?: number };
@@ -22,7 +25,10 @@ export type EventsClientLike = {
   from(table: 'progress_events'): {
     upsert(
       rows: Array<
-        Omit<EventRow, 'content_version'> & { content_version: string; source: 'app' | 'legacy' }
+        Omit<EventRow, 'content_version' | 'received_at' | 'status'> & {
+          content_version: string;
+          source: 'app' | 'legacy';
+        }
       >,
       options: { onConflict: 'id'; ignoreDuplicates: true },
     ): PromiseLike<{ error: RemoteError | null; status?: number }>;
@@ -31,9 +37,10 @@ export type EventsClientLike = {
 };
 
 type OrderedQuery = {
-  /** Solo las filas con ese estado: el servidor guarda `rejected` los eventos que pasan el tope (AD-7). */
-  eq(column: 'status', value: 'accepted' | 'rejected'): OrderedQuery;
-  order(column: 'occurred_at' | 'id', options: { ascending: true }): OrderedQuery;
+  /** Solo lo recibido por el servidor desde esa hora. */
+  gte(column: 'received_at', value: string): OrderedQuery;
+  /** El servidor guarda `rejected` los eventos que pasan el tope (AD-7): vienen junto a los demás. */
+  order(column: 'received_at' | 'id', options: { ascending: true }): OrderedQuery;
   range(
     from: number,
     to: number,
@@ -43,12 +50,18 @@ type OrderedQuery = {
 /** Cuántos eventos se envían o piden por llamada. */
 export const PAGE_SIZE = 500;
 
+/**
+ * Cuánto antes del cursor se vuelve a pedir. Postgres da `received_at` al empezar la transacción, y
+ * una que confirma tarde queda con una hora anterior a otra ya vista: el solape la recupera. Lo
+ * repetido se ignora por su id.
+ */
+export const PULL_OVERLAP_MS = 5 * 60 * 1000;
+
 /** Sin servidor: la app queda como invitado con el progreso solo local. */
 export const unavailableRemote: ProgressRemote = {
   available: () => false,
   push: async () => ({ accepted: [], rejected: [] }),
-  pull: async () => [],
-  rejected: async () => [],
+  pull: async () => ({ events: [], rejected: [], cursor: null }),
 };
 
 /**
@@ -113,36 +126,34 @@ export function createSupabaseProgressRemote(client: EventsClientLike): Progress
       }
       return outcome;
     },
-    async pull() {
+    async pull(since) {
+      const sinceMs = since === null ? Number.NaN : Date.parse(since);
+      const from = Number.isNaN(sinceMs) ? null : new Date(sinceMs - PULL_OVERLAP_MS).toISOString();
       const rows: EventRow[] = [];
-      for (let from = 0; ; from += PAGE_SIZE) {
-        const { data, error } = await client
+      for (let start = 0; ; start += PAGE_SIZE) {
+        let query = client
           .from('progress_events')
-          .select('id, type, payload, occurred_at, content_version')
-          .eq('status', 'accepted')
-          .order('occurred_at', { ascending: true })
+          .select('id, type, payload, occurred_at, content_version, received_at, status');
+        if (from !== null) query = query.gte('received_at', from);
+        const { data, error } = await query
+          .order('received_at', { ascending: true })
           .order('id', { ascending: true })
-          .range(from, from + PAGE_SIZE - 1);
+          .range(start, start + PAGE_SIZE - 1);
         if (error) throw new Error(error.message);
         rows.push(...(data ?? []));
         if ((data?.length ?? 0) < PAGE_SIZE) break;
       }
-      return parseKnownEvents(rows.map(fromRow));
-    },
-    async rejected() {
-      const ids: string[] = [];
-      for (let from = 0; ; from += PAGE_SIZE) {
-        const { data, error } = await client
-          .from('progress_events')
-          .select('id')
-          .eq('status', 'rejected')
-          .order('id', { ascending: true })
-          .range(from, from + PAGE_SIZE - 1);
-        if (error) throw new Error(error.message);
-        ids.push(...(data ?? []).map((r) => r.id));
-        if ((data?.length ?? 0) < PAGE_SIZE) break;
-      }
-      return ids;
+      // El cursor avanza con todo lo recibido, también lo rechazado o de un tipo que esta versión no
+      // entiende; nunca retrocede. Se trunca a milisegundos, y el solape cubre la diferencia.
+      let latest = Number.isNaN(sinceMs) ? Number.NEGATIVE_INFINITY : sinceMs;
+      for (const r of rows) latest = Math.max(latest, Date.parse(r.received_at));
+      const cursor = Number.isFinite(latest) ? new Date(latest).toISOString() : null;
+      const result: PullResult = {
+        events: parseKnownEvents(rows.filter((r) => r.status === 'accepted').map(fromRow)),
+        rejected: rows.filter((r) => r.status === 'rejected').map((r) => r.id),
+        cursor,
+      };
+      return result;
     },
   };
 }

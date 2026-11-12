@@ -28,7 +28,12 @@ function servidorFalso() {
     /** Ids que el servidor guardó como rechazados (fuera de tope). */
     rechazadosEnServidor: new Set<string>(),
     envios: 0,
+    /** Los cursores con que se pidió cada pasada, en orden. */
+    pedidos: [] as Array<string | null>,
+    /** Contador de recepción del servidor: hace de `received_at`. */
+    recibidos: 0,
   };
+  const recepcion = new Map<string, number>();
   const eventos = (id: string) => porCuenta.get(id) ?? porCuenta.set(id, new Map()).get(id)!;
   const remoto = (cuenta: () => Account | null): ProgressRemote => ({
     available: () => true,
@@ -40,22 +45,30 @@ function servidorFalso() {
         if (estado.rechazar.has(e.id)) out.rejected.push(e.id);
         else {
           const mios = eventos(cuenta()!.id);
-          if (!mios.has(e.id)) mios.set(e.id, e);
+          if (!mios.has(e.id)) {
+            mios.set(e.id, e);
+            recepcion.set(e.id, ++estado.recibidos);
+          }
           out.accepted.push(e.id);
         }
       }
       return out;
     },
-    async pull() {
+    async pull(since) {
       if (!estado.enLinea) throw new Error('sin red');
-      return [...eventos(cuenta()!.id).values()];
-    },
-    async rejected() {
-      if (!estado.enLinea) throw new Error('sin red');
-      return [...estado.rechazadosEnServidor];
+      estado.pedidos.push(since);
+      const desde = since === null ? 0 : Number(since);
+      const nuevos = [...eventos(cuenta()!.id).values()].filter(
+        (e) => recepcion.get(e.id)! > desde,
+      );
+      return {
+        events: nuevos,
+        rejected: [...estado.rechazadosEnServidor],
+        cursor: String(Math.max(desde, ...nuevos.map((e) => recepcion.get(e.id)!))),
+      };
     },
   });
-  return { estado, eventos, remoto };
+  return { estado, eventos, remoto, recepcion };
 }
 
 function authFalso(inicial: Account | null = null) {
@@ -163,6 +176,130 @@ describe('sincronizar el progreso', () => {
     await a.sync();
     expect(a.progress.getState().progress.xp).toBe(xp);
     expect(s.eventos('ana').size).toBe(a.progress.getState().events.length);
+  });
+
+  describe('cursor del pull', () => {
+    const CURSOR = 'linguapop:pull-cursor:v1';
+
+    it('la primera pasada pide todo y las siguientes solo desde el cursor guardado', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      await a.sync();
+      // Sin cursor al empezar; tras enviar, otra lectura corta ya con el cursor de la primera.
+      expect(s.estado.pedidos[0]).toBeNull();
+      expect(s.estado.pedidos).toHaveLength(2);
+      const guardado = a.m.data.get(CURSOR);
+      expect(guardado).toBeDefined();
+      s.estado.pedidos.length = 0;
+      await a.sync();
+      expect(s.estado.pedidos).toEqual([guardado!.slice(guardado!.lastIndexOf('|') + 1)]);
+    });
+
+    it('un evento que otro dispositivo sube después llega con el cursor puesto', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      const b = await dispositivo(s);
+      await a.progress.getState().record([leccion(10)]);
+      await a.sync();
+      await b.sync();
+      expect(b.m.data.get(CURSOR)).toBeDefined();
+      // B hace una lección más tarde en su reloj, pero el servidor la recibe después del cursor de A.
+      await b.progress.getState().record([leccion(7)]);
+      await b.sync();
+      await a.sync();
+      expect(a.progress.getState().progress.xp).toBe(b.progress.getState().progress.xp);
+    });
+
+    it('un dispositivo nuevo, sin cursor, reconstruye el mismo progreso', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion(10)]);
+      await a.sync();
+      await a.progress.getState().record([leccion(8)]);
+      await a.sync();
+      const nuevo = await dispositivo(s);
+      await nuevo.sync();
+      expect(nuevo.progress.getState().progress.xp).toBe(a.progress.getState().progress.xp);
+    });
+
+    it('sin progreso local el cursor no se usa: se pide todo', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      await a.sync();
+      await a.composition.progressSink.clear();
+      s.estado.pedidos.length = 0;
+      await a.sync();
+      expect(s.estado.pedidos[0]).toBeNull();
+    });
+
+    it('un cursor guardado con otros tipos de evento no se usa: se pide todo', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      await a.sync();
+      a.m.data.set(CURSOR, 'tipos-viejos|5');
+      s.estado.pedidos.length = 0;
+      await a.sync();
+      expect(s.estado.pedidos[0]).toBeNull();
+    });
+
+    it('si guardar lo traído falla a medias el cursor no avanza y la próxima pasada lo recupera', async () => {
+      const s = servidorFalso();
+      const b = await dispositivo(s);
+      await b.progress.getState().record([leccion(10), leccion(8)]);
+      await b.sync();
+      const a = await dispositivo(s);
+      const sink = a.composition.progressSink;
+      const original = sink.append.bind(sink);
+      let llamadas = 0;
+      sink.append = async (e) => {
+        if (++llamadas === 2) throw new Error('almacenamiento lleno');
+        return original(e);
+      };
+      expect(await a.sync()).toBe('offline');
+      expect(a.m.data.has(CURSOR)).toBe(false);
+      sink.append = original;
+      expect(await a.sync()).toBe('synced');
+      expect(a.progress.getState().progress.xp).toBe(b.progress.getState().progress.xp);
+    });
+
+    it('si la pasada falla el cursor no avanza', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      await a.sync();
+      const antes = a.m.data.get(CURSOR);
+      s.estado.enLinea = false;
+      expect(await a.sync()).toBe('offline');
+      expect(a.m.data.get(CURSOR)).toBe(antes);
+    });
+
+    it('otra cuenta en el dispositivo empieza sin cursor', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      await a.sync();
+      a.entrar(beto);
+      s.estado.pedidos.length = 0;
+      await a.sync();
+      expect(s.estado.pedidos[0]).toBeNull();
+    });
+
+    it('cerrar sesión y borrar la cuenta borran el cursor', async () => {
+      const s = servidorFalso();
+      const a = await dispositivo(s);
+      await a.progress.getState().record([leccion()]);
+      await a.sync();
+      expect(await signOut(a.composition, a.progress)).toEqual({ kind: 'ok' });
+      expect(a.m.data.has(CURSOR)).toBe(false);
+      a.entrar(ana);
+      await a.sync();
+      expect(a.m.data.has(CURSOR)).toBe(true);
+      await deleteAccount(a.composition, a.progress);
+      expect(a.m.data.has(CURSOR)).toBe(false);
+    });
   });
 
   it('lo hecho sin red se envía al volver y no se reenvía después', async () => {

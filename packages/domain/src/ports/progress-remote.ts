@@ -8,6 +8,19 @@ export type PushOutcome = {
 };
 
 /**
+ * Lo que trae una pasada de `pull`. `cursor` es la hora del servidor (`received_at`) más reciente
+ * que se ha visto, que la siguiente pasada pasa como `since`: si no llegó ningún evento nuevo es el
+ * mismo `since`, y es nulo solo cuando tampoco había `since`.
+ */
+export type PullResult = {
+  /** Eventos aceptados que esta versión entiende, también los de otros dispositivos. */
+  events: ProgressEvent[];
+  /** Ids de los eventos que el servidor guardó como rechazados (AD-7): no cuentan. */
+  rejected: string[];
+  cursor: string | null;
+};
+
+/**
  * Copia del progreso en el servidor (AD-6, AD-7). Solo conoce los eventos de la cuenta con la
  * sesión abierta. Si no hay red o el servidor no responde, lanza: los eventos siguen pendientes.
  */
@@ -16,8 +29,10 @@ export interface ProgressRemote {
   available(): boolean;
   /** Envía eventos de forma idempotente: reenviar un id ya guardado no lo duplica. */
   push(events: readonly ProgressEvent[]): Promise<PushOutcome>;
-  /** Todos los eventos de la cuenta que esta versión entiende, también los de otros dispositivos. */
-  pull(): Promise<ProgressEvent[]>;
-  /** Ids de los eventos de la cuenta que el servidor guardó como rechazados (AD-7): no cuentan. */
-  rejected(): Promise<string[]>;
+  /**
+   * Lo que el servidor recibió de la cuenta desde `since` (con un pequeño solape que cubre las
+   * escrituras que confirman fuera de orden); sin `since`, todo. Repetir un evento es inocuo: el
+   * cliente lo ignora por su id.
+   */
+  pull(since: string | null): Promise<PullResult>;
 }

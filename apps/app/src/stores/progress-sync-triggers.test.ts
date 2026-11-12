@@ -33,9 +33,8 @@ async function arrancar(cuenta: Account | null = ana) {
       push: async () => ({ accepted: [], rejected: [] }),
       pull: async () => {
         pulls.n++;
-        return [];
+        return { events: [], rejected: [], cursor: null };
       },
-      rejected: async () => [],
     },
   });
   const progress = createProgressStore(c);
