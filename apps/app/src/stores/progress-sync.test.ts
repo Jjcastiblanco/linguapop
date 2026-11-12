@@ -245,6 +245,26 @@ describe('sincronizar el progreso', () => {
       expect(s.estado.pedidos[0]).toBeNull();
     });
 
+    it('si guardar lo traído falla a medias el cursor no avanza y la próxima pasada lo recupera', async () => {
+      const s = servidorFalso();
+      const b = await dispositivo(s);
+      await b.progress.getState().record([leccion(10), leccion(8)]);
+      await b.sync();
+      const a = await dispositivo(s);
+      const sink = a.composition.progressSink;
+      const original = sink.append.bind(sink);
+      let llamadas = 0;
+      sink.append = async (e) => {
+        if (++llamadas === 2) throw new Error('almacenamiento lleno');
+        return original(e);
+      };
+      expect(await a.sync()).toBe('offline');
+      expect(a.m.data.has(CURSOR)).toBe(false);
+      sink.append = original;
+      expect(await a.sync()).toBe('synced');
+      expect(a.progress.getState().progress.xp).toBe(b.progress.getState().progress.xp);
+    });
+
     it('si la pasada falla el cursor no avanza', async () => {
       const s = servidorFalso();
       const a = await dispositivo(s);

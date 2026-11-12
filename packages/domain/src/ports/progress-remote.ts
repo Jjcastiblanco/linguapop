@@ -8,8 +8,9 @@ export type PushOutcome = {
 };
 
 /**
- * Lo que trae una pasada de `pull`. `cursor` es la hora del servidor (`received_at`) del último
- * evento recibido, que la siguiente pasada pasa como `since`; es nulo si no llegó ninguno.
+ * Lo que trae una pasada de `pull`. `cursor` es la hora del servidor (`received_at`) más reciente
+ * que se ha visto, que la siguiente pasada pasa como `since`: si no llegó ningún evento nuevo es el
+ * mismo `since`, y es nulo solo cuando tampoco había `since`.
  */
 export type PullResult = {
   /** Eventos aceptados que esta versión entiende, también los de otros dispositivos. */

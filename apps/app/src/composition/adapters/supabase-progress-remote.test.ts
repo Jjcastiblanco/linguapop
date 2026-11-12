@@ -27,6 +27,7 @@ function clienteFalso(opciones: {
   );
   const consultas: Array<[number, number]> = [];
   const desdes: Array<string | null> = [];
+  const desdesPorPagina: Array<string | null> = [];
   const columnasPedidas: string[] = [];
   const cliente = {
     from: () => ({
@@ -43,6 +44,7 @@ function clienteFalso(opciones: {
           range: async (from: number, to: number) => {
             consultas.push([from, to]);
             if (from === 0) desdes.push(desde);
+            desdesPorPagina.push(desde);
             const fuente = (opciones.filas ?? []) as Array<{ received_at: string }>;
             const filtradas =
               desde === null
@@ -55,7 +57,7 @@ function clienteFalso(opciones: {
       },
     }),
   } as unknown as EventsClientLike;
-  return { cliente, upsert, consultas, desdes, columnasPedidas };
+  return { cliente, upsert, consultas, desdes, desdesPorPagina, columnasPedidas };
 }
 
 const fila = (
@@ -152,6 +154,16 @@ describe('copia del progreso en Supabase', () => {
     await remoto.pull('2026-11-11T12:10:00.000Z');
     expect(desdes).toEqual([null, '2026-11-11T12:05:00.000Z']);
     expect(PULL_OVERLAP_MS).toBe(5 * 60 * 1000);
+  });
+
+  it('el filtro del cursor se aplica en todas las páginas', async () => {
+    const filas = Array.from({ length: PAGE_SIZE + 5 }, (_v, i) =>
+      fila(i + 1, { received_at: '2026-11-11T12:08:00+00:00' }),
+    );
+    const { cliente, desdesPorPagina } = clienteFalso({ filas });
+    const out = await createSupabaseProgressRemote(cliente).pull('2026-11-11T12:10:00.000Z');
+    expect(out.events).toHaveLength(PAGE_SIZE + 5);
+    expect(desdesPorPagina).toEqual(['2026-11-11T12:05:00.000Z', '2026-11-11T12:05:00.000Z']);
   });
 
   it('con cursor no baja lo anterior al solape y el cursor sigue al último recibido', async () => {
