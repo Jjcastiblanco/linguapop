@@ -1,6 +1,6 @@
 -- Retención de datos (épica 10, historia 10.2). Se corre con `pnpm db:test`.
 begin;
-select plan(22);
+select plan(24);
 
 select set_config('test.week', (date_trunc('week', now() at time zone 'utc'))::date::text, true);
 
@@ -38,7 +38,7 @@ select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000a
 select public.zz_evento('00000000-0000-4000-8000-0000000000e1', 'session_completed@1', '{"xp": 251}'); -- rechazado, viejo
 select public.zz_evento('00000000-0000-4000-8000-0000000000e2', 'session_completed@1', '{"xp": 251}'); -- rechazado, reciente
 select public.zz_evento('00000000-0000-4000-8000-0000000000e3', 'session_completed@1', '{"xp": 100}');  -- aceptado, viejo
-select public.zz_evento('00000000-0000-4000-8000-0000000000e4', 'session_completed@1', '{"xp": 251}'); -- rechazado, justo dentro de 30 días
+select public.zz_evento('00000000-0000-4000-8000-0000000000e4', 'session_completed@1', '{"xp": 251}'); -- rechazado, dentro del plazo
 reset role;
 
 update public.progress_events set received_at = now() - interval '31 days' where id = '00000000-0000-4000-8000-0000000000e1';
@@ -47,6 +47,7 @@ update public.progress_events set received_at = now() - interval '400 days' wher
 update public.progress_events set received_at = now() - interval '29 days' where id = '00000000-0000-4000-8000-0000000000e4';
 
 select is((select status from public.progress_events where id = '00000000-0000-4000-8000-0000000000e1'), 'rejected', 'preparado: el evento viejo está rechazado');
+select is((select count(*)::int from public.progress_events where status = 'rejected' and id in ('00000000-0000-4000-8000-0000000000e1', '00000000-0000-4000-8000-0000000000e2', '00000000-0000-4000-8000-0000000000e4')), 3, 'preparado: los tres eventos fuera de tope están rechazados');
 select is((select status from public.progress_events where id = '00000000-0000-4000-8000-0000000000e3'), 'accepted', 'preparado: el evento aceptado está aceptado');
 
 -- Permisos ----------------------------------------------------------------------------------------
@@ -83,12 +84,14 @@ select is((select count(*)::int from public.progress_events where id = '00000000
 
 -- Borrar miembros de semanas pasadas no manda avisos; borrar uno de la semana en curso sí.
 select is((select count(*)::int from realtime.messages), current_setting('test.avisos')::int, 'borrar miembros de semanas pasadas no manda avisos de Realtime');
+delete from public.league_members where is_bot and week_start = current_setting('test.week')::date;
+select is((select count(*)::int from realtime.messages), current_setting('test.avisos')::int, 'borrar un bot de la semana en curso no avisa');
 delete from public.league_members where user_id = '00000000-0000-4000-8000-00000000000a' and week_start = current_setting('test.week')::date;
 select is((select count(*)::int from realtime.messages), current_setting('test.avisos')::int + 1, 'borrar un miembro de la semana en curso sigue avisando a su cohorte');
 
 -- Sin nada que borrar corre sin error y no cambia nada.
 select lives_ok($$select public.purge_old_data()$$, 'una segunda corrida no falla');
-select is((select count(*)::int from public.league_cohorts), 2, 'y deja lo mismo');
+select is((select count(*)::int from public.league_cohorts where id in ('00000000-0000-4000-8000-0000000000c0', '00000000-0000-4000-8000-0000000000c8')), 2, 'y deja lo mismo');
 
 select * from finish();
 rollback;

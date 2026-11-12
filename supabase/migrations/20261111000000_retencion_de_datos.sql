@@ -30,6 +30,8 @@ $$;
 -- Solo la corre el trabajo programado (con el rol de la base); ningún cliente.
 revoke all on function public.purge_old_data() from public, anon, authenticated;
 
+-- La semana se calcula en línea y no con `league_week_start`, que ningún cliente puede ejecutar: la condición
+-- se evalúa con el rol de quien borra (por ejemplo, al borrar una cuenta) y fallaría por permisos.
 -- Borrar miembros de semanas pasadas no debe avisar a nadie: el aviso de la 7.5 llegaría a canales que ya
 -- no existen. Quien borra su cuenta (semana en curso) sigue avisando a su cohorte.
 drop trigger league_members_notify_delete on public.league_members;
