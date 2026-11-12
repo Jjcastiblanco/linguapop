@@ -3,6 +3,7 @@ import type { ProgressEvent } from '@linguapop/domain';
 import {
   createSupabaseProgressRemote,
   PAGE_SIZE,
+  PULL_OVERLAP_MS,
   unavailableRemote,
   type EventsClientLike,
 } from './supabase-progress-remote';
@@ -20,46 +21,61 @@ type Respuesta = { error: { code?: string; message: string } | null; status?: nu
 function clienteFalso(opciones: {
   upsert?: (rows: Array<{ id: string }>) => Respuesta;
   filas?: unknown[];
-  rechazados?: string[];
 }) {
   const upsert = vi.fn(async (rows: Array<{ id: string }>) =>
     (opciones.upsert ?? (() => ({ error: null, status: 201 })))(rows),
   );
   const consultas: Array<[number, number]> = [];
-  const filtros: string[] = [];
+  const desdes: Array<string | null> = [];
+  const columnasPedidas: string[] = [];
   const cliente = {
     from: () => ({
       upsert,
       select: (columnas: string) => {
-        let estado = '';
+        columnasPedidas.push(columnas);
+        let desde: string | null = null;
         const q = {
-          eq: (_columna: string, valor: string) => {
-            estado = valor;
-            filtros.push(`${columnas}:${valor}`);
+          gte: (_columna: string, valor: string) => {
+            desde = valor;
             return q;
           },
           order: () => q,
           range: async (from: number, to: number) => {
             consultas.push([from, to]);
-            const fuente =
-              estado === 'rejected'
-                ? (opciones.rechazados ?? []).map((id) => ({ id }))
-                : (opciones.filas ?? []);
-            return { data: fuente.slice(from, to + 1), error: null };
+            if (from === 0) desdes.push(desde);
+            const fuente = (opciones.filas ?? []) as Array<{ received_at: string }>;
+            const filtradas =
+              desde === null
+                ? fuente
+                : fuente.filter((r) => Date.parse(r.received_at) >= Date.parse(desde!));
+            return { data: filtradas.slice(from, to + 1), error: null };
           },
         };
         return q;
       },
     }),
   } as unknown as EventsClientLike;
-  return { cliente, upsert, consultas, filtros };
+  return { cliente, upsert, consultas, desdes, columnasPedidas };
 }
+
+const fila = (
+  n: number,
+  extra: Partial<{ received_at: string; status: 'accepted' | 'rejected'; type: string }> = {},
+) => ({
+  id: evento(n).id,
+  type: 'purchase@1',
+  payload: { item: 'hearts', costGems: 10 },
+  occurred_at: '2026-10-28T12:00:00+00:00',
+  content_version: '3',
+  received_at: '2026-11-11T12:00:00.123456+00:00',
+  status: 'accepted' as const,
+  ...extra,
+});
 
 describe('copia del progreso en Supabase', () => {
   it('sin servidor no está disponible y no hace nada', async () => {
     expect(unavailableRemote.available()).toBe(false);
-    expect(await unavailableRemote.pull()).toEqual([]);
-    expect(await unavailableRemote.rejected()).toEqual([]);
+    expect(await unavailableRemote.pull(null)).toEqual({ events: [], rejected: [], cursor: null });
   });
 
   it('envía los eventos de forma idempotente, con el contenido como texto y sin user_id', async () => {
@@ -117,41 +133,78 @@ describe('copia del progreso en Supabase', () => {
   });
 
   it('trae los eventos con fecha normalizada, por páginas, y descarta los desconocidos', async () => {
-    const filas = Array.from({ length: PAGE_SIZE + 1 }, (_v, i) => ({
-      id: evento(i + 1).id,
-      type: 'purchase@1',
-      payload: { item: 'hearts', costGems: 10 },
-      occurred_at: '2026-10-28T12:00:00+00:00',
-      content_version: '3',
-    }));
-    filas.push({ ...filas[0]!, id: evento(9999).id, type: 'futuro@7' });
+    const filas = Array.from({ length: PAGE_SIZE + 1 }, (_v, i) => fila(i + 1));
+    filas.push(fila(9999, { type: 'futuro@7' }));
     const { cliente, consultas } = clienteFalso({ filas });
-    const traidos = await createSupabaseProgressRemote(cliente).pull();
-    expect(traidos).toHaveLength(PAGE_SIZE + 1);
-    expect(traidos[0]).toMatchObject({ occurredAt: '2026-10-28T12:00:00.000Z', contentVersion: 3 });
+    const { events } = await createSupabaseProgressRemote(cliente).pull(null);
+    expect(events).toHaveLength(PAGE_SIZE + 1);
+    expect(events[0]).toMatchObject({ occurredAt: '2026-10-28T12:00:00.000Z', contentVersion: 3 });
     expect(consultas).toEqual([
       [0, PAGE_SIZE - 1],
       [PAGE_SIZE, 2 * PAGE_SIZE - 1],
     ]);
   });
 
-  it('pide solo los eventos aceptados y trae aparte los ids de los rechazados', async () => {
-    const { cliente, filtros } = clienteFalso({ rechazados: [evento(5).id, evento(6).id] });
+  it('sin cursor pide todo; con cursor pide desde cinco minutos antes', async () => {
+    const { cliente, desdes } = clienteFalso({ filas: [fila(1)] });
     const remoto = createSupabaseProgressRemote(cliente);
-    expect(await remoto.pull()).toEqual([]);
-    expect(await remoto.rejected()).toEqual([evento(5).id, evento(6).id]);
-    expect(filtros).toEqual([
-      'id, type, payload, occurred_at, content_version:accepted',
-      'id:rejected',
-    ]);
+    await remoto.pull(null);
+    await remoto.pull('2026-11-11T12:10:00.000Z');
+    expect(desdes).toEqual([null, '2026-11-11T12:05:00.000Z']);
+    expect(PULL_OVERLAP_MS).toBe(5 * 60 * 1000);
   });
 
-  it('un fallo al pedir los rechazados lanza para reintentar en la próxima pasada', async () => {
+  it('con cursor no baja lo anterior al solape y el cursor sigue al último recibido', async () => {
+    const viejo = fila(1, { received_at: '2026-11-11T11:00:00+00:00' });
+    const reciente = fila(2, { received_at: '2026-11-11T12:08:00+00:00' });
+    const nuevo = fila(3, { received_at: '2026-11-11T12:20:00.654321+00:00' });
+    const { cliente } = clienteFalso({ filas: [viejo, reciente, nuevo] });
+    const out = await createSupabaseProgressRemote(cliente).pull('2026-11-11T12:10:00.000Z');
+    expect(out.events.map((e) => e.id)).toEqual([reciente.id, nuevo.id]);
+    expect(out.cursor).toBe('2026-11-11T12:20:00.654Z');
+  });
+
+  it('una pasada sin eventos nuevos deja el mismo cursor y sin cursor devuelve nulo', async () => {
+    const { cliente } = clienteFalso({ filas: [] });
+    const remoto = createSupabaseProgressRemote(cliente);
+    expect((await remoto.pull('2026-11-11T12:10:00.000Z')).cursor).toBe('2026-11-11T12:10:00.000Z');
+    expect((await remoto.pull(null)).cursor).toBeNull();
+  });
+
+  it('trae en la misma consulta los rechazados y los separa de los aceptados', async () => {
+    const filas = [fila(1), fila(5, { status: 'rejected' }), fila(6, { status: 'rejected' })];
+    const { cliente, columnasPedidas } = clienteFalso({ filas });
+    const out = await createSupabaseProgressRemote(cliente).pull(null);
+    expect(out.events.map((e) => e.id)).toEqual([evento(1).id]);
+    expect(out.rejected).toEqual([evento(5).id, evento(6).id]);
+    expect(columnasPedidas).toHaveLength(1);
+    expect(columnasPedidas[0]).toContain('status');
+  });
+
+  it('un rechazado o un tipo desconocido también adelantan el cursor', async () => {
+    const filas = [
+      fila(1, { received_at: '2026-11-11T12:00:00+00:00' }),
+      fila(2, { status: 'rejected', received_at: '2026-11-11T12:30:00+00:00' }),
+      fila(3, { type: 'futuro@7', received_at: '2026-11-11T12:40:00+00:00' }),
+    ];
+    const { cliente } = clienteFalso({ filas });
+    expect((await createSupabaseProgressRemote(cliente).pull(null)).cursor).toBe(
+      '2026-11-11T12:40:00.000Z',
+    );
+  });
+
+  it('un cursor ilegible se trata como sin cursor', async () => {
+    const { cliente, desdes } = clienteFalso({ filas: [fila(1)] });
+    await createSupabaseProgressRemote(cliente).pull('no-es-una-fecha');
+    expect(desdes).toEqual([null]);
+  });
+
+  it('un fallo al pedir los eventos lanza para reintentar en la próxima pasada', async () => {
     const cliente = {
       from: () => ({
         select: () => {
           const q = {
-            eq: () => q,
+            gte: () => q,
             order: () => q,
             range: async () => ({ data: null, error: { message: 'sin red' } }),
           };
@@ -159,16 +212,6 @@ describe('copia del progreso en Supabase', () => {
         },
       }),
     } as unknown as EventsClientLike;
-    await expect(createSupabaseProgressRemote(cliente).rejected()).rejects.toThrow('sin red');
-  });
-
-  it('trae los ids rechazados por páginas cuando son más que una página', async () => {
-    const rechazados = Array.from({ length: PAGE_SIZE + 3 }, (_v, i) => evento(i + 1).id);
-    const { cliente, consultas } = clienteFalso({ rechazados });
-    expect(await createSupabaseProgressRemote(cliente).rejected()).toEqual(rechazados);
-    expect(consultas).toEqual([
-      [0, PAGE_SIZE - 1],
-      [PAGE_SIZE, 2 * PAGE_SIZE - 1],
-    ]);
+    await expect(createSupabaseProgressRemote(cliente).pull(null)).rejects.toThrow('sin red');
   });
 });

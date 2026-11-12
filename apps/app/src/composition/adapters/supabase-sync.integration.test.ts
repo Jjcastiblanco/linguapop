@@ -42,7 +42,27 @@ describe.skipIf(!url || !anonKey)('copia del progreso contra Supabase local', ()
     const e = evento();
     expect(await a.push([e])).toEqual({ accepted: [e.id], rejected: [] });
     expect(await a.push([e])).toEqual({ accepted: [e.id], rejected: [] });
-    expect(await b.pull()).toEqual([e]);
+    expect((await b.pull(null)).events).toEqual([e]);
+  });
+
+  it('con cursor solo baja lo recibido después (con solape) y un evento tardío llega', async () => {
+    const c = correo();
+    const a = await dispositivo(c);
+    const b = await dispositivo(c);
+    const primero = evento();
+    await a.push([primero]);
+    const inicial = await b.pull(null);
+    expect(inicial.events).toEqual([primero]);
+    expect(inicial.cursor).not.toBeNull();
+    // Otro dispositivo sube un evento con fecha vieja del cliente: el servidor lo recibe ahora.
+    const tardio = { ...evento(), occurredAt: '2020-01-01T00:00:00.000Z' } as ProgressEvent;
+    await a.push([tardio]);
+    const siguiente = await b.pull(inicial.cursor);
+    expect(siguiente.events.map((e) => e.id)).toContain(tardio.id);
+    expect(siguiente.cursor! >= inicial.cursor!).toBe(true);
+    // Un cursor posterior a todo lo recibido (más allá del solape) no trae nada.
+    const futuro = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    expect(await b.pull(futuro)).toEqual({ events: [], rejected: [], cursor: futuro });
   });
 
   it('una cuenta no baja los eventos de otra y un id ajeno no pisa nada', async () => {
@@ -50,7 +70,7 @@ describe.skipIf(!url || !anonKey)('copia del progreso contra Supabase local', ()
     const otra = await dispositivo(correo());
     const e = evento();
     await a.push([e]);
-    expect(await otra.pull()).toEqual([]);
+    expect((await otra.pull(null)).events).toEqual([]);
   });
 
   it('un evento que el servidor no admite se rechaza y no estorba a los demás', async () => {
@@ -59,7 +79,7 @@ describe.skipIf(!url || !anonKey)('copia del progreso contra Supabase local', ()
     const malo = evento({ type: `${'x'.repeat(100)}@1` });
     const out = await a.push([bueno, malo]);
     expect(out).toEqual({ accepted: [bueno.id], rejected: [malo.id] });
-    expect(await a.pull()).toEqual([bueno]);
+    expect((await a.pull(null)).events).toEqual([bueno]);
   });
 
   it('un evento con xp sobre el tope se guarda rechazado: no se baja y se reporta aparte', async () => {
@@ -85,12 +105,12 @@ describe.skipIf(!url || !anonKey)('copia del progreso contra Supabase local', ()
       accepted: [bueno.id, forjado.id],
       rejected: [],
     });
-    expect(await a.pull()).toEqual([bueno]);
-    expect(await a.rejected()).toEqual([forjado.id]);
+    expect((await a.pull(null)).events).toEqual([bueno]);
+    expect((await a.pull(null)).rejected).toEqual([forjado.id]);
     // Otro dispositivo de la misma cuenta ve lo mismo.
     const b = await dispositivo(c);
-    expect(await b.pull()).toEqual([bueno]);
-    expect(await b.rejected()).toEqual([forjado.id]);
+    expect((await b.pull(null)).events).toEqual([bueno]);
+    expect((await b.pull(null)).rejected).toEqual([forjado.id]);
   });
 
   it('un payload de más de 8 KB se rechaza al enviarlo', async () => {
@@ -113,7 +133,7 @@ describe.skipIf(!url || !anonKey)('copia del progreso contra Supabase local', ()
     )!;
     expect(await a.push([importado])).toEqual({ accepted: [importado.id], rejected: [] });
     expect(await a.push([importado])).toEqual({ accepted: [importado.id], rejected: [] });
-    expect(await (await dispositivo(c)).pull()).toEqual([importado]);
+    expect((await (await dispositivo(c)).pull(null)).events).toEqual([importado]);
   });
 });
 

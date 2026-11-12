@@ -1,10 +1,30 @@
-import { LEGACY_STORAGE_KEY, legacyEventId, legacyImportEvent } from '@linguapop/domain';
+import {
+  EVENT_TYPES,
+  LEGACY_STORAGE_KEY,
+  legacyEventId,
+  legacyImportEvent,
+} from '@linguapop/domain';
 import type { DeleteAccountResult } from '@linguapop/domain';
 import type { Composition } from '../composition';
 import type { ProgressStore } from './progress-store';
 
 export const SYNC_OWNER_KEY = 'linguapop:sync-owner:v1';
 export const SYNCED_KEY = 'linguapop:synced-ids:v1';
+/** Hora del servidor (`received_at`) hasta la que este dispositivo ya trajo los eventos de la cuenta. */
+export const PULL_CURSOR_KEY = 'linguapop:pull-cursor:v1';
+
+/**
+ * El cursor lleva los tipos de evento que esta versión entiende: `pull` descarta los que no conoce y
+ * el cursor pasa de largo, así que una versión que entienda más tipos debe volver a pedir todo.
+ */
+const CURSOR_TAG = EVENT_TYPES.join(',');
+
+async function readCursor(c: Composition): Promise<string | null> {
+  const raw = await c.store.get(PULL_CURSOR_KEY);
+  const at = raw ? raw.lastIndexOf('|') : -1;
+  if (!raw || at < 0 || raw.slice(0, at) !== CURSOR_TAG) return null;
+  return raw.slice(at + 1) || null;
+}
 
 /** Espera tras un cambio de progreso antes de sincronizar, para juntar los eventos de una lección. */
 export const SYNC_DELAY_MS = 2000;
@@ -58,6 +78,25 @@ async function importLegacy(c: Composition, accountId: string): Promise<void> {
 }
 
 /**
+ * Trae lo que el servidor recibió desde el último cursor, lo anota y marca los rechazados que este
+ * dispositivo tiene. El cursor solo avanza cuando todo quedó guardado: si falla a medias, la próxima
+ * pasada repite desde el mismo punto. Sin progreso local no se confía en el cursor.
+ */
+async function pullNew(c: Composition, synced: Set<string>): Promise<void> {
+  const local = await c.progressSink.readAll();
+  const result = await c.progressRemote.pull(local.length > 0 ? await readCursor(c) : null);
+  for (const e of result.events) {
+    await c.progressSink.append(e);
+    synced.add(e.id);
+  }
+  if (result.rejected.length > 0) {
+    const held = new Set((await c.progressSink.readAll()).map((e) => e.id));
+    await c.progressSink.reject(result.rejected.filter((id) => held.has(id)));
+  }
+  if (result.cursor !== null) await c.store.set(PULL_CURSOR_KEY, `${CURSOR_TAG}|${result.cursor}`);
+}
+
+/**
  * Una pasada de sincronización (AD-6): trae los eventos de la cuenta, envía los locales que el
  * servidor aún no tiene y marca los que rechaza. El estado resultante siempre es el pliegue de
  * todos los eventos, así dos dispositivos con la misma cuenta convergen al mismo progreso.
@@ -79,15 +118,13 @@ export async function syncProgress(c: Composition, progress: ProgressStore): Pro
     for (const e of kept) await c.progressSink.append(e);
     synced = new Set();
     await c.store.remove(SYNCED_KEY);
+    await c.store.remove(PULL_CURSOR_KEY);
   }
   await c.store.set(SYNC_OWNER_KEY, account.id);
 
   let result: SyncResult = 'synced';
   try {
-    for (const e of await c.progressRemote.pull()) {
-      await c.progressSink.append(e);
-      synced.add(e.id);
-    }
+    await pullNew(c, synced);
     await importLegacy(c, account.id);
     const rejected = await c.progressSink.rejectedIds();
     const pending = (await c.progressSink.readAll())
@@ -97,11 +134,10 @@ export async function syncProgress(c: Composition, progress: ProgressStore): Pro
       const outcome = await c.progressRemote.push(pending);
       outcome.accepted.forEach((id) => synced.add(id));
       await c.progressSink.reject(outcome.rejected);
+      // El servidor guarda como rechazados los eventos fuera de tope (AD-7), también los que acaba de
+      // recibir: otra lectura corta los trae para marcarlos y que no cuenten.
+      await pullNew(c, synced);
     }
-    // El servidor guarda como rechazados los eventos fuera de tope (AD-7), también los que acaba de
-    // recibir: se marcan para que no cuenten. Solo los que este dispositivo tiene.
-    const held = new Set((await c.progressSink.readAll()).map((e) => e.id));
-    await c.progressSink.reject((await c.progressRemote.rejected()).filter((id) => held.has(id)));
   } catch {
     result = 'offline'; // sin red o servidor caído: lo pendiente se envía en la próxima pasada
   } finally {
@@ -147,6 +183,7 @@ async function resetDeviceProgress(c: Composition, progress: ProgressStore): Pro
   await progress.getState().reset();
   await c.store.remove(SYNC_OWNER_KEY);
   await c.store.remove(SYNCED_KEY);
+  await c.store.remove(PULL_CURSOR_KEY);
   await progress.getState().load();
 }
 
