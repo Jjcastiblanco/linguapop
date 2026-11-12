@@ -307,11 +307,11 @@ describe('pantalla Ligas con la tabla real', () => {
     expect(await screen.findByText(/No hay conexión con la liga/)).toBeInTheDocument();
   });
 
-  it('el aviso de conexión queda debajo de la tabla simulada', async () => {
+  it('el aviso de conexión queda encima de la tabla simulada', async () => {
     await abrirReal(authFalso(ANA).auth, ligaFalsa(new Error('sin red')));
     const aviso = await screen.findByText(/No hay conexión con la liga/);
     const tabla = screen.getByRole('list', { name: 'Clasificación semanal' });
-    expect(tabla.compareDocumentPosition(aviso) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(tabla.compareDocumentPosition(aviso) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
   it('si el servidor no contesta en 10 segundos queda la simulada', async () => {
