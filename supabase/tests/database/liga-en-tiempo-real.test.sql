@@ -1,7 +1,7 @@
 -- La liga en tiempo real (épica 7, historia 7.5). Se corre con `pnpm db:test`; no necesita el
 -- servidor Realtime: se prueba lo que escribe la base (avisos) y quién puede leerlo (la política).
 begin;
-select plan(44);
+select plan(47);
 
 select set_config('test.week', (date_trunc('week', now() at time zone 'utc'))::date::text, true);
 
@@ -87,6 +87,18 @@ select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d2'), 2, 'y la 2 a
 select ok((select notified_at from public.league_cohorts where id = '00000000-0000-4000-8000-0000000000d1') is not null, 'la cohorte guarda cuándo avisó');
 select is((select notified_at from public.league_cohorts where id = '00000000-0000-4000-8000-0000000000d3'), null, 'una cohorte que no avisó no tiene marca');
 
+-- El intervalo con el reloj real: hace 2 s se avisa, hace medio segundo no.
+update public.league_cohorts set notified_at = clock_timestamp() - interval '2 seconds' where id = '00000000-0000-4000-8000-0000000000d1';
+update public.league_members set weekly_xp = 150 where user_id = '00000000-0000-4000-8000-00000000000a';
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 9, 'con el último aviso de hace 2 s se avisa');
+update public.league_cohorts set notified_at = clock_timestamp() - interval '500 milliseconds' where id = '00000000-0000-4000-8000-0000000000d1';
+update public.league_members set weekly_xp = 160 where user_id = '00000000-0000-4000-8000-00000000000a';
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 9, 'con el último aviso de hace medio segundo no se avisa');
+update public.league_cohorts set notified_at = clock_timestamp() + interval '5 seconds' where id = '00000000-0000-4000-8000-0000000000d1';
+update public.league_members set weekly_xp = 170 where user_id = '00000000-0000-4000-8000-00000000000a';
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 9, 'un aviso marcado en el futuro tampoco deja pasar otro');
+select public.zz_libre();
+
 -- Qué lleva el aviso --------------------------------------------------------------------------
 select is((select count(*)::int from realtime.messages where topic like 'league:%' and (payload - 'id') <> '{}'::jsonb), 0,
   'el aviso no lleva más que su id: ni XP, ni nombres, ni correo, ni eventos');
@@ -102,7 +114,7 @@ insert into public.progress_events (id, type, payload, occurred_at, content_vers
 values ('00000000-0000-4000-8000-0000000000a1', 'session_completed@1', '{"xp": 20}', now(), '1');
 reset role;
 -- La semana de la prueba puede no ser la de `weekly_xp` si cruza el lunes: se mide el aviso nuevo.
-select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 9,
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 10,
   'un evento de XP aceptado avisa a la cohorte de quien lo ganó');
 select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d2'), 2, 'y no a las demás');
 
@@ -110,7 +122,7 @@ select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d2'), 2, 'y no a l
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000a', true);
 select is(public.league_my_topic(), 'league:00000000-0000-4000-8000-0000000000d1', 'A tiene el canal de su cohorte');
-select is((select count(*)::int from realtime.messages where topic = 'league:00000000-0000-4000-8000-0000000000d1'), 9,
+select is((select count(*)::int from realtime.messages where topic = 'league:00000000-0000-4000-8000-0000000000d1'), 10,
   'A lee los avisos de su cohorte');
 select is((select count(*)::int from realtime.messages where topic = 'league:00000000-0000-4000-8000-0000000000d2'), 0,
   'y ninguno de la cohorte de C');
@@ -141,7 +153,7 @@ select throws_ok($$ select * from public.league_members $$, '42501', null, 'las 
 select lives_ok($$ select realtime.send('{"xp": 99999}'::jsonb, 'xp', 'league:00000000-0000-4000-8000-0000000000d1', true) $$,
   'llamar a realtime.send no rompe la sesión');
 reset role;
-select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 9, 'pero no deja ningún aviso');
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 10, 'pero no deja ningún aviso');
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000a', true);
 

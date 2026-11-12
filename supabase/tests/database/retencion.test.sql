@@ -1,6 +1,6 @@
 -- Retención de datos (épica 10, historia 10.2). Se corre con `pnpm db:test`.
 begin;
-select plan(27);
+select plan(29);
 
 select set_config('test.week', (date_trunc('week', now() at time zone 'utc'))::date::text, true);
 
@@ -98,6 +98,9 @@ select is((select count(*)::int from realtime.messages where topic = 'league:rec
 select public.purge_realtime_messages(-1);
 select is((select count(*)::int from realtime.messages where topic = 'league:reciente'), 0, 'y se borra cuando queda fuera del plazo');
 select ok(not has_function_privilege('authenticated', 'public.purge_realtime_messages(integer)', 'execute'), 'ningún cliente ejecuta la limpieza de mensajes');
+
+select ok(pg_get_functiondef('public.purge_old_data()'::regprocedure) ~ 'purge_realtime_messages\(realtime_days\)', 'la limpieza semanal llama a la de mensajes de Realtime');
+select ok(pg_get_functiondef('public.purge_old_data()'::regprocedure) ~ 'realtime_days constant integer := 7;', 'con un plazo de 7 días');
 
 -- Sin nada que borrar corre sin error y no cambia nada.
 select lives_ok($$select public.purge_old_data()$$, 'una segunda corrida no falla');

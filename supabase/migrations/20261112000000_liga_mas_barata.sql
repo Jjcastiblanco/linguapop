@@ -48,7 +48,9 @@ create trigger league_members_count_delete
   execute function public.league_members_count();
 
 -- El aviso sigue siendo privado y vacío (7.5); ahora se envía solo si pasó un segundo desde el último
--- de esa cohorte. La hora es la de la transacción: varios cambios de una misma sentencia cuentan como uno.
+-- de esa cohorte. Se usa el reloj real (`clock_timestamp`) y no la hora de inicio de la transacción: una
+-- transacción larga que empezó antes no debe quedar suprimida por un aviso posterior a su inicio, porque
+-- confirmaría después de la relectura del cliente y nadie volvería a avisar.
 create or replace function public.league_members_notify() returns trigger
   language plpgsql
   security definer
@@ -58,9 +60,9 @@ declare
   v_cohort uuid := (case when tg_op = 'DELETE' then old.cohort_id else new.cohort_id end);
 begin
   update public.league_cohorts
-  set notified_at = now()
+  set notified_at = clock_timestamp()
   where id = v_cohort
-    and (notified_at is null or notified_at <= now() - interval '1 second');
+    and (notified_at is null or notified_at <= clock_timestamp() - interval '1 second');
   if found then
     -- `realtime.send` no lanza si falla: un aviso perdido nunca estorba a quien guarda su progreso.
     perform realtime.send('{}'::jsonb, 'xp', 'league:' || v_cohort::text, true);
@@ -102,7 +104,7 @@ begin
     select c.id into v_cohort
     from public.league_cohorts c
     where c.week_start = v_week
-      and c.people < max_members
+      and c.people < 30 -- igual que `max_members`: el literal permite usar el índice parcial
     order by c.created_at, c.id
     limit 1;
 
@@ -123,6 +125,10 @@ begin
         select id from public.league_members where cohort_id = v_cohort and is_bot order by id limit 1
       );
     end if;
+
+    -- El candado de la cohorte se toma antes de insertar: la alta bloquea la fila de la cohorte (conteo y
+    -- avisos) y no debe esperar el candado teniéndola tomada, o los eventos de XP de la cohorte harían cola.
+    perform pg_advisory_xact_lock(hashtextextended('league-cohort:' || v_cohort::text, 0));
 
     -- El XP aceptado de esta semana antes de abrir la liga también cuenta. Los topes de 7.2 dan como
     -- máximo 21 000 por semana (3000 × 7); el límite aquí protege de filas anteriores a 7.2, que
@@ -152,8 +158,8 @@ end;
 $$;
 
 -- Los avisos de la liga (7.5) son efímeros: Realtime ya descarta sus particiones diarias, y esto es una red de
--- seguridad. Si el rol que corre la limpieza no tiene permiso sobre `realtime.messages`, se omite sin abortar el
--- resto de la retención.
+-- seguridad. Si falla (por ejemplo, sin permiso sobre `realtime.messages`), avisa y no aborta el resto de la
+-- retención.
 create function public.purge_realtime_messages(p_days integer) returns void
   language plpgsql
   security definer
@@ -162,8 +168,10 @@ as $$
 begin
   delete from realtime.messages
   where inserted_at < (now() at time zone 'utc') - make_interval(days => p_days);
-exception when insufficient_privilege or undefined_table then
-  null;
+exception when others then
+  -- Es una red de seguridad: un fallo (permisos, tiempo de espera) no debe abortar el resto de la retención,
+  -- pero tampoco pasar sin dejar rastro.
+  raise warning 'purge_realtime_messages omitida: %', sqlerrm;
 end;
 $$;
 

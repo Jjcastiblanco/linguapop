@@ -1,6 +1,6 @@
 -- Conteo de personas por cohorte y apertura de la liga (épica 10, historia 10.3). Se corre con `pnpm db:test`.
 begin;
-select plan(13);
+select plan(14);
 
 select set_config('test.week', (date_trunc('week', now() at time zone 'utc'))::date::text, true);
 
@@ -57,6 +57,7 @@ select is((select count(*)::int from public.league_members where cohort_id = (se
 
 -- Permisos e índice --------------------------------------------------------------------------------------
 select ok(not has_function_privilege('authenticated', 'public.league_members_count()', 'execute'), 'ningún cliente ejecuta el disparador del conteo');
+select is((select indexdef from pg_indexes where indexname = 'league_cohorts_open_idx') ~ 'WHERE \(people < 30\)', true, 'el índice de cohortes con plaza es parcial sobre people < 30');
 
 select * from finish();
 rollback;
