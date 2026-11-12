@@ -53,9 +53,12 @@ export const PAGE_SIZE = 500;
 /**
  * Cuánto antes del cursor se vuelve a pedir. Postgres da `received_at` al empezar la transacción, y
  * una que confirma tarde queda con una hora anterior a otra ya vista: el solape la recupera. Lo
- * repetido se ignora por su id.
+ * repetido se ignora por su id. El rol `authenticated` tiene `statement_timeout = 8 s`, así que ninguna
+ * escritura confirma más de 8 s después de su `received_at`: 30 s dan margen de sobra. Más no hace falta
+ * y cuesta egress: cada pasada sin eventos nuevos vuelve a bajar lo recibido en este tramo antes del
+ * último evento (medido en la 10.6: 5 min repetían la última lección en cada pasada).
  */
-export const PULL_OVERLAP_MS = 5 * 60 * 1000;
+export const PULL_OVERLAP_MS = 30 * 1000;
 
 /** Sin servidor: la app queda como invitado con el progreso solo local. */
 export const unavailableRemote: ProgressRemote = {
