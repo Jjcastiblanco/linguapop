@@ -31,6 +31,13 @@ const sesion = (correct: number): PendingEvent => ({
 const filas = () => screen.getAllByTestId(/^league-row-/);
 const mia = () => filas().find((f) => f.getAttribute('data-me') === 'true')!;
 
+/** El servidor manda como mucho un aviso por segundo y por cohorte (10.3); la lectura debe esperar más. */
+const SERVER_NOTICE_INTERVAL_MS = 1_000;
+
+it('la espera de relectura es mayor que el intervalo entre avisos del servidor', () => {
+  expect(REFRESH_DELAY_MS).toBeGreaterThan(SERVER_NOTICE_INTERVAL_MS);
+});
+
 describe('pantalla Ligas', () => {
   it('muestra la liga, los días restantes y 30 jugadores', async () => {
     await abrir();

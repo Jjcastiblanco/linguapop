@@ -1,7 +1,7 @@
 -- La liga en tiempo real (épica 7, historia 7.5). Se corre con `pnpm db:test`; no necesita el
 -- servidor Realtime: se prueba lo que escribe la base (avisos) y quién puede leerlo (la política).
 begin;
-select plan(38);
+select plan(44);
 
 select set_config('test.week', (date_trunc('week', now() at time zone 'utc'))::date::text, true);
 
@@ -24,6 +24,11 @@ create function public.zz_avisos(cohorte text) returns integer language sql secu
   select count(*)::int from realtime.messages where topic = 'league:' || cohorte
 $$;
 
+-- El aviso de una cohorte sale como mucho una vez por segundo (10.3): entre pasos se libera el intervalo.
+create function public.zz_libre() returns void language sql security definer as $$
+  update public.league_cohorts set notified_at = null
+$$;
+
 -- Qué se avisa -------------------------------------------------------------------------------
 select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 0, 'al empezar no hay avisos');
 
@@ -35,6 +40,7 @@ insert into public.league_members (cohort_id, week_start, bot_name, is_bot, week
 values ('00000000-0000-4000-8000-0000000000d1', current_setting('test.week')::date, 'Robi', true, 5);
 select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 1, 'entrar un bot no avisa');
 
+select public.zz_libre();
 insert into public.league_members (cohort_id, week_start, user_id)
 values
   ('00000000-0000-4000-8000-0000000000d1', current_setting('test.week')::date, '00000000-0000-4000-8000-00000000000b'),
@@ -43,6 +49,7 @@ values
 select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 2, 'cada cohorte recibe solo lo suyo (B en la 1)');
 select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d2'), 1, 'y C en la 2');
 
+select public.zz_libre();
 update public.league_members set weekly_xp = 40 where user_id = '00000000-0000-4000-8000-00000000000a';
 select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 3, 'cambiar el XP de una persona avisa');
 update public.league_members set weekly_xp = 40 where user_id = '00000000-0000-4000-8000-00000000000a';
@@ -55,11 +62,30 @@ select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 3, 'cambiar 
 -- Salir de la cohorte también avisa; un bot que se va, no
 delete from public.league_members where is_bot;
 select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 3, 'borrar un bot no avisa');
+select public.zz_libre();
 delete from public.league_members where user_id = '00000000-0000-4000-8000-00000000000b';
 select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 4, 'salir una persona de la cohorte avisa');
+select public.zz_libre();
 insert into public.league_members (cohort_id, week_start, user_id)
 values ('00000000-0000-4000-8000-0000000000d1', current_setting('test.week')::date, '00000000-0000-4000-8000-00000000000b');
 select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 5, 'y al volver a entrar avisa otra vez');
+
+-- Ráfagas: varios cambios dentro del segundo se funden en un aviso (10.3) ------------------------------
+select public.zz_libre();
+update public.league_members set weekly_xp = 100 where user_id = '00000000-0000-4000-8000-00000000000a';
+update public.league_members set weekly_xp = 110 where user_id = '00000000-0000-4000-8000-00000000000a';
+update public.league_members set weekly_xp = 120 where user_id = '00000000-0000-4000-8000-00000000000a';
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 6, 'tres cambios seguidos de una cohorte mandan un solo aviso');
+select public.zz_libre();
+update public.league_members set weekly_xp = 130 where user_id = '00000000-0000-4000-8000-00000000000a';
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 7, 'pasado el intervalo vuelve a avisar');
+select public.zz_libre();
+update public.league_members set weekly_xp = 140 where user_id = '00000000-0000-4000-8000-00000000000a';
+update public.league_members set weekly_xp = 50 where user_id = '00000000-0000-4000-8000-00000000000c';
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 8, 'cada cohorte tiene su propio intervalo (la 1 avisa)');
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d2'), 2, 'y la 2 avisa también');
+select ok((select notified_at from public.league_cohorts where id = '00000000-0000-4000-8000-0000000000d1') is not null, 'la cohorte guarda cuándo avisó');
+select is((select notified_at from public.league_cohorts where id = '00000000-0000-4000-8000-0000000000d3'), null, 'una cohorte que no avisó no tiene marca');
 
 -- Qué lleva el aviso --------------------------------------------------------------------------
 select is((select count(*)::int from realtime.messages where topic like 'league:%' and (payload - 'id') <> '{}'::jsonb), 0,
@@ -69,21 +95,22 @@ select is((select count(distinct event || ':' || extension || ':' || private::te
 select is((select event from realtime.messages where topic like 'league:%' limit 1), 'xp', 'el evento se llama xp');
 
 -- El camino real: un evento de XP de A avisa a su cohorte ----------------------------------------------
+select public.zz_libre();
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000a', true);
 insert into public.progress_events (id, type, payload, occurred_at, content_version)
 values ('00000000-0000-4000-8000-0000000000a1', 'session_completed@1', '{"xp": 20}', now(), '1');
 reset role;
 -- La semana de la prueba puede no ser la de `weekly_xp` si cruza el lunes: se mide el aviso nuevo.
-select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 6,
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 9,
   'un evento de XP aceptado avisa a la cohorte de quien lo ganó');
-select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d2'), 1, 'y no a las demás');
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d2'), 2, 'y no a las demás');
 
 -- Quién puede escuchar ---------------------------------------------------------------------------------------
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000a', true);
 select is(public.league_my_topic(), 'league:00000000-0000-4000-8000-0000000000d1', 'A tiene el canal de su cohorte');
-select is((select count(*)::int from realtime.messages where topic = 'league:00000000-0000-4000-8000-0000000000d1'), 6,
+select is((select count(*)::int from realtime.messages where topic = 'league:00000000-0000-4000-8000-0000000000d1'), 9,
   'A lee los avisos de su cohorte');
 select is((select count(*)::int from realtime.messages where topic = 'league:00000000-0000-4000-8000-0000000000d2'), 0,
   'y ninguno de la cohorte de C');
@@ -93,7 +120,7 @@ select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000c
 select is(public.league_my_topic(), 'league:00000000-0000-4000-8000-0000000000d2', 'C tiene el canal de la suya');
 select is((select count(*)::int from realtime.messages where topic = 'league:00000000-0000-4000-8000-0000000000d1'), 0,
   'C no lee los avisos de la cohorte de A');
-select is((select count(*)::int from realtime.messages where topic = 'league:00000000-0000-4000-8000-0000000000d2'), 1,
+select is((select count(*)::int from realtime.messages where topic = 'league:00000000-0000-4000-8000-0000000000d2'), 2,
   'pero sí los de la suya');
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000d', true);
@@ -114,7 +141,7 @@ select throws_ok($$ select * from public.league_members $$, '42501', null, 'las 
 select lives_ok($$ select realtime.send('{"xp": 99999}'::jsonb, 'xp', 'league:00000000-0000-4000-8000-0000000000d1', true) $$,
   'llamar a realtime.send no rompe la sesión');
 reset role;
-select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 6, 'pero no deja ningún aviso');
+select is(public.zz_avisos('00000000-0000-4000-8000-0000000000d1'), 9, 'pero no deja ningún aviso');
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000a', true);
 

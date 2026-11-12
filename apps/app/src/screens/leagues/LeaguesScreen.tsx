@@ -33,7 +33,12 @@ type Real = { kind: 'loading' } | { kind: 'ready'; rows: LeagueStanding[] } | { 
 /** Cuánto se espera al servidor antes de quedarse con la liga simulada. */
 const OPEN_TIMEOUT_MS = 10_000;
 
-/** Tras un aviso de la liga se espera este rato por si llegan más y se vuelve a leer una sola vez. */
+/**
+ * Tras un aviso de la liga se espera este rato por si llegan más y se vuelve a leer una sola vez. Debe
+ * seguir siendo mayor que el intervalo entre avisos de una cohorte en el servidor (1 s, migración
+ * `20261112000000_liga_mas_barata.sql`): los cambios de ese segundo no mandan aviso y esta lectura,
+ * hecha después, ya los ve.
+ */
 export const REFRESH_DELAY_MS = 1_500;
 /** Con avisos sin pausa la espera no se alarga más que esto: la tabla no se queda sin actualizar. */
 export const REFRESH_MAX_WAIT_MS = 5_000;
