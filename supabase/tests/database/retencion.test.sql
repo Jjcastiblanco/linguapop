@@ -1,6 +1,6 @@
 -- Retención de datos (épica 10, historia 10.2). Se corre con `pnpm db:test`.
 begin;
-select plan(24);
+select plan(29);
 
 select set_config('test.week', (date_trunc('week', now() at time zone 'utc'))::date::text, true);
 
@@ -67,6 +67,9 @@ select is((select count(*)::int from cron.job where jobname = 'purge-old-data'),
 
 select set_config('test.xp', (select weekly_xp::text from public.league_members where week_start = current_setting('test.week')::date and user_id = '00000000-0000-4000-8000-00000000000a'), true);
 
+insert into realtime.messages (topic, extension, payload, event, private)
+values ('league:reciente', 'broadcast', '{}', 'xp', true);
+
 select set_config('test.avisos', (select count(*)::text from realtime.messages), true);
 
 -- La limpieza ------------------------------------------------------------------------------------------
@@ -86,8 +89,18 @@ select is((select count(*)::int from public.progress_events where id = '00000000
 select is((select count(*)::int from realtime.messages), current_setting('test.avisos')::int, 'borrar miembros de semanas pasadas no manda avisos de Realtime');
 delete from public.league_members where is_bot and week_start = current_setting('test.week')::date;
 select is((select count(*)::int from realtime.messages), current_setting('test.avisos')::int, 'borrar un bot de la semana en curso no avisa');
+update public.league_cohorts set notified_at = null;
 delete from public.league_members where user_id = '00000000-0000-4000-8000-00000000000a' and week_start = current_setting('test.week')::date;
 select is((select count(*)::int from realtime.messages), current_setting('test.avisos')::int + 1, 'borrar un miembro de la semana en curso sigue avisando a su cohorte');
+
+-- Mensajes de Realtime: los reciente se conservan con el plazo normal y se borran con un plazo vencido.
+select is((select count(*)::int from realtime.messages where topic = 'league:reciente'), 1, 'un mensaje de hoy se conserva con la limpieza normal');
+select public.purge_realtime_messages(-1);
+select is((select count(*)::int from realtime.messages where topic = 'league:reciente'), 0, 'y se borra cuando queda fuera del plazo');
+select ok(not has_function_privilege('authenticated', 'public.purge_realtime_messages(integer)', 'execute'), 'ningún cliente ejecuta la limpieza de mensajes');
+
+select ok(pg_get_functiondef('public.purge_old_data()'::regprocedure) ~ 'purge_realtime_messages\(realtime_days\)', 'la limpieza semanal llama a la de mensajes de Realtime');
+select ok(pg_get_functiondef('public.purge_old_data()'::regprocedure) ~ 'realtime_days constant integer := 7;', 'con un plazo de 7 días');
 
 -- Sin nada que borrar corre sin error y no cambia nada.
 select lives_ok($$select public.purge_old_data()$$, 'una segunda corrida no falla');
