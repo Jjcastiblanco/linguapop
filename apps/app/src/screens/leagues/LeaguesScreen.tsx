@@ -200,7 +200,7 @@ export function LeaguesScreen() {
   return (
     <Simulated
       head={head}
-      below={
+      notice={
         online ? (
           <p className={`${styles.muted} ${styles.note}`} role="status">
             {t('league.offline')}
@@ -225,11 +225,12 @@ export function LeaguesScreen() {
 function Simulated({
   head,
   above,
-  below,
+  notice,
 }: {
   head: (days: string | null) => React.ReactNode;
   above: React.ReactNode;
-  below: React.ReactNode;
+  /** Aviso de que la tabla no es real: va entre la cabecera y la lista para que se vea sin bajar. */
+  notice: React.ReactNode;
 }) {
   const { composition } = useServices();
   const progress = useProgress((s) => s.progress);
@@ -248,6 +249,7 @@ function Simulated({
       <h1 className={styles.srOnly}>{t('screen.leagues.title')}</h1>
       {above}
       {head(t(league.daysLeft === 1 ? 'league.days.one' : 'league.days', { n: league.daysLeft }))}
+      {notice}
 
       <ol className={`${styles.card} ${styles.table}`} aria-label={t('league.table')}>
         {league.rows.map((row, i) => {
@@ -284,7 +286,6 @@ function Simulated({
         })}
       </ol>
       <p className={`${styles.muted} ${styles.note}`}>{t('league.simulated')}</p>
-      {below}
     </div>
   );
 }
