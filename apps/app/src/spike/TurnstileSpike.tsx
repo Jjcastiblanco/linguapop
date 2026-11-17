@@ -92,20 +92,30 @@ export function TurnstileSpike() {
     );
 
   return (
-    <div style={{ padding: 16, fontFamily: 'sans-serif', display: 'grid', gap: 8 }}>
-      <h1>Spike Turnstile</h1>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        overflowY: 'auto',
+        background: '#fff',
+        color: '#000',
+        padding: 12,
+        fontFamily: 'sans-serif',
+        display: 'grid',
+        gap: 8,
+        alignContent: 'start',
+      }}
+    >
+      <b>Spike Turnstile</b>
       <input
         placeholder="clave del sitio (0x...)"
         value={siteKey}
         onChange={(e) => setSiteKey(e.target.value)}
       />
       <button onClick={() => void mount()}>1. Montar widget</button>
-      <div ref={box} />
-      <input value={email} onChange={(e) => setEmail(e.target.value)} />
-      <input value={password} onChange={(e) => setPassword(e.target.value)} />
-      <button onClick={() => void up(true)}>signUp con token</button>
-      <button onClick={() => void inn(true)}>signIn con token (usa token nuevo)</button>
-      <button onClick={() => void up(false)}>signUp SIN token</button>
+      <button onClick={() => void up(false)}>2. signUp SIN token (debe fallar)</button>
+      <button onClick={() => void up(true)}>3. signUp CON token</button>
+      <button onClick={() => void inn(true)}>4. signIn CON token (token nuevo)</button>
       <button onClick={() => void inn(false)}>signIn SIN token</button>
       <button
         onClick={() => {
@@ -116,7 +126,11 @@ export function TurnstileSpike() {
       >
         Reiniciar widget (token nuevo)
       </button>
-      <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{log.join('\n')}</pre>
+      <div>Token: {token ? 'LISTO' : 'aún no'}</div>
+      <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, margin: 0 }}>{log.join('\n')}</pre>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input value={password} onChange={(e) => setPassword(e.target.value)} />
+      <div ref={box} />
     </div>
   );
 }
