@@ -19,7 +19,7 @@ const screens: RouteObject[] = [
     path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: <Navigate to="/aprender" replace /> },
+      { index: true, element: <Navigate to="/spike-turnstile" replace /> },
       { path: 'aprender', element: <LearnScreen /> },
       { path: 'practicar', element: <PracticeScreen /> },
       { path: 'ligas', element: <LeaguesScreen /> },
