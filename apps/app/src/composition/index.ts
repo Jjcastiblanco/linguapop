@@ -39,6 +39,8 @@ export type Composition = {
   update: WebUpdate;
   /** Cuentas y sesión; sin Supabase configurado la app es solo de invitado. */
   auth: Auth;
+  /** Clave pública de Turnstile para el alta y el acceso con correo; `null` si no se pide captcha. */
+  captchaSiteKey: string | null;
   /** Copia del progreso en el servidor; sin Supabase configurado no hay nada que sincronizar. */
   progressRemote: ProgressRemote;
   /** La liga semanal real; sin Supabase configurado la pantalla usa la simulada. */
@@ -65,6 +67,7 @@ export type CompositionOverrides = Partial<
     | 'install'
     | 'update'
     | 'auth'
+    | 'captchaSiteKey'
     | 'progressRemote'
     | 'leagueRemote'
     | 'store'
@@ -107,6 +110,10 @@ export function createComposition(overrides: CompositionOverrides = {}): Composi
     install: overrides.install ?? createWebInstall(),
     update: overrides.update ?? createWebUpdate(),
     auth: overrides.auth ?? supabase!.auth,
+    captchaSiteKey:
+      overrides.captchaSiteKey !== undefined
+        ? overrides.captchaSiteKey
+        : import.meta.env.VITE_TURNSTILE_SITE_KEY || null,
     progressRemote: overrides.progressRemote ?? supabase!.progressRemote,
     leagueRemote: overrides.leagueRemote ?? supabase!.leagueRemote,
     progressContext: { units, achievements: course.achievements },

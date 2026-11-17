@@ -12,11 +12,19 @@ import type {
 export type AuthClientLike = {
   getSession(): Promise<{ data: { session: Session | null } }>;
   onAuthStateChange(cb: (event: string, session: Session | null) => void): unknown;
-  signUp(credentials: { email: string; password: string }): Promise<{
+  signUp(credentials: {
+    email: string;
+    password: string;
+    options?: { captchaToken?: string };
+  }): Promise<{
     data: { session: Session | null; user: { id: string; email?: string } | null };
     error: AuthError | null;
   }>;
-  signInWithPassword(credentials: { email: string; password: string }): Promise<{
+  signInWithPassword(credentials: {
+    email: string;
+    password: string;
+    options?: { captchaToken?: string };
+  }): Promise<{
     data: { session: Session | null };
     error: AuthError | null;
   }>;
@@ -79,6 +87,7 @@ export function authFailure(error: Pick<AuthError, 'code' | 'message' | 'status'
     return 'invalid-email';
   }
   if (code === 'email_not_confirmed') return 'confirmation-required';
+  if (code === 'captcha_failed' || /captcha/.test(text)) return 'captcha';
   if (/fetch|network/.test(text) || error.status === 0) return 'network';
   return 'error';
 }
@@ -141,14 +150,22 @@ export function createSupabaseAuth(
       listeners.add(listener);
       return () => void listeners.delete(listener);
     },
-    signUp: (email, password) =>
+    signUp: (email, password, captchaToken) =>
       finish(async () => {
-        const { data, error } = await client.signUp({ email, password });
+        const { data, error } = await client.signUp({
+          email,
+          password,
+          ...(captchaToken ? { options: { captchaToken } } : {}),
+        });
         return { session: data.session, error };
       }),
-    signIn: (email, password) =>
+    signIn: (email, password, captchaToken) =>
       finish(async () => {
-        const { data, error } = await client.signInWithPassword({ email, password });
+        const { data, error } = await client.signInWithPassword({
+          email,
+          password,
+          ...(captchaToken ? { options: { captchaToken } } : {}),
+        });
         return { session: data.session, error };
       }),
     async signOut() {

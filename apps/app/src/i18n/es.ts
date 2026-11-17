@@ -241,6 +241,9 @@ export const es = {
   'account.error.invalid-email': 'Escribe un correo válido.',
   'account.error.weak-password': 'La contraseña es muy débil: usa al menos 6 caracteres.',
   'account.error.confirmation-required': 'Confirma tu correo para entrar y vuelve a intentarlo.',
+  'account.error.captcha': 'Comprueba que no eres un robot e inténtalo de nuevo.',
+  'account.captcha.unavailable':
+    'No se pudo cargar la verificación. Revisa tu conexión; con Google o como invitado puedes seguir.',
   'account.error.network': 'No hay conexión. Inténtalo de nuevo cuando vuelva la red.',
   'account.error.error': 'No se pudo completar. Inténtalo de nuevo.',
   'profile.rename': 'Cambiar nombre',

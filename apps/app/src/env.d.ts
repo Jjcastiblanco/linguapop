@@ -7,4 +7,6 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_ANON_KEY?: string;
   /** ID del cliente OAuth web de Google (público); sin él el APK no ofrece Google. Nunca el del cliente Android. */
   readonly VITE_GOOGLE_WEB_CLIENT_ID?: string;
+  /** Clave del sitio de Cloudflare Turnstile (pública); sin ella el alta y el acceso con correo no piden captcha. El secreto vive solo en Supabase. */
+  readonly VITE_TURNSTILE_SITE_KEY?: string;
 }

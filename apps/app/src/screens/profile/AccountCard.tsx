@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useAccount, useServices } from '../../composition/context';
 import { deleteAccount, signOut } from '../../stores';
 import { t, type TextKey } from '../../i18n';
+import { CaptchaWidget } from '../../ui/CaptchaWidget';
 import { Modal } from '../../ui/Modal';
 import styles from './ProfileScreen.module.css';
 
@@ -13,7 +14,7 @@ type Mode = 'signUp' | 'signIn';
  */
 export function AccountCard() {
   const { composition, toast, progress } = useServices();
-  const { auth } = composition;
+  const { auth, captchaSiteKey } = composition;
   const account = useAccount();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>('signUp');
@@ -22,6 +23,10 @@ export function AccountCard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<TextKey | null>(null);
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  // Turnstile (11.3): un token por intento; `captchaReset` pide uno nuevo tras cada envío.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
+  const [captchaFailed, setCaptchaFailed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<TextKey | null>(null);
   const [unsynced, setUnsynced] = useState<number | null>(null);
@@ -33,6 +38,8 @@ export function AccountCard() {
     setError(null);
     setErrorDetail(null);
     setPassword('');
+    setCaptchaFailed(false);
+    setCaptchaToken(null); // el widget se desmonta con la hoja: su token ya no vale
   };
 
   async function submit(e: FormEvent) {
@@ -41,8 +48,9 @@ export function AccountCard() {
     setBusy(true);
     setError(null);
     setErrorDetail(null);
-    const result = await auth[mode](email.trim(), password);
+    const result = await auth[mode](email.trim(), password, captchaToken ?? undefined);
     setBusy(false);
+    if (captchaSiteKey) setCaptchaReset((n) => n + 1); // el token ya se gastó
     if (result.kind === 'failed') return setError(`account.error.${result.reason}`);
     close();
     toast.getState().show(t('account.welcome'));
@@ -219,10 +227,28 @@ export function AccountCard() {
                 {errorDetail && <small className={styles.muted}> ({errorDetail})</small>}
               </p>
             )}
+            {captchaSiteKey && (
+              <>
+                <CaptchaWidget
+                  siteKey={captchaSiteKey}
+                  resetSignal={captchaReset}
+                  onToken={(token) => {
+                    setCaptchaToken(token);
+                    if (token) setCaptchaFailed(false);
+                  }}
+                  onUnavailable={() => setCaptchaFailed(true)}
+                />
+                {captchaFailed && (
+                  <p className={styles.muted} role="alert">
+                    {t('account.captcha.unavailable')}
+                  </p>
+                )}
+              </>
+            )}
             <button
               type="submit"
               className={styles.btn}
-              disabled={busy || !email.trim() || !password}
+              disabled={busy || !email.trim() || !password || (!!captchaSiteKey && !captchaToken)}
             >
               {busy ? t('account.sending') : t(`account.submit.${mode}`)}
             </button>
@@ -232,6 +258,7 @@ export function AccountCard() {
               onClick={() => {
                 setMode(mode === 'signUp' ? 'signIn' : 'signUp');
                 setError(null);
+                if (captchaSiteKey) setCaptchaReset((n) => n + 1);
               }}
             >
               {mode === 'signUp' ? t('account.switch.toSignIn') : t('account.switch.toSignUp')}
