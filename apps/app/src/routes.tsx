@@ -8,6 +8,7 @@ import { PracticeScreen } from './screens/practice/PracticeScreen';
 import { PracticeSessionScreen } from './screens/practice/PracticeSessionScreen';
 import { AppShell } from './shell/AppShell';
 import { Toaster } from './ui/Toaster';
+import { TurnstileSpike } from './spike/TurnstileSpike';
 
 /**
  * Rutas de la app. Atrás cierra una pantalla sin salir de la app. La lección y la llamada ocupan
@@ -28,6 +29,7 @@ const screens: RouteObject[] = [
   { path: '/practicar/sesion', element: <PracticeSessionScreen /> },
   { path: '/leccion/:unitId/:lessonId', element: <LessonScreen /> },
   { path: '/llamada', element: <CallScreen /> },
+  { path: '/spike-turnstile', element: <TurnstileSpike /> },
   { path: '*', element: <Navigate to="/aprender" replace /> },
 ];
 
