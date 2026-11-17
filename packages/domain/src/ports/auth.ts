@@ -7,6 +7,7 @@ export type AuthFailure =
   | 'invalid-email'
   | 'weak-password'
   | 'confirmation-required'
+  | 'captcha'
   | 'network'
   | 'error';
 
@@ -36,8 +37,9 @@ export interface Auth {
   account(): Account | null;
   /** Avisa cuando la sesión se abre, se cierra o se restaura; devuelve cómo dejar de escuchar. */
   subscribe(listener: () => void): () => void;
-  signUp(email: string, password: string): Promise<AuthResult>;
-  signIn(email: string, password: string): Promise<AuthResult>;
+  /** `captchaToken` es la prueba de Turnstile de un solo uso; hace falta si el servidor exige captcha. */
+  signUp(email: string, password: string, captchaToken?: string): Promise<AuthResult>;
+  signIn(email: string, password: string, captchaToken?: string): Promise<AuthResult>;
   signOut(): Promise<void>;
   /** Se puede entrar con Google en esta plataforma (la web y el APK con su cliente configurado). */
   googleAvailable(): boolean;

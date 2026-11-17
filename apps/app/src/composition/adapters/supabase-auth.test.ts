@@ -53,6 +53,10 @@ describe('traducción de errores de Supabase Auth', () => {
     [error('weak_password', 'Password should be at least 6 characters'), 'weak-password'],
     [error('email_address_invalid', 'Email address is invalid'), 'invalid-email'],
     [error('email_not_confirmed', 'Email not confirmed'), 'confirmation-required'],
+    [
+      error('captcha_failed', 'captcha protection: request disallowed (timeout-or-duplicate)'),
+      'captcha',
+    ],
     [error('unexpected_failure', 'Failed to fetch', 0), 'network'],
     [error('over_request_rate_limit', 'Too many', 429), 'error'],
   ])('%j', (e, motivo) => expect(authFailure(e)).toBe(motivo));
@@ -285,5 +289,45 @@ describe('sin servicio de cuentas', () => {
     expect(unavailableAuth.available()).toBe(false);
     expect(unavailableAuth.account()).toBeNull();
     expect(await unavailableAuth.signIn('a', 'b')).toEqual({ kind: 'failed', reason: 'error' });
+  });
+});
+
+describe('captcha en el alta y el acceso', () => {
+  it('signUp y signIn mandan el token a Supabase', async () => {
+    const { client, mock } = clienteFalso();
+    const auth = createSupabaseAuth(client);
+    await auth.signUp('ana@prueba.test', 'secreto1', 'tok-1');
+    await auth.signIn('ana@prueba.test', 'secreto1', 'tok-2');
+    expect(mock.signUp).toHaveBeenCalledWith({
+      email: 'ana@prueba.test',
+      password: 'secreto1',
+      options: { captchaToken: 'tok-1' },
+    });
+    expect(mock.signInWithPassword).toHaveBeenCalledWith({
+      email: 'ana@prueba.test',
+      password: 'secreto1',
+      options: { captchaToken: 'tok-2' },
+    });
+  });
+
+  it('sin token no manda opciones', async () => {
+    const { client, mock } = clienteFalso();
+    await createSupabaseAuth(client).signUp('ana@prueba.test', 'secreto1');
+    expect(mock.signUp).toHaveBeenCalledWith({ email: 'ana@prueba.test', password: 'secreto1' });
+  });
+
+  it('un captcha rechazado vuelve como motivo captcha', async () => {
+    const { client, mock } = clienteFalso();
+    mock.signUp.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: error(
+        'captcha_failed',
+        'captcha protection: request disallowed (timeout-or-duplicate)',
+      ),
+    });
+    expect(await createSupabaseAuth(client).signUp('a@b.test', 'secreto1', 'viejo')).toEqual({
+      kind: 'failed',
+      reason: 'captcha',
+    });
   });
 });

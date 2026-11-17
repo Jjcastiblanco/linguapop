@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Account, Auth, AuthResult, GoogleSignInResult } from '@linguapop/domain';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { crearServicios, memoria, renderApp } from '../../test/helpers';
 
 /** Un servicio de cuentas falso que se comporta como el real: guarda la sesión y avisa. */
@@ -20,15 +20,18 @@ function authFalso(
   };
   const oyentes = new Set<() => void>();
   const llamadas: Array<[string, string, string]> = [];
-  const resolver = (modo: string) => async (email: string, password: string) => {
-    llamadas.push([modo, email, password]);
-    const r = typeof respuesta === 'function' ? respuesta(modo) : respuesta;
-    if (r.kind === 'ok') {
-      actual = r.account;
-      oyentes.forEach((l) => l());
-    }
-    return r;
-  };
+  const tokens: Array<string | undefined> = [];
+  const resolver =
+    (modo: string) => async (email: string, password: string, captchaToken?: string) => {
+      llamadas.push([modo, email, password]);
+      tokens.push(captchaToken);
+      const r = typeof respuesta === 'function' ? respuesta(modo) : respuesta;
+      if (r.kind === 'ok') {
+        actual = r.account;
+        oyentes.forEach((l) => l());
+      }
+      return r;
+    };
   const auth: Auth = {
     available: () => true,
     account: () => actual,
@@ -51,14 +54,167 @@ function authFalso(
       return { kind: 'ok' as const };
     }),
   };
-  return { auth, llamadas, borrado, google };
+  return { auth, llamadas, tokens, borrado, google };
 }
 
-async function abrir(auth?: Auth) {
-  const services = await crearServicios({ storage: memoria().storage, ...(auth ? { auth } : {}) });
+async function abrir(auth?: Auth, captchaSiteKey?: string) {
+  const services = await crearServicios({
+    storage: memoria().storage,
+    ...(auth ? { auth } : {}),
+    ...(captchaSiteKey ? { captchaSiteKey } : {}),
+  });
   renderApp(services, '/perfil');
   return services;
 }
+
+/** Un Turnstile falso: guarda los callbacks para que la prueba entregue o venza el token. */
+function turnstileFalso() {
+  let opciones: Record<string, (...a: unknown[]) => void> = {};
+  const api = {
+    render: vi.fn((_el: HTMLElement, o: Record<string, (...a: unknown[]) => void>) => {
+      opciones = o;
+      return 'w1';
+    }),
+    reset: vi.fn(),
+    remove: vi.fn(),
+  };
+  window.turnstile = api;
+  return {
+    api,
+    entregar: (token: string) => act(() => opciones.callback?.(token)),
+    fallar: () => act(() => opciones['error-callback']?.()),
+    vencer: () => act(() => opciones['expired-callback']?.()),
+  };
+}
+
+describe('captcha en el alta y el acceso con correo', () => {
+  afterEach(() => {
+    delete window.turnstile;
+  });
+
+  async function abrirHoja(auth: Auth) {
+    await abrir(auth, '0xCLAVE');
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+    await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@prueba.test');
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'secreto1');
+  }
+
+  it('sin token el botón de correo está deshabilitado y con token manda el token', async () => {
+    const ts = turnstileFalso();
+    const { auth, tokens } = authFalso();
+    await abrirHoja(auth);
+    expect(await screen.findByTestId('captcha')).toBeInTheDocument();
+    expect(ts.api.render).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ sitekey: '0xCLAVE' }),
+    );
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeDisabled();
+    await ts.entregar('tok-1');
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+    expect(tokens).toEqual(['tok-1']);
+  });
+
+  it('tras cada intento pide un token nuevo, también si falla', async () => {
+    const ts = turnstileFalso();
+    await abrirHoja(authFalso({ kind: 'failed', reason: 'invalid-credentials' }).auth);
+    await screen.findByTestId('captcha');
+    await ts.entregar('tok-1');
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('no son correctos');
+    expect(ts.api.reset).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeDisabled();
+  });
+
+  it('si Turnstile no puede dibujar el widget avisa y deja Google', async () => {
+    const ts = turnstileFalso();
+    ts.api.render.mockImplementation(() => {
+      throw new Error('invalid sitekey');
+    });
+    const { auth, google } = authFalso();
+    google.disponible = true;
+    await abrirHoja(auth);
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo cargar la verificación');
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Continuar con Google' })).toBeEnabled();
+  });
+
+  it('cambiar entre crear cuenta e iniciar sesión pide un token nuevo', async () => {
+    const ts = turnstileFalso();
+    await abrirHoja(authFalso().auth);
+    await screen.findByTestId('captcha');
+    await ts.entregar('tok-1');
+    await userEvent.click(screen.getByRole('button', { name: 'Ya tengo cuenta' }));
+    expect(ts.api.reset).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeDisabled();
+  });
+
+  it('si el token vence el botón se deshabilita hasta tener otro', async () => {
+    const ts = turnstileFalso();
+    await abrirHoja(authFalso().auth);
+    await screen.findByTestId('captcha');
+    await ts.entregar('tok-1');
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeEnabled();
+    await ts.vencer();
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeDisabled();
+    await ts.entregar('tok-2');
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeEnabled();
+  });
+
+  it('un fallo de captcha del servidor se explica', async () => {
+    const ts = turnstileFalso();
+    await abrirHoja(authFalso({ kind: 'failed', reason: 'captcha' }).auth);
+    await screen.findByTestId('captcha');
+    await ts.entregar('tok-1');
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Comprueba que no eres un robot');
+    expect(ts.api.reset).toHaveBeenCalled();
+  });
+
+  it('si el widget falla avisa, bloquea el correo y deja Google', async () => {
+    const ts = turnstileFalso();
+    const { auth, google } = authFalso();
+    google.disponible = true;
+    await abrirHoja(auth);
+    await screen.findByTestId('captcha');
+    await ts.fallar();
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo cargar la verificación');
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Continuar con Google' })).toBeEnabled();
+  });
+
+  it('Google no manda token', async () => {
+    turnstileFalso();
+    const { auth, google, tokens } = authFalso();
+    google.disponible = true;
+    await abrirHoja(auth);
+    await userEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+    expect(auth.signInWithGoogle).toHaveBeenCalledWith();
+    expect(tokens).toEqual([]);
+  });
+
+  it('sin clave del sitio no hay widget y el envío no se bloquea', async () => {
+    const { auth, tokens } = authFalso();
+    await abrir(auth);
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+    await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@prueba.test');
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'secreto1');
+    expect(screen.queryByTestId('captcha')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+    expect(tokens).toEqual([undefined]);
+  });
+
+  it('al cerrar la hoja el token se descarta', async () => {
+    const ts = turnstileFalso();
+    await abrirHoja(authFalso().auth);
+    await screen.findByTestId('captcha');
+    await ts.entregar('tok-1');
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta o iniciar sesión' }));
+    await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@prueba.test');
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'secreto1');
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeDisabled();
+  });
+});
 
 describe('cuenta en el perfil', () => {
   it('sin servicio de cuentas no se menciona', async () => {
