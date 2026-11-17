@@ -1,6 +1,6 @@
 -- Freno global de eventos (épica 11, historia 11.1). Se corre con `pnpm db:test`.
 begin;
-select plan(10);
+select plan(14);
 
 insert into auth.users (id, instance_id, aud, role, email)
 values
@@ -49,7 +49,18 @@ select throws_ok($$ select public.zz_evento('00000000-0000-4000-8000-0000000000f
 select set_config('linguapop.max_events_bytes', '1000000000', true);
 select lives_ok($$ select public.zz_evento('00000000-0000-4000-8000-0000000000f2', 'purchase@1', '{}') $$,
   'con la tabla otra vez por debajo del límite la cuenta guarda');
-select is((select count(*)::int from public.progress_events), 1, 'y ve solo lo suyo');
+select is((select count(*)::int from public.progress_events where user_id = '00000000-0000-4000-8000-00000000000a'), 0, 'y no ve lo de A');
+
+-- Un valor sustituto mal formado se ignora: queda el límite por defecto (250 MB) y nada falla
+select set_config('linguapop.max_events_bytes', 'abc', true);
+select lives_ok($$ select public.zz_evento('00000000-0000-4000-8000-0000000000f3', 'purchase@1', '{}') $$,
+  'un valor mal formado se ignora y el evento se guarda');
+select lives_ok($$ select public.zz_evento('00000000-0000-4000-8000-0000000000f3', 'purchase@1', '{}') $$,
+  'y reenviar un id guardado tampoco falla');
+select set_config('linguapop.max_events_bytes', '', true);
+select lives_ok($$ select public.zz_evento('00000000-0000-4000-8000-0000000000f4', 'purchase@1', '{}') $$,
+  'un valor vacío usa el límite por defecto y guarda');
+select is((select count(*)::int from public.progress_events), 3, 'la cuenta B ve sus tres eventos y ninguno de A');
 
 select * from finish();
 rollback;

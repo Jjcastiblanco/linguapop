@@ -5,6 +5,10 @@
 -- índices) pesa 250 MB o más, el evento nuevo de cualquier cuenta falla con PT429 (reintentable: el cliente lo
 -- deja pendiente). Reenviar un id ya guardado y la lectura no cambian. El límite se puede sustituir con
 -- `alter database postgres set linguapop.max_events_bytes = '<bytes>'` (la prueba lo usa con `set_config`).
+--
+-- Ojo operativo: `pg_total_relation_size` mide archivos. Borrar filas (retención, borrar cuenta) no encoge la tabla
+-- hasta un `VACUUM FULL`, así que si el freno se activa, para recuperar hay que borrar las cuentas abusivas, correr
+-- `VACUUM FULL public.progress_events` o subir el límite con el `alter database` de arriba.
 
 create or replace function public.progress_events_validate() returns trigger
   language plpgsql
@@ -25,8 +29,8 @@ declare
   max_events_total constant integer := 20000;
   -- Tamaño de `progress_events` (con índices) a partir del cual no se guardan eventos nuevos: la mitad de los
   -- 500 MB del plan gratis, para dejar margen a la liga, a Auth y a los índices de las demás tablas.
-  max_table_bytes constant bigint := coalesce(
-    nullif(current_setting('linguapop.max_events_bytes', true), '')::bigint, 262144000);
+  max_table_bytes bigint := 262144000;
+  max_table_setting text;
   max_payload_bytes integer;
   day_start timestamptz := date_trunc('day', now() at time zone 'utc') at time zone 'utc';
   xp_text text;
@@ -42,6 +46,11 @@ begin
   end if;
 
   -- Freno global: la tabla pesa demasiado para todas las cuentas. `pg_total_relation_size` lee metadatos.
+  -- El valor sustituto solo cuenta si es un entero; cualquier otro texto se ignora y queda el de la constante.
+  max_table_setting := current_setting('linguapop.max_events_bytes', true);
+  if max_table_setting ~ '^[0-9]{1,15}$' then
+    max_table_bytes := max_table_setting::bigint;
+  end if;
   if pg_total_relation_size('public.progress_events') >= max_table_bytes then
     raise exception 'la base está llena, reintenta más tarde' using errcode = 'PT429';
   end if;
