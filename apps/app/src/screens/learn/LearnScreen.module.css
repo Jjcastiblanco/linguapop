@@ -64,6 +64,26 @@
   cursor: not-allowed;
 }
 
+.daily {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  color: inherit;
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  text-align: left;
+}
+
+.daily:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
 .novaAvatar {
   width: 54px;
   height: 54px;

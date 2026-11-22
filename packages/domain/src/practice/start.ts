@@ -4,6 +4,7 @@ import { currentHearts, type ProgressState } from '../progress';
 import type { DayKey } from '../streak';
 import {
   TIMED_SECONDS,
+  buildDailyReviewList,
   buildPersonalizedList,
   buildPlacementList,
   buildReviewList,
@@ -14,6 +15,7 @@ import { isUnitComplete } from './unlock';
 
 export type PracticeKind =
   | { kind: 'review' }
+  | { kind: 'daily' }
   | { kind: 'personalized' }
   | { kind: 'timed' }
   | { kind: 'placement'; unitId: string };
@@ -26,13 +28,14 @@ export type PracticeResult =
 
 const MODE: Record<PracticeKind['kind'], SessionMode> = {
   review: 'review',
+  daily: 'review',
   personalized: 'practice',
   timed: 'timed',
   placement: 'test',
 };
 
 /**
- * Prepara la configuración de una sesión de práctica. Todos estos modos son del plan PRO.
+ * Prepara la configuración de una sesión de práctica. Todos son del plan PRO salvo el repaso de hoy (`daily`), que es para todos.
  * `today` sirve para saber las vidas del día en el plan gratis.
  */
 export function practiceConfig(
@@ -41,7 +44,8 @@ export function practiceConfig(
   today: DayKey,
 ): PracticeResult {
   const { progress } = input;
-  if (progress.settings.plan !== 'pro') return { ok: false, reason: 'pro-required' };
+  if (request.kind !== 'daily' && progress.settings.plan !== 'pro')
+    return { ok: false, reason: 'pro-required' };
   const base = {
     mode: MODE[request.kind],
     plan: progress.settings.plan,
@@ -51,6 +55,12 @@ export function practiceConfig(
   switch (request.kind) {
     case 'review': {
       const exercises = buildReviewList(input);
+      return exercises.length === 0
+        ? { ok: false, reason: 'nothing-to-review' }
+        : { ok: true, config: { ...base, exercises } };
+    }
+    case 'daily': {
+      const exercises = buildDailyReviewList(input, today);
       return exercises.length === 0
         ? { ok: false, reason: 'nothing-to-review' }
         : { ok: true, config: { ...base, exercises } };
