@@ -725,3 +725,88 @@ describe('pliegue: calendario de repaso espaciado', () => {
     expect(foldEvents(evs, ctx).reviews).toEqual(foldEvents(evs, ctx).reviews);
   });
 });
+
+describe('pliegue: dominio y retención a +7', () => {
+  const E = 'u-saludos-e03';
+  const resp = (correct: boolean, at: string, extra: { skipped?: boolean } = {}, id = E) =>
+    evento('exercise_answered@1', { exerciseId: id, correct, mode: 'lesson', ...extra }, at);
+  const f = (d: string) => `${d}T10:00:00.000Z`;
+  const hasta30 = [
+    resp(true, f('2026-11-01')),
+    resp(true, f('2026-11-02')),
+    resp(true, f('2026-11-09')),
+  ];
+
+  it('nace vacío', () => {
+    expect(initialProgress().retention7).toEqual([]);
+    expect(foldEvents([resp(true, f('2026-11-01'))], ctx).reviews[E]?.mastered).toBeFalsy();
+  });
+
+  it('acertar en etapa 2 con el vencimiento cumplido domina y vence a +30', () => {
+    const s = foldEvents([...hasta30, resp(true, f('2026-12-09'))], ctx);
+    expect(s.reviews[E]).toEqual({ stage: 2, due: '2027-01-08', mastered: true });
+  });
+
+  it('un acierto anticipado en etapa 2 conserva el dominio y re-ancla; sin dominio no lo da', () => {
+    const dominado = foldEvents([...hasta30, resp(true, f('2026-12-09'))], ctx);
+    const antes = foldEvents(
+      [...hasta30, resp(true, f('2026-12-09')), resp(true, f('2026-12-20'))],
+      ctx,
+    );
+    expect(antes.reviews[E]).toEqual({ stage: 2, due: '2027-01-19', mastered: true });
+    expect(dominado.reviews[E]?.mastered).toBe(true);
+    const sin = foldEvents([...hasta30, resp(true, f('2026-11-20'))], ctx);
+    expect(sin.reviews[E]?.mastered).toBeFalsy();
+  });
+
+  it('un fallo pierde el dominio y vuelve a la etapa 0', () => {
+    const s = foldEvents(
+      [...hasta30, resp(true, f('2026-12-09')), resp(false, f('2027-01-10'))],
+      ctx,
+    );
+    expect(s.reviews[E]?.stage).toBe(0);
+    expect(s.reviews[E]?.mastered).toBeFalsy();
+  });
+
+  it('anota la retención en respuestas de etapa 1 vencidas, acierto o fallo', () => {
+    const ok = foldEvents(hasta30, ctx);
+    expect(ok.retention7).toEqual([true]);
+    const mal = foldEvents(
+      [resp(true, f('2026-11-01')), resp(true, f('2026-11-02')), resp(false, f('2026-11-09'))],
+      ctx,
+    );
+    expect(mal.retention7).toEqual([false]);
+    // Etapa 1 pero antes de vencer: no cuenta.
+    const pronto = foldEvents(
+      [resp(true, f('2026-11-01')), resp(true, f('2026-11-02')), resp(true, f('2026-11-04'))],
+      ctx,
+    );
+    expect(pronto.retention7).toEqual([]);
+  });
+
+  it('guarda solo los últimos 20 resultados', () => {
+    const evs = [];
+    for (let i = 0; i < 25; i++) {
+      const id = `u-saludos-x${i}`;
+      evs.push(resp(true, f('2026-11-01'), {}, id), resp(true, f('2026-11-02'), {}, id));
+      evs.push(resp(i % 2 === 0, f('2026-11-09'), {}, id));
+    }
+    const s = foldEvents(evs, ctx);
+    expect(s.retention7).toHaveLength(20);
+    expect(s.retention7[0]).toBe(false); // el ejercicio 5 (impar) es el más antiguo que queda
+  });
+
+  it('omitidos y palabras sueltas no cambian nada', () => {
+    const base = foldEvents(hasta30, ctx);
+    const s = foldEvents(
+      [
+        ...hasta30,
+        resp(false, f('2026-12-20'), { skipped: true }),
+        resp(true, f('2026-11-09'), {}, 'w-hi'),
+      ],
+      ctx,
+    );
+    expect(s.retention7).toEqual(base.retention7);
+    expect(s.reviews).toEqual(base.reviews);
+  });
+});

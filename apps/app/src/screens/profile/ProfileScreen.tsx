@@ -1,4 +1,11 @@
-import { dayKey, isUnitComplete, recentXp, type PendingEvent } from '@linguapop/domain';
+import {
+  SKILLS,
+  dayKey,
+  isUnitComplete,
+  masteryReport,
+  recentXp,
+  type PendingEvent,
+} from '@linguapop/domain';
 import { useRef, useState, type FormEvent } from 'react';
 import { useInstallAvailable, useProgress, useServices, useUi } from '../../composition/context';
 import { t } from '../../i18n';
@@ -60,6 +67,7 @@ export function ProfileScreen() {
   const { units, achievements } = composition.course;
   const unitsDone = units.filter((u) => isUnitComplete(u, progress.lessonsDone)).length;
   const unlocked = achievements.filter((a) => progress.achievements[a.id]).length;
+  const mastery = masteryReport(units, progress);
   const goalY = 130 - (100 * settings.dailyGoalXp) / max;
 
   /** Guarda un cambio de ajustes del estudiante como evento. */
@@ -132,6 +140,35 @@ export function ProfileScreen() {
         <Stat label={t('profile.calls')} value={stats.calls} />
         <Stat label={t('profile.units')} value={`${unitsDone}/${units.length}`} />
       </dl>
+
+      <section className={styles.card} aria-label={t('profile.mastery.title')}>
+        <b>{t('profile.mastery.title')}</b>
+        <p className={styles.muted}>{t('profile.mastery.hint')}</p>
+        <b className={styles.subhead}>{t('profile.mastery.byUnit')}</b>
+        {units.map((u) => (
+          <MasteryBar
+            key={u.id}
+            id={`unit-${u.id}`}
+            label={u.name}
+            percent={mastery.byUnit.find((m) => m.unitId === u.id)?.percent ?? 0}
+          />
+        ))}
+        <b className={styles.subhead}>{t('profile.mastery.bySkill')}</b>
+        {SKILLS.map((k) => (
+          <MasteryBar
+            key={k}
+            id={`skill-${k}`}
+            label={t(`profile.mastery.skill.${k}`)}
+            percent={mastery.bySkill[k].percent}
+          />
+        ))}
+        <div className={styles.setrow}>
+          {t('profile.mastery.retention')}
+          <b data-testid="retention7">
+            {mastery.retention7 === null ? '—' : `${mastery.retention7}%`}
+          </b>
+        </div>
+      </section>
 
       <section className={styles.card} aria-label={t('profile.chart')}>
         <b>{t('profile.chart')}</b>
@@ -359,6 +396,25 @@ function Stat({ label, value, sub }: { label: string; value: string | number; su
       <dt>{label}</dt>
       <dd>{value}</dd>
       {sub && <span className={styles.muted}>{sub}</span>}
+    </div>
+  );
+}
+
+function MasteryBar({ id, label, percent }: { id: string; label: string; percent: number }) {
+  return (
+    <div className={styles.mastery} data-testid={`mastery-${id}`} data-percent={percent}>
+      <span>{label}</span>
+      <div
+        className={styles.track}
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+      >
+        <div className={styles.fill} style={{ width: `${percent}%` }} />
+      </div>
+      <b>{percent}%</b>
     </div>
   );
 }
