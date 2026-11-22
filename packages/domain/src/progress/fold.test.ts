@@ -810,3 +810,19 @@ describe('pliegue: dominio y retención a +7', () => {
     expect(s.reviews).toEqual(base.reviews);
   });
 });
+
+describe('pliegue: pares mínimos (Entrena tu oído)', () => {
+  it('sus respuestas no cambian errores, vidas, calendario ni dominio', () => {
+    const antes = foldEvents([], ctx);
+    const respuestas = [false, true, false].map((correct) =>
+      evento('exercise_answered@1', { exerciseId: 'pair-berry-very', correct, mode: 'practice' }),
+    );
+    const despues = foldEvents(respuestas, ctx);
+    expect(despues).toEqual(antes);
+    expect(despues.hearts).toBe(MAX_HEARTS);
+    expect(despues.errors).toEqual([]);
+    expect(despues.reviews).toEqual({});
+    expect(despues.words).toEqual({});
+    expect(despues.weak).toEqual({});
+  });
+});

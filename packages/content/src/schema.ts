@@ -192,6 +192,40 @@ export const AchievementSchema = z.object({
   }),
 });
 
+/** Prefijo de los ids de pares mínimos; el dominio lo comparte como `PAIR_EXERCISE_PREFIX`. */
+const PAIR_ID_PREFIX = 'pair-';
+
+/** Contrastes que trabajan los pares mínimos (todos con fuente en el informe de ciencia del aprendizaje). */
+export const PAIR_CONTRASTS = ['b-v', 'i-ih', 's-cluster'] as const;
+
+const PairWord = z.object({ en: Texto, es: Texto });
+
+/** Dos palabras en inglés que se distinguen por un solo sonido, para entrenar el oído. */
+export const MinimalPairSchema = z
+  .object({
+    id: Slug.refine((id) => id.startsWith(PAIR_ID_PREFIX), {
+      message: `el id de un par debe empezar por ${PAIR_ID_PREFIX}`,
+    }),
+    a: PairWord,
+    b: PairWord,
+    contrast: z.enum(PAIR_CONTRASTS),
+  })
+  .refine((p) => p.a.en.toLowerCase() !== p.b.en.toLowerCase(), {
+    message: 'las dos palabras del par deben ser distintas',
+    path: ['b', 'en'],
+  });
+
+/** La lista de pares: ids repetidos no valen. */
+export const MinimalPairsSchema = z.array(MinimalPairSchema).superRefine((pairs, ctx) => {
+  const ids = new Set<string>();
+  pairs.forEach((p, i) => {
+    if (ids.has(p.id)) {
+      ctx.addIssue({ code: 'custom', message: `id de par repetido: ${p.id}`, path: [i, 'id'] });
+    }
+    ids.add(p.id);
+  });
+});
+
 export const CourseSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -261,5 +295,7 @@ export type Unit = z.infer<typeof UnitSchema>;
 export type DialogueTurn = z.infer<typeof DialogueTurnSchema>;
 export type DialogueTopic = z.infer<typeof DialogueTopicSchema>;
 export type Achievement = z.infer<typeof AchievementSchema>;
+export type MinimalPair = z.infer<typeof MinimalPairSchema>;
+export type PairContrast = (typeof PAIR_CONTRASTS)[number];
 export type Course = z.infer<typeof CourseSchema>;
 export type AchievementStat = (typeof ACHIEVEMENT_STATS)[number];

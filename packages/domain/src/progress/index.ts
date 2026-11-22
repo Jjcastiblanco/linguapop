@@ -13,6 +13,7 @@ export {
   RETENTION7_MIN,
   RETENTION7_WINDOW,
   REVIEW_INTERVALS,
+  PAIR_EXERCISE_PREFIX,
   WORD_EXERCISE_PREFIX,
   currentHearts,
   initialProgress,

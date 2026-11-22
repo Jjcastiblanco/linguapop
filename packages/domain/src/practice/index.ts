@@ -1,3 +1,4 @@
+export { EAR_SESSION_SIZE, buildEarSession, type EarAttempt } from './ear';
 export {
   DAILY_REVIEW_SIZE,
   PERSONALIZED_SIZE,

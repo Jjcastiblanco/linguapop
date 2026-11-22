@@ -1,0 +1,136 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  padding-top: calc(14px + env(safe-area-inset-top));
+}
+
+.close {
+  background: none;
+  font-size: 24px;
+  color: var(--muted);
+  font-weight: 900;
+  padding: 0 4px;
+}
+
+.count {
+  flex: 1;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.body {
+  flex: 1;
+  overflow: auto;
+  padding: 6px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.center {
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+
+.listen {
+  align-self: center;
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  width: 96px;
+  height: 96px;
+  font-size: 40px;
+  box-shadow: 0 4px 0 var(--line);
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.option {
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 8px;
+  font-weight: 800;
+  font-size: 20px;
+  box-shadow: 0 4px 0 var(--line);
+}
+
+.option:disabled {
+  cursor: default;
+}
+
+.good {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+  box-shadow: 0 4px 0 var(--ok);
+}
+
+.notice {
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+
+.foot {
+  padding: 12px 18px calc(14px + env(safe-area-inset-bottom));
+  border-top: 2px solid var(--line);
+  display: grid;
+  gap: 10px;
+}
+
+.footGood {
+  background: var(--ok-bg);
+  border-color: var(--ok);
+}
+
+.footMiss {
+  background: var(--card);
+}
+
+.feedback {
+  font-weight: 800;
+}
+
+.action {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--brand);
+  box-shadow: 0 5px 0 var(--brand-d);
+}
+
+.ghost {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-radius: 16px;
+  font-weight: 900;
+  background: var(--card);
+  color: var(--brand);
+  border: 2px solid var(--line);
+}

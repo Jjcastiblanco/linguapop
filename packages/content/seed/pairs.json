@@ -1,0 +1,314 @@
+[
+  {
+    "id": "pair-berry-very",
+    "a": {
+      "en": "berry",
+      "es": "baya"
+    },
+    "b": {
+      "en": "very",
+      "es": "muy"
+    },
+    "contrast": "b-v"
+  },
+  {
+    "id": "pair-boat-vote",
+    "a": {
+      "en": "boat",
+      "es": "bote"
+    },
+    "b": {
+      "en": "vote",
+      "es": "voto"
+    },
+    "contrast": "b-v"
+  },
+  {
+    "id": "pair-best-vest",
+    "a": {
+      "en": "best",
+      "es": "el mejor"
+    },
+    "b": {
+      "en": "vest",
+      "es": "chaleco"
+    },
+    "contrast": "b-v"
+  },
+  {
+    "id": "pair-ban-van",
+    "a": {
+      "en": "ban",
+      "es": "prohibición"
+    },
+    "b": {
+      "en": "van",
+      "es": "furgoneta"
+    },
+    "contrast": "b-v"
+  },
+  {
+    "id": "pair-bet-vet",
+    "a": {
+      "en": "bet",
+      "es": "apuesta"
+    },
+    "b": {
+      "en": "vet",
+      "es": "veterinario"
+    },
+    "contrast": "b-v"
+  },
+  {
+    "id": "pair-base-vase",
+    "a": {
+      "en": "base",
+      "es": "base"
+    },
+    "b": {
+      "en": "vase",
+      "es": "jarrón"
+    },
+    "contrast": "b-v"
+  },
+  {
+    "id": "pair-ship-sheep",
+    "a": {
+      "en": "ship",
+      "es": "barco"
+    },
+    "b": {
+      "en": "sheep",
+      "es": "oveja"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-seat-sit",
+    "a": {
+      "en": "seat",
+      "es": "asiento"
+    },
+    "b": {
+      "en": "sit",
+      "es": "sentarse"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-live-leave",
+    "a": {
+      "en": "live",
+      "es": "vivir"
+    },
+    "b": {
+      "en": "leave",
+      "es": "irse"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-bit-beat",
+    "a": {
+      "en": "bit",
+      "es": "trozo"
+    },
+    "b": {
+      "en": "beat",
+      "es": "golpear"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-feel-fill",
+    "a": {
+      "en": "feel",
+      "es": "sentir"
+    },
+    "b": {
+      "en": "fill",
+      "es": "llenar"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-hill-heel",
+    "a": {
+      "en": "hill",
+      "es": "colina"
+    },
+    "b": {
+      "en": "heel",
+      "es": "talón"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-eat-it",
+    "a": {
+      "en": "eat",
+      "es": "comer"
+    },
+    "b": {
+      "en": "it",
+      "es": "eso"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-chip-cheap",
+    "a": {
+      "en": "chip",
+      "es": "papa frita"
+    },
+    "b": {
+      "en": "cheap",
+      "es": "barato"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-rich-reach",
+    "a": {
+      "en": "rich",
+      "es": "rico"
+    },
+    "b": {
+      "en": "reach",
+      "es": "alcanzar"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-still-steal",
+    "a": {
+      "en": "still",
+      "es": "todavía"
+    },
+    "b": {
+      "en": "steal",
+      "es": "robar"
+    },
+    "contrast": "i-ih"
+  },
+  {
+    "id": "pair-spill-pill",
+    "a": {
+      "en": "spill",
+      "es": "derramar"
+    },
+    "b": {
+      "en": "pill",
+      "es": "píldora"
+    },
+    "contrast": "s-cluster"
+  },
+  {
+    "id": "pair-stop-top",
+    "a": {
+      "en": "stop",
+      "es": "parar"
+    },
+    "b": {
+      "en": "top",
+      "es": "cima"
+    },
+    "contrast": "s-cluster"
+  },
+  {
+    "id": "pair-speak-peak",
+    "a": {
+      "en": "speak",
+      "es": "hablar"
+    },
+    "b": {
+      "en": "peak",
+      "es": "pico"
+    },
+    "contrast": "s-cluster"
+  },
+  {
+    "id": "pair-pin-spin",
+    "a": {
+      "en": "pin",
+      "es": "alfiler"
+    },
+    "b": {
+      "en": "spin",
+      "es": "girar"
+    },
+    "contrast": "s-cluster"
+  },
+  {
+    "id": "pair-star-tar",
+    "a": {
+      "en": "star",
+      "es": "estrella"
+    },
+    "b": {
+      "en": "tar",
+      "es": "alquitrán"
+    },
+    "contrast": "s-cluster"
+  },
+  {
+    "id": "pair-school-cool",
+    "a": {
+      "en": "school",
+      "es": "escuela"
+    },
+    "b": {
+      "en": "cool",
+      "es": "genial"
+    },
+    "contrast": "s-cluster"
+  },
+  {
+    "id": "pair-sport-port",
+    "a": {
+      "en": "sport",
+      "es": "deporte"
+    },
+    "b": {
+      "en": "port",
+      "es": "puerto"
+    },
+    "contrast": "s-cluster"
+  },
+  {
+    "id": "pair-mile-smile",
+    "a": {
+      "en": "mile",
+      "es": "milla"
+    },
+    "b": {
+      "en": "smile",
+      "es": "sonrisa"
+    },
+    "contrast": "s-cluster"
+  },
+  {
+    "id": "pair-snow-no",
+    "a": {
+      "en": "snow",
+      "es": "nieve"
+    },
+    "b": {
+      "en": "no",
+      "es": "no"
+    },
+    "contrast": "s-cluster"
+  },
+  {
+    "id": "pair-low-slow",
+    "a": {
+      "en": "low",
+      "es": "bajo"
+    },
+    "b": {
+      "en": "slow",
+      "es": "lento"
+    },
+    "contrast": "s-cluster"
+  }
+]

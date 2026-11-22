@@ -89,6 +89,17 @@ export function PracticeScreen() {
         </p>
       )}
 
+      <button type="button" className={styles.pcard} onClick={() => navigate('/practicar/oido')}>
+        <span className={styles.em} aria-hidden="true">
+          👂
+        </span>
+        <span className={styles.grow}>
+          <b>{t('practice.ear')}</b>
+          <small>{t('practice.ear.sub')}</small>
+        </span>
+        <span aria-hidden="true">›</span>
+      </button>
+
       <button
         type="button"
         className={styles.pcard}
