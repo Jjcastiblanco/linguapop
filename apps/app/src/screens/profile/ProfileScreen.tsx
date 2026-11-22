@@ -69,7 +69,7 @@ export function ProfileScreen() {
   const unitsDone = units.filter((u) => isUnitComplete(u, progress.lessonsDone)).length;
   const unlocked = achievements.filter((a) => progress.achievements[a.id]).length;
   const level = estimatedLevel(units, progress.lessonsDone);
-  const mastery = masteryReport(units, progress);
+  const mastery = masteryReport(units, progress, composition.readings);
   const goalY = 130 - (100 * settings.dailyGoalXp) / max;
 
   /** Guarda un cambio de ajustes del estudiante como evento. */

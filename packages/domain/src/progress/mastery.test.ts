@@ -1,6 +1,7 @@
 import type { Course } from '@linguapop/content';
 import { describe, expect, it } from 'vitest';
-import { masteryReport, skillOf } from './mastery';
+import { readingExercises, seedReadings } from '@linguapop/content';
+import { SKILLS, masteryReport, skillOf } from './mastery';
 import { initialProgress } from './state';
 
 const ex = (id: string, type: string, retired = false) =>
@@ -62,5 +63,43 @@ describe('masteryReport', () => {
     expect(
       masteryReport(units, { ...base, retention7: [true, true, true, false, false] }).retention7,
     ).toBe(60);
+  });
+});
+
+describe('habilidad «Leer»', () => {
+  const unidades = [unit('u-saludos', [ex('x1', 'mc')]), unit('u-comida', [ex('y1', 'write')])];
+  const texto = seedReadings.find((t) => t.unitId === 'u-saludos')!;
+  const preguntas = readingExercises(texto);
+
+  it('es una habilidad más, al final', () => {
+    expect(SKILLS.at(-1)).toBe('read');
+  });
+
+  it('las preguntas de lectura cuentan en «Leer» y en la unidad de su texto', () => {
+    const p = {
+      ...initialProgress(),
+      reviews: { [preguntas[0]!.id]: { stage: 2 as const, due: '2026-12-01', mastered: true } },
+    };
+    const r = masteryReport(unidades, p, [texto]);
+    expect(r.bySkill.read).toEqual({
+      mastered: 1,
+      total: preguntas.length,
+      percent: Math.round((100 * 1) / preguntas.length),
+    });
+    expect(r.byUnit[0]).toMatchObject({
+      unitId: 'u-saludos',
+      total: 1 + preguntas.length,
+      mastered: 1,
+    });
+    expect(r.byUnit[1]).toMatchObject({ unitId: 'u-comida', total: 1 });
+    expect(r.bySkill.recognize.total).toBe(1);
+  });
+
+  it('sin textos «Leer» queda en 0 %', () => {
+    expect(masteryReport(unidades, initialProgress()).bySkill.read).toEqual({
+      mastered: 0,
+      total: 0,
+      percent: 0,
+    });
   });
 });

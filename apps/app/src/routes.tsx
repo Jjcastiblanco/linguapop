@@ -5,6 +5,7 @@ import { LeaguesScreen } from './screens/leagues/LeaguesScreen';
 import { ProfileScreen } from './screens/profile/ProfileScreen';
 import { LessonScreen } from './screens/lesson/LessonScreen';
 import { PracticeScreen } from './screens/practice/PracticeScreen';
+import { ReadingScreen } from './screens/practice/ReadingScreen';
 import { EarTrainingScreen } from './screens/practice/EarTrainingScreen';
 import { PracticeSessionScreen } from './screens/practice/PracticeSessionScreen';
 import { AppShell } from './shell/AppShell';
@@ -27,6 +28,7 @@ const screens: RouteObject[] = [
     ],
   },
   { path: '/practicar/oido', element: <EarTrainingScreen /> },
+  { path: '/practicar/lectura', element: <ReadingScreen /> },
   { path: '/practicar/sesion', element: <PracticeSessionScreen /> },
   { path: '/leccion/:unitId/:lessonId', element: <LessonScreen /> },
   { path: '/llamada', element: <CallScreen /> },

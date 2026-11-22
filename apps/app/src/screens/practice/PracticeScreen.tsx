@@ -57,7 +57,11 @@ export function PracticeScreen() {
   function start(request: PracticeKind, feature: TextKey) {
     setNotice('');
     setPicking(false);
-    const result = practiceConfig(request, { units, progress, random: composition.random }, today);
+    const result = practiceConfig(
+      request,
+      { units, progress, random: composition.random, readings: composition.readings },
+      today,
+    );
     if (!result.ok) {
       if (result.reason === 'pro-required') setProFor(feature);
       else setNotice(NOTICE[result.reason] ? t(NOTICE[result.reason]!) : '');
@@ -96,6 +100,17 @@ export function PracticeScreen() {
         <span className={styles.grow}>
           <b>{t('practice.ear')}</b>
           <small>{t('practice.ear.sub')}</small>
+        </span>
+        <span aria-hidden="true">›</span>
+      </button>
+
+      <button type="button" className={styles.pcard} onClick={() => navigate('/practicar/lectura')}>
+        <span className={styles.em} aria-hidden="true">
+          📖
+        </span>
+        <span className={styles.grow}>
+          <b>{t('practice.read')}</b>
+          <small>{t('practice.read.sub')}</small>
         </span>
         <span aria-hidden="true">›</span>
       </button>

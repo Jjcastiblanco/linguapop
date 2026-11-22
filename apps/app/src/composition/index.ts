@@ -1,5 +1,5 @@
-import { seedCourse, seedPairs } from '@linguapop/content';
-import type { Course, MinimalPair } from '@linguapop/content';
+import { seedCourse, seedPairs, seedReadings } from '@linguapop/content';
+import type { Course, MinimalPair, ReadingText } from '@linguapop/content';
 import type {
   Auth,
   Clock,
@@ -31,6 +31,8 @@ export type Composition = {
   course: Course;
   /** Pares mínimos de «Entrena tu oído»: contenido aparte del curso. */
   pairs: MinimalPair[];
+  /** Textos de «Lectura corta»: contenido aparte del curso. */
+  readings: ReadingText[];
   /** Voz del navegador: habla y escucha, y dice cuándo no puede. */
   speech: Speech;
   /** Sonidos con Web Audio; respeta la preferencia de sonido del dispositivo. */
@@ -67,6 +69,7 @@ export type CompositionOverrides = Partial<
     | 'sound'
     | 'course'
     | 'pairs'
+    | 'readings'
     | 'install'
     | 'update'
     | 'auth'
@@ -109,6 +112,7 @@ export function createComposition(overrides: CompositionOverrides = {}): Composi
     content: { load: async () => course },
     course,
     pairs: overrides.pairs ?? seedPairs,
+    readings: overrides.readings ?? seedReadings,
     speech: overrides.speech ?? createWebSpeech(),
     sound: overrides.sound ?? createWebSound(),
     install: overrides.install ?? createWebInstall(),

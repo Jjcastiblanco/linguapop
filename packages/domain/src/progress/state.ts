@@ -4,6 +4,8 @@ import { INITIAL_STREAK, type DayKey, type StreakPlan, type StreakState } from '
 export const WORD_EXERCISE_PREFIX = 'w-';
 /** Prefijo de los ids de pares mínimos («Entrena tu oído»): el pliegue los ignora. */
 export const PAIR_EXERCISE_PREFIX = 'pair-';
+/** Prefijo de los ids de las preguntas de «Lectura corta»: cuentan para el calendario y el dominio, no para errores ni vidas. */
+export const READING_EXERCISE_PREFIX = 'read-';
 /** Vidas del plan gratis. */
 export const MAX_HEARTS = 5;
 /** Meta diaria de XP por defecto. */

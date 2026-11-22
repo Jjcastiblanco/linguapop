@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { collectPairTexts } from './audio';
+import {
+  READING_MIN_COVERAGE,
+  ReadingTextSchema,
+  readingCoverage,
+  readingExercises,
+} from './reading';
 import { CourseSchema, MinimalPairSchema, MinimalPairsSchema, PAIR_CONTRASTS } from './schema';
-import { seedAchievements, seedCourse, seedDialogues, seedPairs, seedUnits } from './seed';
+import {
+  seedAchievements,
+  seedCourse,
+  seedDialogues,
+  seedPairs,
+  seedReadings,
+  seedUnits,
+} from './seed';
 import { findUntaughtTerms, normalizeTerm } from './teach';
 
 // Fórmula de la versión heredada: 3 lecciones de 10 ejercicios con desfases 0, 7 y 14.
@@ -211,5 +224,77 @@ describe('semilla: pares mínimos', () => {
     expect(textos).toContain('sheep');
     expect(textos).toContain('very');
     expect(collectPairTexts(seedPairs).every((s) => s.speed === 'normal')).toBe(true);
+  });
+});
+
+describe('semilla: lectura corta', () => {
+  it('cada texto usa al menos el 95 % de palabras ya enseñadas hasta su unidad', () => {
+    for (const text of seedReadings) {
+      const { ratio, unknown } = readingCoverage(text, seedUnits);
+      expect(
+        ratio,
+        `${text.id}: palabras sin enseñar ${unknown.join(', ')}`,
+      ).toBeGreaterThanOrEqual(READING_MIN_COVERAGE);
+    }
+  });
+
+  it('hay textos para cada unidad, de 3 a 6 líneas y con 2 o 3 preguntas', () => {
+    expect(new Set(seedReadings.map((t) => t.unitId))).toEqual(new Set(seedUnits.map((u) => u.id)));
+    for (const t of seedReadings) {
+      expect(t.lines.length).toBeGreaterThanOrEqual(3);
+      expect(t.lines.length).toBeLessThanOrEqual(6);
+      expect(t.questions.length).toBeGreaterThanOrEqual(2);
+      expect(t.questions.length).toBeLessThanOrEqual(3);
+    }
+  });
+
+  it('la respuesta correcta no siempre es la primera opción', () => {
+    const posiciones = new Set(seedReadings.flatMap((t) => t.questions.map((q) => q.answerIndex)));
+    expect(posiciones.size).toBeGreaterThan(1);
+  });
+
+  it('las preguntas se convierten en ejercicios con id propio y la línea citada', () => {
+    const ejercicios = seedReadings.flatMap(readingExercises);
+    expect(new Set(ejercicios.map((e) => e.id)).size).toBe(ejercicios.length);
+    expect(ejercicios.every((e) => e.type === 'mc' && e.id.startsWith('read-'))).toBe(true);
+    expect(ejercicios[0]).toMatchObject({
+      prompt: expect.stringContaining('En el texto: «Hello! My name is Ana.»'),
+    });
+  });
+
+  it('la validación rechaza opciones repetidas', () => {
+    const base = seedReadings[0]!;
+    const q = base.questions[0]!;
+    expect(
+      ReadingTextSchema.safeParse({
+        ...base,
+        questions: [
+          { ...q, options: [q.options[0], q.options[0]], answerIndex: 0 },
+          base.questions[1],
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('la validación rechaza una pregunta a una línea inexistente y un texto fuera de rango', () => {
+    const base = seedReadings[0]!;
+    expect(
+      ReadingTextSchema.safeParse({
+        ...base,
+        questions: [{ ...base.questions[0], line: 9 }, base.questions[1]],
+      }).success,
+    ).toBe(false);
+    expect(ReadingTextSchema.safeParse({ ...base, lines: ['uno', 'dos'] }).success).toBe(false);
+    expect(ReadingTextSchema.safeParse({ ...base, id: 'saludos-1' }).success).toBe(false);
+  });
+
+  it('la cobertura detecta una palabra sin enseñar', () => {
+    const base = seedReadings[0]!;
+    const { ratio, unknown } = readingCoverage(
+      { ...base, lines: ['Hello zebra giraffe okapi', 'Hello', 'Hello'] },
+      seedUnits,
+    );
+    expect(unknown).toEqual(['zebra', 'giraffe', 'okapi']);
+    expect(ratio).toBeLessThan(READING_MIN_COVERAGE);
   });
 });

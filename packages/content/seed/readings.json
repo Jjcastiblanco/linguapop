@@ -1,0 +1,319 @@
+[
+  {
+    "id": "read-saludos-1",
+    "unitId": "u-saludos",
+    "kind": "dialogue",
+    "title": "Conoces a Ana",
+    "lines": [
+      "Hello! My name is Ana.",
+      "Good morning, Ana. Nice to meet you.",
+      "How are you?",
+      "I am fine, thank you.",
+      "What is your name?"
+    ],
+    "questions": [
+      {
+        "line": 0,
+        "prompt": "¿Cómo se llama quien habla primero?",
+        "options": ["Sofía", "Ana", "Luis"],
+        "answerIndex": 1
+      },
+      {
+        "line": 1,
+        "prompt": "¿En qué momento del día se saludan?",
+        "options": ["Por la noche", "Por la mañana", "Por la tarde"],
+        "answerIndex": 1
+      },
+      {
+        "line": 3,
+        "prompt": "¿Cómo está la persona?",
+        "options": ["Mal", "Con sueño", "Bien"],
+        "answerIndex": 2
+      }
+    ]
+  },
+  {
+    "id": "read-saludos-2",
+    "unitId": "u-saludos",
+    "kind": "message",
+    "title": "Un mensaje de un amigo",
+    "lines": ["Hello, my friend!", "Good night, thank you.", "I am sorry.", "See you tomorrow."],
+    "questions": [
+      {
+        "line": 3,
+        "prompt": "¿Cuándo se ven?",
+        "options": ["Ayer", "Mañana", "Hoy"],
+        "answerIndex": 1
+      },
+      {
+        "line": 2,
+        "prompt": "¿Qué hace la persona?",
+        "options": ["Da las gracias", "Pide perdón", "Pregunta el nombre"],
+        "answerIndex": 1
+      },
+      {
+        "line": 1,
+        "prompt": "¿Cómo se despide por la noche?",
+        "options": ["Buenos días", "Buenas tardes", "Buenas noches"],
+        "answerIndex": 2
+      }
+    ]
+  },
+  {
+    "id": "read-comida-1",
+    "unitId": "u-comida",
+    "kind": "dialogue",
+    "title": "En el restaurante",
+    "lines": [
+      "A table for two, please.",
+      "Can I have the menu?",
+      "I would like some soup.",
+      "The soup is delicious.",
+      "The bill, please."
+    ],
+    "questions": [
+      {
+        "line": 0,
+        "prompt": "¿Para cuántas personas es la mesa?",
+        "options": ["Dos", "Una", "Tres"],
+        "answerIndex": 0
+      },
+      {
+        "line": 2,
+        "prompt": "¿Qué pide para comer?",
+        "options": ["Ensalada", "Pizza", "Sopa"],
+        "answerIndex": 2
+      },
+      {
+        "line": 4,
+        "prompt": "¿Qué pide al final?",
+        "options": ["Agua", "El menú", "La cuenta"],
+        "answerIndex": 2
+      }
+    ]
+  },
+  {
+    "id": "read-comida-2",
+    "unitId": "u-comida",
+    "kind": "message",
+    "title": "Una nota sobre comida",
+    "lines": ["I am hungry.", "I want a coffee with milk.", "I do not eat meat.", "I like pizza."],
+    "questions": [
+      {
+        "line": 1,
+        "prompt": "¿Qué quiere tomar?",
+        "options": ["Un jugo", "Un té", "Un café con leche"],
+        "answerIndex": 2
+      },
+      {
+        "line": 2,
+        "prompt": "¿Qué no come?",
+        "options": ["Pan", "Queso", "Carne"],
+        "answerIndex": 2
+      },
+      {
+        "line": 3,
+        "prompt": "¿Qué le gusta?",
+        "options": ["La pizza", "El arroz", "La ensalada"],
+        "answerIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "read-familia-1",
+    "unitId": "u-familia",
+    "kind": "message",
+    "title": "Mi familia",
+    "lines": [
+      "This is my family.",
+      "My mother is kind.",
+      "My father is tall.",
+      "I have two brothers.",
+      "I love my family."
+    ],
+    "questions": [
+      {
+        "line": 1,
+        "prompt": "¿Cómo es su madre?",
+        "options": ["Alta", "Graciosa", "Amable"],
+        "answerIndex": 2
+      },
+      {
+        "line": 2,
+        "prompt": "¿Cómo es su padre?",
+        "options": ["Bajo", "Amable", "Alto"],
+        "answerIndex": 2
+      },
+      {
+        "line": 3,
+        "prompt": "¿Cuántos hermanos tiene?",
+        "options": ["Dos", "Tres", "Uno"],
+        "answerIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "read-familia-2",
+    "unitId": "u-familia",
+    "kind": "dialogue",
+    "title": "Hablando de la familia",
+    "lines": [
+      "How many people are in your family?",
+      "My family is big.",
+      "My grandmother is here.",
+      "She has a daughter.",
+      "My cousin is very funny."
+    ],
+    "questions": [
+      {
+        "line": 1,
+        "prompt": "¿Cómo es su familia?",
+        "options": ["Pequeña", "De dos personas", "Grande"],
+        "answerIndex": 2
+      },
+      {
+        "line": 2,
+        "prompt": "¿Quién está aquí?",
+        "options": ["Su abuela", "Su tía", "Su hermana"],
+        "answerIndex": 0
+      },
+      {
+        "line": 4,
+        "prompt": "¿Cómo es su primo?",
+        "options": ["Muy alto", "Muy gracioso", "Muy amable"],
+        "answerIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "read-viajes-1",
+    "unitId": "u-viajes",
+    "kind": "dialogue",
+    "title": "En la estación",
+    "lines": [
+      "Where is the bus station?",
+      "Turn left at the corner.",
+      "How much is the ticket?",
+      "A one-way ticket, please.",
+      "Thank you!"
+    ],
+    "questions": [
+      {
+        "line": 1,
+        "prompt": "¿Hacia dónde hay que girar?",
+        "options": ["A la derecha", "Todo recto", "A la izquierda"],
+        "answerIndex": 2
+      },
+      {
+        "line": 0,
+        "prompt": "¿Qué busca?",
+        "options": ["El aeropuerto", "La estación de autobuses", "El hotel"],
+        "answerIndex": 1
+      },
+      {
+        "line": 3,
+        "prompt": "¿Qué billete pide?",
+        "options": ["De ida y vuelta", "De ida", "Para dos personas"],
+        "answerIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "read-viajes-2",
+    "unitId": "u-viajes",
+    "kind": "message",
+    "title": "Un mensaje de viaje",
+    "lines": [
+      "Welcome to the hotel.",
+      "My flight arrives at three.",
+      "The train leaves at eight.",
+      "We are going to the beach tomorrow."
+    ],
+    "questions": [
+      {
+        "line": 1,
+        "prompt": "¿A qué hora llega su vuelo?",
+        "options": ["A las ocho", "A las tres", "A las diez"],
+        "answerIndex": 1
+      },
+      {
+        "line": 2,
+        "prompt": "¿A qué hora sale el tren?",
+        "options": ["A las tres", "A las ocho", "A la una"],
+        "answerIndex": 1
+      },
+      {
+        "line": 3,
+        "prompt": "¿Adónde van mañana?",
+        "options": ["A la playa", "Al aeropuerto", "Al hotel"],
+        "answerIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "read-trabajo-1",
+    "unitId": "u-trabajo",
+    "kind": "message",
+    "title": "Mi día en la oficina",
+    "lines": [
+      "I work in an office.",
+      "I work from nine to five.",
+      "My boss is kind.",
+      "I have a meeting at ten.",
+      "My job is very difficult."
+    ],
+    "questions": [
+      {
+        "line": 1,
+        "prompt": "¿A qué hora termina de trabajar?",
+        "options": ["A las cinco", "A las diez", "A las nueve"],
+        "answerIndex": 0
+      },
+      {
+        "line": 2,
+        "prompt": "¿Cómo es su jefe?",
+        "options": ["Amable", "Difícil", "Alto"],
+        "answerIndex": 0
+      },
+      {
+        "line": 3,
+        "prompt": "¿Cuándo es la reunión?",
+        "options": ["A las diez", "A las cinco", "A las nueve"],
+        "answerIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "read-trabajo-2",
+    "unitId": "u-trabajo",
+    "kind": "dialogue",
+    "title": "Buscando trabajo",
+    "lines": [
+      "I need a job.",
+      "I am looking for a new job.",
+      "I have an interview tomorrow.",
+      "Can you help me, please?",
+      "Thank you for your help."
+    ],
+    "questions": [
+      {
+        "line": 2,
+        "prompt": "¿Cuándo es la entrevista?",
+        "options": ["Hoy", "Ayer", "Mañana"],
+        "answerIndex": 2
+      },
+      {
+        "line": 1,
+        "prompt": "¿Qué busca?",
+        "options": ["Un coche", "Un trabajo nuevo", "Un hotel"],
+        "answerIndex": 1
+      },
+      {
+        "line": 4,
+        "prompt": "¿Qué agradece?",
+        "options": ["El billete", "El café", "La ayuda"],
+        "answerIndex": 2
+      }
+    ]
+  }
+]
