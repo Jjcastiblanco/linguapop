@@ -1,5 +1,6 @@
 import type { Exercise } from '@linguapop/content';
 import { levenshtein, normalizeText, similarity } from '../text';
+import { judgeSpeech, type SoundHint } from './sounds';
 import type { Answer, AnswerResult, ExerciseOf } from './answer';
 
 /** Cuántos intentos fallidos admite emparejar y aun así cuenta como acierto. */
@@ -82,13 +83,31 @@ function checkListen(e: ExerciseOf<'listen'>, text: string): AnswerResult {
   return { ok, correctAnswer: e.en, translation: e.es, ...(typo ? { typo } : {}) };
 }
 
+/**
+ * Hablar se evalúa por inteligibilidad: se acepta si el parecido llega al mínimo o si lo único que
+ * cambia son sustituciones de sonido típicas de hispanohablantes (ver `sounds.ts`). Un solo sonido
+ * no reprueba una frase de 3 palabras o más, y al fallar se nombra la palabra que no coincidió.
+ */
 function checkSpeak(e: ExerciseOf<'speak'>, heard: readonly string[]): AnswerResult {
-  const best = Math.max(0, ...heard.map((h) => similarity(h, e.en)));
-  const ok = best >= SPEAK_PASS_SIMILARITY;
+  const scores = heard.map((h) => similarity(h, e.en));
+  const best = Math.max(0, ...scores);
+  const judged = heard.map((h) => judgeSpeech(h, e.en));
+  const byRule = judged.some((j) => j?.accepted && !j.hint);
+  const byWarnedRule = judged.some((j) => j?.accepted && j.hint);
+  const similar = best >= SPEAK_PASS_SIMILARITY;
+  const ok = similar || byRule || byWarnedRule;
+  // El aviso sale de la misma alternativa que decidió el resultado: la que se aceptó por regla, la
+  // más parecida si pasó por parecido, o la primera con pista si falló.
+  const decisive =
+    judged.find((j) => j?.accepted) ??
+    (similar ? judged[scores.indexOf(best)] : judged.find((j) => j?.hint));
+  const soundHint: SoundHint | undefined = decisive?.hint;
   return {
     ok,
     correctAnswer: e.en,
-    ...(ok ? { pronunciation: Math.round(best * 100) } : heard[0] ? { heard: heard[0] } : {}),
+    ...(similar ? { pronunciation: Math.round(best * 100) } : {}),
+    ...(!ok && heard[0] ? { heard: heard[0] } : {}),
+    ...(soundHint && !(ok && soundHint.kind === 'word') ? { soundHint } : {}),
   };
 }
 

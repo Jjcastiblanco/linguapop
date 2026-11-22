@@ -1,4 +1,5 @@
 import type { Exercise } from '@linguapop/content';
+import type { SoundHint } from './sounds';
 
 /** Respuesta completa del estudiante a un ejercicio; cada tipo trae lo suyo. */
 export type Answer =
@@ -28,6 +29,8 @@ export type AnswerResult = {
   pronunciation?: number;
   /** Lo que se entendió, cuando no alcanzó. */
   heard?: string;
+  /** La palabra o el sonido que no coincidió al hablar, para dar una pista en español. */
+  soundHint?: SoundHint;
   /** Intentos fallidos al emparejar. */
   mistakes?: number;
   /** Traducción al español de la frase (ejercicio de escuchar). */

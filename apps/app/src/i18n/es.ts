@@ -95,6 +95,11 @@ export const es = {
   'feedback.mistakes.many': 'Tuviste {n} intentos fallidos',
   'feedback.pronunciation': 'Pronunciación: {n}%',
   'feedback.heard': 'Escuché: “{text}”',
+  'feedback.sound.b-v':
+    'Se oyó «{heard}» en lugar de «{expected}». La v se dice con los dientes de arriba sobre el labio de abajo, sin juntar los labios.',
+  'feedback.sound.long-short-i':
+    'Se oyó «{heard}» en lugar de «{expected}». Alarga la vocal: «ee» o «ea» suena larga, como una «i» estirada.',
+  'feedback.sound.word': 'Revisa la palabra «{expected}»: se oyó «{heard}».',
   'lesson.nohearts.title': 'Sin vidas 💔',
   'lesson.nohearts.text': 'Vuelve mañana, recarga con gemas o activa PRO para vidas ilimitadas ∞.',
   'lesson.nohearts.back': 'Volver',

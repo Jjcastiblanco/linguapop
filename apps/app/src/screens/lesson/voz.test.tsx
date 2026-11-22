@@ -372,6 +372,24 @@ describe('hablar', () => {
     expect(screen.getByText('Escuché: “banana split”')).toBeInTheDocument();
   });
 
+  it('si falla por pocas palabras nombra la palabra con una pista en lugar de solo repetir lo oído', async () => {
+    await abrir([SPEAK], { oidos: [oyo('i am fine banana banana')] });
+    await userEvent.click(screen.getByRole('button', { name: 'Hablar' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Comprobar' })).toBeEnabled());
+    await comprobar();
+    expect(screen.getByText('Respuesta correcta:')).toBeInTheDocument();
+    expect(screen.getByText('Revisa la palabra «thank»: se oyó «banana».')).toBeInTheDocument();
+    expect(screen.getByText('Escuché: “i am fine banana banana”')).toBeInTheDocument();
+  });
+
+  it('una sustitución de baja carga («tank» por «thank») no reprueba la frase', async () => {
+    await abrir([SPEAK], { oidos: [oyo('i am fine tank you')] });
+    await userEvent.click(screen.getByRole('button', { name: 'Hablar' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Comprobar' })).toBeEnabled());
+    await comprobar();
+    expect(screen.getByTestId('bubble')).toHaveTextContent('¡Bien hecho!');
+  });
+
   it('el silencio avisa y deja intentarlo otra vez', async () => {
     await abrir([SPEAK], { oidos: [{ kind: 'silence' }, oyo(e.en)] });
     await userEvent.click(screen.getByRole('button', { name: 'Hablar' }));
