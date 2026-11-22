@@ -193,7 +193,7 @@ export const AchievementSchema = z.object({
 });
 
 /** Prefijo de los ids de pares mínimos; el dominio lo comparte como `PAIR_EXERCISE_PREFIX`. */
-const PAIR_ID_PREFIX = 'pair-';
+export const PAIR_ID_PREFIX = 'pair-';
 
 /** Contrastes que trabajan los pares mínimos (todos con fuente en el informe de ciencia del aprendizaje). */
 export const PAIR_CONTRASTS = ['b-v', 'i-ih', 's-cluster'] as const;

@@ -5,8 +5,11 @@ import {
   audioKey,
   collectPairTexts,
   collectSpokenTexts,
+  seedCourse,
   seedPairs,
+  seedReadings,
   seedUnits,
+  validateContent,
   type AudioManifest,
 } from '@linguapop/content';
 
@@ -29,6 +32,14 @@ describe('audio pregrabado del curso', () => {
       .filter((s) => !keys.has(audioKey(s.text, s.speed, s.voice)))
       .map((s) => `${s.speed} ${s.voice ?? ''}: ${s.text}`);
     expect(missing, 'faltan grabaciones: corre `pnpm audio:generar`').toEqual([]);
+  });
+
+  it('la semilla completa (curso, lecturas, pares y audio) pasa el validador único', () => {
+    const r = validateContent(
+      { course: seedCourse, readings: seedReadings, pairs: seedPairs },
+      { audioKeys: keys },
+    );
+    expect(r.ok ? [] : r.problems).toEqual([]);
   });
 
   it('cada clave del manifiesto tiene su archivo y no sobran archivos', () => {

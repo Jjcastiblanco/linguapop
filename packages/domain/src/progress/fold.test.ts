@@ -4,14 +4,16 @@ import { ProgressEventSchema } from '../events';
 import { applyEvent, foldEvents, parseKnownEvents } from './fold';
 import {
   MAX_HEARTS,
+  PAIR_EXERCISE_PREFIX,
   PRICES,
   READING_EXERCISE_PREFIX,
+  WORD_EXERCISE_PREFIX,
   currentHearts,
   initialProgress,
   type ProgressState,
 } from './state';
 import { isLessonUnlocked } from '../practice';
-import { READING_ID_PREFIX } from '@linguapop/content';
+import { READING_ID_PREFIX, RESERVED_EXERCISE_PREFIXES } from '@linguapop/content';
 import { weekKey } from '../streak';
 import { TEST_CONTEXT as ctx, UNIT_IDS, evento, sesion } from './test-support';
 
@@ -900,6 +902,12 @@ describe('preguntas de lectura en el pliegue', () => {
       expect(s.hearts).toBe(MAX_HEARTS);
       expect(s.reviews['read-saludos-1-q1']).toEqual({ stage: 0, due: '2026-10-28' });
     }
+  });
+
+  it('los prefijos que el pliegue trata aparte son los que el validador reserva', () => {
+    expect([...RESERVED_EXERCISE_PREFIXES].sort()).toEqual(
+      [WORD_EXERCISE_PREFIX, PAIR_EXERCISE_PREFIX, READING_EXERCISE_PREFIX].sort(),
+    );
   });
 
   it('el prefijo del pliegue es el mismo que el de los textos de lectura', () => {
