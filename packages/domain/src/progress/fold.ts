@@ -9,6 +9,7 @@ import {
   PRICES,
   RETENTION7_WINDOW,
   REVIEW_INTERVALS,
+  PAIR_EXERCISE_PREFIX,
   WORD_EXERCISE_PREFIX,
   initialProgress,
   type ProgressState,
@@ -151,6 +152,8 @@ function onExerciseAnswered(
   e: Of<'exercise_answered@1'>,
   day: DayKey,
 ): ProgressState {
+  // «Entrena tu oído» no es del curso: sus respuestas no tocan errores, vidas, calendario ni dominio.
+  if (e.payload.exerciseId.startsWith(PAIR_EXERCISE_PREFIX)) return state;
   const s = refreshHearts(state, day);
   const { exerciseId, correct, mode, skipped } = e.payload;
   if (skipped) return s;

@@ -1,4 +1,4 @@
-import type { Unit } from './schema';
+import type { MinimalPair, Unit } from './schema';
 
 /**
  * Audio pregrabado del curso (AD-11): cada texto en inglés que la app puede decir tiene un archivo
@@ -93,4 +93,14 @@ export function collectSpokenTexts(units: readonly Unit[]): SpokenText[] {
     ...[...normal].map((text): SpokenText => ({ text, speed: 'normal' })),
     ...[...slow].map((text): SpokenText => ({ text, speed: 'slow' })),
   ];
+}
+
+/** Las palabras de los pares mínimos, a velocidad normal (una sola voz; las varias son la 12.15). */
+export function collectPairTexts(pairs: readonly MinimalPair[]): SpokenText[] {
+  const words = new Set<string>();
+  for (const pair of pairs) {
+    words.add(audioText(pair.a.en));
+    words.add(audioText(pair.b.en));
+  }
+  return [...words].map((text): SpokenText => ({ text, speed: 'normal' }));
 }

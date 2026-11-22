@@ -5,6 +5,7 @@ import { LeaguesScreen } from './screens/leagues/LeaguesScreen';
 import { ProfileScreen } from './screens/profile/ProfileScreen';
 import { LessonScreen } from './screens/lesson/LessonScreen';
 import { PracticeScreen } from './screens/practice/PracticeScreen';
+import { EarTrainingScreen } from './screens/practice/EarTrainingScreen';
 import { PracticeSessionScreen } from './screens/practice/PracticeSessionScreen';
 import { AppShell } from './shell/AppShell';
 import { Toaster } from './ui/Toaster';
@@ -25,6 +26,7 @@ const screens: RouteObject[] = [
       { path: 'perfil', element: <ProfileScreen /> },
     ],
   },
+  { path: '/practicar/oido', element: <EarTrainingScreen /> },
   { path: '/practicar/sesion', element: <PracticeSessionScreen /> },
   { path: '/leccion/:unitId/:lessonId', element: <LessonScreen /> },
   { path: '/llamada', element: <CallScreen /> },

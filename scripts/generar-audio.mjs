@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Mp3Encoder } from '@breezystack/lamejs';
 import { KokoroTTS } from 'kokoro-js';
-import { audioKey, collectSpokenTexts } from '../packages/content/src/audio.ts';
+import { audioKey, collectPairTexts, collectSpokenTexts } from '../packages/content/src/audio.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const unitsDir = path.join(root, 'packages/content/seed/units');
@@ -28,7 +28,10 @@ const units = fs
   .filter((f) => f.endsWith('.json'))
   .sort()
   .map((f) => JSON.parse(fs.readFileSync(path.join(unitsDir, f), 'utf8')));
-const spoken = collectSpokenTexts(units);
+const pairs = JSON.parse(
+  fs.readFileSync(path.join(root, 'packages/content/seed/pairs.json'), 'utf8'),
+);
+const spoken = [...collectSpokenTexts(units), ...collectPairTexts(pairs)];
 const wanted = new Map(spoken.map((s) => [audioKey(s.text, s.speed), s]));
 
 fs.mkdirSync(outDir, { recursive: true });

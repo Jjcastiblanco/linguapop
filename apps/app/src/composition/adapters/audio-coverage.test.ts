@@ -1,7 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { audioKey, collectSpokenTexts, seedUnits, type AudioManifest } from '@linguapop/content';
+import {
+  audioKey,
+  collectPairTexts,
+  collectSpokenTexts,
+  seedPairs,
+  seedUnits,
+  type AudioManifest,
+} from '@linguapop/content';
 
 const dir = path.resolve(__dirname, '../../../public/audio');
 
@@ -15,7 +22,7 @@ describe('audio pregrabado del curso', () => {
     fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'),
   ) as AudioManifest;
   const keys = new Set(manifest.keys);
-  const spoken = collectSpokenTexts(seedUnits);
+  const spoken = [...collectSpokenTexts(seedUnits), ...collectPairTexts(seedPairs)];
 
   it('cada texto que dice el curso tiene su grabación en el manifiesto', () => {
     const missing = spoken

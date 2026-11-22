@@ -2,6 +2,8 @@ import { INITIAL_STREAK, type DayKey, type StreakPlan, type StreakState } from '
 
 /** Prefijo de los ids de ejercicios de palabra suelta (repaso de palabras a mejorar). */
 export const WORD_EXERCISE_PREFIX = 'w-';
+/** Prefijo de los ids de pares mínimos («Entrena tu oído»): el pliegue los ignora. */
+export const PAIR_EXERCISE_PREFIX = 'pair-';
 /** Vidas del plan gratis. */
 export const MAX_HEARTS = 5;
 /** Meta diaria de XP por defecto. */

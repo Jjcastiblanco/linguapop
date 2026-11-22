@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CourseSchema } from './schema';
-import { seedAchievements, seedCourse, seedDialogues, seedUnits } from './seed';
+import { collectPairTexts } from './audio';
+import { CourseSchema, MinimalPairSchema, MinimalPairsSchema, PAIR_CONTRASTS } from './schema';
+import { seedAchievements, seedCourse, seedDialogues, seedPairs, seedUnits } from './seed';
 import { findUntaughtTerms, normalizeTerm } from './teach';
 
 // Fórmula de la versión heredada: 3 lecciones de 10 ejercicios con desfases 0, 7 y 14.
@@ -180,5 +181,35 @@ describe('semilla: enseñanza previa', () => {
   it('ninguna palabra o frase se enseña dos veces en el curso', () => {
     const vistas = lecciones.flatMap((l) => l.teach ?? []).map((c) => normalizeTerm(c.en));
     expect(new Set(vistas).size).toBe(vistas.length);
+  });
+});
+
+describe('semilla: pares mínimos', () => {
+  it('son unos 26, sin ids repetidos, con los tres contrastes del informe', () => {
+    expect(seedPairs.length).toBeGreaterThanOrEqual(26);
+    expect(new Set(seedPairs.map((p) => p.id)).size).toBe(seedPairs.length);
+    expect(new Set(seedPairs.map((p) => p.contrast))).toEqual(new Set(PAIR_CONTRASTS));
+  });
+
+  it('cada par tiene id con prefijo pair- y dos palabras distintas', () => {
+    for (const p of seedPairs) {
+      expect(p.id.startsWith('pair-')).toBe(true);
+      expect(p.a.en.toLowerCase()).not.toBe(p.b.en.toLowerCase());
+    }
+  });
+
+  it('la validación rechaza palabras iguales, ids repetidos y ids sin prefijo', () => {
+    const par = seedPairs[0]!;
+    expect(MinimalPairSchema.safeParse({ ...par, b: { ...par.a } }).success).toBe(false);
+    expect(MinimalPairsSchema.safeParse([par, par]).success).toBe(false);
+    expect(MinimalPairSchema.safeParse({ ...par, id: 'berry-very' }).success).toBe(false);
+    expect(MinimalPairSchema.safeParse({ ...par, contrast: 'th-d' }).success).toBe(false);
+  });
+
+  it('las palabras de los pares entran al audio pregrabado', () => {
+    const textos = collectPairTexts(seedPairs).map((s) => s.text);
+    expect(textos).toContain('sheep');
+    expect(textos).toContain('very');
+    expect(collectPairTexts(seedPairs).every((s) => s.speed === 'normal')).toBe(true);
   });
 });
