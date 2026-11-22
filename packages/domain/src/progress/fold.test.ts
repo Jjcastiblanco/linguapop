@@ -446,6 +446,32 @@ describe('pliegue: ajustes, meta diaria y logros', () => {
       at,
     );
 
+  it('el modo inmersión se activa y se desactiva con eventos y no toca los demás ajustes', () => {
+    const base = foldEvents([], ctx);
+    expect(base.settings.immersion).toBeUndefined();
+    const activo = foldEvents(
+      [evento('settings_changed@1', { immersion: true }, '2026-10-27T09:00:00.000Z')],
+      ctx,
+    );
+    expect(activo.settings).toEqual({ ...base.settings, immersion: true });
+    const otra = foldEvents(
+      [
+        evento('settings_changed@1', { immersion: true }, '2026-10-27T09:00:00.000Z'),
+        evento('settings_changed@1', { dailyGoalXp: 80 }, '2026-10-27T09:30:00.000Z'),
+      ],
+      ctx,
+    );
+    expect(otra.settings).toMatchObject({ immersion: true, dailyGoalXp: 80 });
+    const apagado = foldEvents(
+      [
+        evento('settings_changed@1', { immersion: true }, '2026-10-27T09:00:00.000Z'),
+        evento('settings_changed@1', { immersion: false }, '2026-10-27T10:00:00.000Z'),
+      ],
+      ctx,
+    );
+    expect(apagado.settings.immersion).toBe(false);
+  });
+
   it('la meta diaria cambia cuándo se paga el bono', () => {
     const meta20 = foldEvents(
       [

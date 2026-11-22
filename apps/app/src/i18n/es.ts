@@ -338,6 +338,7 @@ export const es = {
   'profile.dark': 'Modo oscuro',
   'profile.sound': 'Sonidos',
   'profile.subtitles': 'Subtítulos en llamadas',
+  'profile.immersion': 'Modo inmersión (interfaz en inglés)',
   'profile.plan': 'Plan PRO (todo desbloqueado)',
   'profile.goal': 'Meta diaria',
   'profile.proIncludes':

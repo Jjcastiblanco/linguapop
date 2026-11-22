@@ -45,6 +45,8 @@ export type ProgressSettings = {
   plan: StreakPlan;
   timeZone: string;
   displayName: string;
+  /** Modo inmersión (interfaz en inglés); ausente es lo mismo que desactivado. */
+  immersion?: boolean;
 };
 
 /** Todo el estado del estudiante; siempre se reconstruye plegando eventos (AD-6). */

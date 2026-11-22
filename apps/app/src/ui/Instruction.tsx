@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useServices } from '../composition/context';
-import { en, instructionsInEnglish, type InstructionKey } from '../i18n/en';
-import { t } from '../i18n';
+import { instructionsInEnglish, type InstructionKey } from '../i18n/en';
+import { interfaceLanguage, t } from '../i18n';
 import styles from './Instruction.module.css';
 
 /**
@@ -11,10 +11,16 @@ import styles from './Instruction.module.css';
 export function Instruction({ k, exerciseId }: { k: InstructionKey; exerciseId: string }) {
   const { composition } = useServices();
   const [shown, setShown] = useState(false);
-  if (!instructionsInEnglish(composition.course.units, exerciseId)) return <>{t(k)}</>;
+  // Con el modo inmersión toda la interfaz está en inglés; si no, depende de la unidad.
+  if (
+    interfaceLanguage() !== 'en' &&
+    !instructionsInEnglish(composition.course.units, exerciseId)
+  ) {
+    return <>{t(k)}</>;
+  }
   return (
     <>
-      <span lang="en">{en[k]}</span>{' '}
+      <span lang="en">{t(k, {}, 'en')}</span>{' '}
       <button
         type="button"
         className={styles.es}
@@ -27,7 +33,7 @@ export function Instruction({ k, exerciseId }: { k: InstructionKey; exerciseId: 
       </button>
       {shown && (
         <span className={styles.translation} lang="es" data-testid="instruction-es">
-          {t(k)}
+          {t(k, {}, 'es')}
         </span>
       )}
     </>

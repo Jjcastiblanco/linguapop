@@ -83,6 +83,18 @@ describe('catálogo de eventos', () => {
     ).toBe(true);
   });
 
+  it('acepta el modo inmersión en settings_changed y rechaza un valor que no es booleano', () => {
+    expect(
+      ProgressEventSchema.safeParse(evento('settings_changed@1', { immersion: true })).success,
+    ).toBe(true);
+    expect(
+      ProgressEventSchema.safeParse(evento('settings_changed@1', { immersion: false })).success,
+    ).toBe(true);
+    expect(
+      ProgressEventSchema.safeParse(evento('settings_changed@1', { immersion: 'sí' })).success,
+    ).toBe(false);
+  });
+
   it.each([
     ['versión desconocida', evento('exercise_answered@2', validos['exercise_answered@1'])],
     ['tipo desconocido', evento('level_up@1', { level: 2 })],

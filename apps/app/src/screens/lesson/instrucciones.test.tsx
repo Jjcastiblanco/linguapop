@@ -3,7 +3,7 @@ import { seedCourse, type Course } from '@linguapop/content';
 import type { PendingEvent } from '@linguapop/domain';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { cursoConLeccion } from '../../test/curso-de-prueba';
 import { crearServicios, memoria, relojFalso, renderApp } from '../../test/helpers';
 
@@ -65,7 +65,7 @@ describe('instrucciones en inglés desde la unidad 2', () => {
   });
 
   it.each([
-    ['listen', 'What does it say?', '¿Qué dice?'],
+    ['listen', 'What do you hear?', '¿Qué dice?'],
     ['speak', 'Repeat this sentence', 'Repite esta frase'],
     ['match', 'Match the pairs', 'Empareja los pares'],
     ['order', 'Tap the words in order', 'Toca las palabras en orden'],
@@ -108,5 +108,33 @@ describe('instrucciones en inglés desde la unidad 2', () => {
     await abrir(cursoConLeccion(ids), '/leccion/u-saludos/u-saludos-l1');
     expect(screen.getByTestId('bubble')).toHaveTextContent('Elige la traducción correcta');
     expect(screen.queryByRole('button', { name: 'Ver la traducción en español' })).toBeNull();
+  });
+});
+
+describe('modo inmersión en las lecciones', () => {
+  afterEach(async () => {
+    const { setInterfaceLanguage } = await import('../../i18n');
+    setInterfaceLanguage('es');
+  });
+
+  it('con el modo activo hasta la unidad 1 sale en inglés, la traducción sigue a un toque y las glosas no cambian', async () => {
+    const ids = seedCourse.units[0]!.exercises.filter((e) => e.type === 'mc' && !e.retired)
+      .slice(0, 2)
+      .map((e) => e.id);
+    const services = await crearServicios({
+      storage: memoria().storage,
+      clock: relojFalso(),
+      course: cursoConLeccion(ids),
+    });
+    await services.progress
+      .getState()
+      .record([{ type: 'settings_changed@1', payload: { immersion: true } }]);
+    renderApp(services, '/leccion/u-saludos/u-saludos-l1');
+    expect(screen.getByTestId('bubble')).toHaveTextContent('Choose the correct translation');
+    await userEvent.click(screen.getByRole('button', { name: 'Show the Spanish translation' }));
+    expect(screen.getByTestId('instruction-es')).toHaveTextContent('Elige la traducción correcta');
+    // Los botones y la salida de la lección también están en inglés.
+    expect(screen.getByRole('button', { name: 'Check' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Leave the lesson' })).toBeInTheDocument();
   });
 });

@@ -345,3 +345,56 @@ describe('Nivel estimado', () => {
     expect(screen.getByTestId('estimated-level')).toHaveTextContent('A1 en curso');
   });
 });
+
+describe('modo inmersión', () => {
+  afterEach(async () => {
+    const { setInterfaceLanguage } = await import('../../i18n');
+    setInterfaceLanguage('es');
+  });
+
+  it('el interruptor pone toda la interfaz en inglés, registra el cambio y vuelve al español', async () => {
+    const { services } = await abrir();
+    expect(interruptor('Modo inmersión (interfaz en inglés)')).toHaveAttribute(
+      'aria-checked',
+      'false',
+    );
+    await userEvent.click(interruptor('Modo inmersión (interfaz en inglés)'));
+    expect(progreso(services).settings.immersion).toBe(true);
+    // La interfaz entera cambia, incluida la navegación y el propio interruptor.
+    expect(await screen.findByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('switch', { name: 'Immersion mode (interface in English)' }),
+    ).toBeChecked();
+    expect(screen.getByLabelText('Settings')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Ajustes')).toBeNull();
+    expect(document.documentElement.lang).toBe('en');
+    const cambios = services.progress
+      .getState()
+      .events.filter((e) => e.type === 'settings_changed@1')
+      .map((e) => e.payload);
+    expect(cambios.at(-1)).toEqual({ immersion: true });
+
+    await userEvent.click(
+      screen.getByRole('switch', { name: 'Immersion mode (interface in English)' }),
+    );
+    expect(progreso(services).settings.immersion).toBe(false);
+    expect(await screen.findByLabelText('Ajustes')).toBeInTheDocument();
+    expect(document.documentElement.lang).toBe('es');
+    expect(
+      services.progress
+        .getState()
+        .events.filter((e) => e.type === 'settings_changed@1')
+        .map((e) => e.payload)
+        .slice(-2),
+    ).toEqual([{ immersion: true }, { immersion: false }]);
+  });
+
+  it('con el modo activo al arrancar la interfaz sale en inglés y se conserva al recargar', async () => {
+    const storage = memoria().storage;
+    const primera = await abrir({ storage });
+    await userEvent.click(interruptor('Modo inmersión (interfaz en inglés)'));
+    primera.unmount();
+    await abrir({ storage });
+    expect(await screen.findByLabelText('Settings')).toBeInTheDocument();
+  });
+});
