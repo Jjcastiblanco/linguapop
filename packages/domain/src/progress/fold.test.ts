@@ -657,3 +657,71 @@ describe('pliegue: lo que no se puede jugar no da premio', () => {
     }
   });
 });
+
+describe('pliegue: calendario de repaso espaciado', () => {
+  const E = 'u-saludos-e03';
+  const resp = (correct: boolean, at: string, extra: { skipped?: boolean } = {}, id = E) =>
+    evento('exercise_answered@1', { exerciseId: id, correct, mode: 'lesson', ...extra }, at);
+  const dia = (d: string) => `2026-11-${d}T10:00:00.000Z`;
+
+  it('primer acierto vence al día siguiente (etapa 0)', () => {
+    expect(foldEvents([resp(true, dia('01'))], ctx).reviews[E]).toEqual({
+      stage: 0,
+      due: '2026-11-02',
+    });
+  });
+
+  it('aciertos al vencer suben +7, +30 y se quedan en +30', () => {
+    const s = foldEvents(
+      [resp(true, dia('01')), resp(true, dia('02')), resp(true, dia('09')), resp(true, dia('10'))],
+      ctx,
+    );
+    expect(s.reviews[E]).toEqual({ stage: 2, due: '2026-12-10' });
+    const e1 = foldEvents([resp(true, dia('01')), resp(true, dia('02'))], ctx);
+    expect(e1.reviews[E]).toEqual({ stage: 1, due: '2026-11-09' });
+    const e2 = foldEvents(
+      [resp(true, dia('01')), resp(true, dia('02')), resp(true, dia('09'))],
+      ctx,
+    );
+    expect(e2.reviews[E]).toEqual({ stage: 2, due: '2026-12-09' });
+  });
+
+  it('un acierto antes de vencer mantiene la etapa y re-ancla el vencimiento', () => {
+    const s = foldEvents(
+      [resp(true, dia('01')), resp(true, dia('02')), resp(true, dia('03'))],
+      ctx,
+    );
+    expect(s.reviews[E]).toEqual({ stage: 1, due: '2026-11-10' });
+  });
+
+  it('un fallo vuelve a la etapa 0 con +1', () => {
+    const s = foldEvents(
+      [resp(true, dia('01')), resp(true, dia('02')), resp(false, dia('05'))],
+      ctx,
+    );
+    expect(s.reviews[E]).toEqual({ stage: 0, due: '2026-11-06' });
+  });
+
+  it('un ejercicio omitido no mueve el calendario', () => {
+    const s = foldEvents([resp(true, dia('01')), resp(false, dia('05'), { skipped: true })], ctx);
+    expect(s.reviews[E]).toEqual({ stage: 0, due: '2026-11-02' });
+  });
+
+  it('las palabras sueltas no entran en el calendario', () => {
+    const s = foldEvents([resp(true, dia('01'), {}, 'w-hello')], ctx);
+    expect(s.reviews).toEqual({});
+  });
+
+  it('un acierto en modo repaso sube la etapa y quita el error: el repaso avanza el calendario', () => {
+    const repaso = (correct: boolean, at: string) =>
+      evento('exercise_answered@1', { exerciseId: E, correct, mode: 'review' }, at);
+    const s = foldEvents([resp(false, dia('01')), repaso(true, dia('02'))], ctx);
+    expect(s.reviews[E]).toEqual({ stage: 1, due: '2026-11-09' });
+    expect(s.errors).not.toContain(E);
+  });
+
+  it('el mismo historial da el mismo calendario', () => {
+    const evs = [resp(true, dia('01')), resp(true, dia('02')), resp(false, dia('04'))];
+    expect(foldEvents(evs, ctx).reviews).toEqual(foldEvents(evs, ctx).reviews);
+  });
+});

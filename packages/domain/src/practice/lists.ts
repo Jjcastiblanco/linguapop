@@ -1,17 +1,19 @@
 import type { Course, Exercise } from '@linguapop/content';
 import { WORD_EXERCISE_PREFIX, type ProgressState } from '../progress';
 import type { Random } from '../ports';
+import type { DayKey } from '../streak';
 import { shuffle } from '../random';
 import { isUnitUnlocked } from './unlock';
 
 export type PracticeInput = {
   units: Course['units'];
-  progress: Pick<ProgressState, 'errors' | 'weak' | 'words' | 'lessonsDone'>;
+  progress: Pick<ProgressState, 'errors' | 'weak' | 'words' | 'lessonsDone' | 'reviews'>;
   random: Random;
 };
 
 /** Cuántos ejercicios arma cada modo (reglas de la versión heredada). */
 export const REVIEW_SIZE = 12;
+export const DAILY_REVIEW_SIZE = 12;
 export const PERSONALIZED_SIZE = 10;
 export const PERSONALIZED_WEAK_MAX = 10;
 export const PERSONALIZED_WORDS_MAX = 3;
@@ -54,6 +56,26 @@ export function buildReviewList(input: PracticeInput): Exercise[] {
     items.push(wordExercise(word, 'listen', 'Palabra para mejorar'));
   }
   return shuffle(items, input.random).slice(0, REVIEW_SIZE);
+}
+
+/** Ejercicios vencidos (hoy o antes) de unidades abiertas, del vencimiento más antiguo al más nuevo. */
+function dueExercises(input: PracticeInput, today: DayKey): Exercise[] {
+  const index = exerciseIndex(input.units);
+  const open = new Set(unlockedExercises(input).map((e) => e.id));
+  return Object.entries(input.progress.reviews)
+    .filter(([id, slot]) => slot.due <= today && open.has(id) && index.has(id))
+    .sort((a, b) => (a[1].due < b[1].due ? -1 : a[1].due > b[1].due ? 1 : a[0] < b[0] ? -1 : 1))
+    .map(([id]) => index.get(id)!);
+}
+
+/** «Repaso de hoy»: lo vencido, lo más atrasado primero. */
+export function buildDailyReviewList(input: PracticeInput, today: DayKey): Exercise[] {
+  return dueExercises(input, today).slice(0, DAILY_REVIEW_SIZE);
+}
+
+/** Cuántos ejercicios vencidos hay en total (el contador de la tarjeta). */
+export function dailyReviewCount(input: PracticeInput, today: DayKey): number {
+  return dueExercises(input, today).length;
 }
 
 /** Práctica personalizada: lo más débil primero y, si sobra sitio, ejercicios de las unidades abiertas. */

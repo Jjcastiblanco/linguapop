@@ -2,11 +2,12 @@ import type { Achievement } from '@linguapop/content';
 import { ProgressEventSchema, type ProgressEvent } from '../events';
 import { canPlayLesson } from '../practice/unlock';
 import { ACHIEVEMENT_GEM_BONUS, dailyGoalBonus, scoreCall, scoreSession } from '../scoring';
-import { dayKey, monthKey, registerActivity, type DayKey } from '../streak';
+import { addDays, dayKey, monthKey, registerActivity, type DayKey } from '../streak';
 import {
   MAX_HEARTS,
   MAX_PENDING_ERRORS,
   PRICES,
+  REVIEW_INTERVALS,
   WORD_EXERCISE_PREFIX,
   initialProgress,
   type ProgressState,
@@ -114,6 +115,24 @@ function removeError(state: ProgressState, exerciseId: string): ProgressState {
   return { ...state, errors: state.errors.filter((e) => e !== exerciseId) };
 }
 
+/** Calendario de repaso: acierto vencido sube de etapa, uno anticipado re-ancla; un fallo vuelve a +1. */
+function scheduleReview(
+  state: ProgressState,
+  exerciseId: string,
+  correct: boolean,
+  day: DayKey,
+): ProgressState {
+  if (exerciseId.startsWith(WORD_EXERCISE_PREFIX)) return state;
+  const prev = state.reviews[exerciseId];
+  let stage: 0 | 1 | 2 = 0;
+  if (correct && prev) {
+    const overdue = day >= prev.due; // las claves YYYY-MM-DD se ordenan como texto
+    stage = overdue && prev.stage < 2 ? ((prev.stage + 1) as 1 | 2) : prev.stage;
+  }
+  const slot = { stage, due: addDays(day, REVIEW_INTERVALS[stage]) };
+  return { ...state, reviews: { ...state.reviews, [exerciseId]: slot } };
+}
+
 type Of<T extends ProgressEvent['type']> = Extract<ProgressEvent, { type: T }>;
 
 function onExerciseAnswered(
@@ -124,8 +143,9 @@ function onExerciseAnswered(
   const s = refreshHearts(state, day);
   const { exerciseId, correct, mode, skipped } = e.payload;
   if (skipped) return s;
-  if (correct) return mode === 'review' ? removeError(s, exerciseId) : s;
-  const failed = addError(s, exerciseId);
+  const scheduled = scheduleReview(s, exerciseId, correct, day);
+  if (correct) return mode === 'review' ? removeError(scheduled, exerciseId) : scheduled;
+  const failed = addError(scheduled, exerciseId);
   const losesHeart = failed.settings.plan === 'free' && mode !== 'timed';
   return losesHeart ? { ...failed, hearts: Math.max(0, failed.hearts - 1) } : failed;
 }

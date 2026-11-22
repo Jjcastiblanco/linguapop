@@ -1,7 +1,9 @@
 import {
+  dailyReviewCount,
   dayKey,
   isNovaUnlocked,
   learningPath,
+  practiceConfig,
   rollChestReward,
   type PathUnit,
 } from '@linguapop/domain';
@@ -12,6 +14,7 @@ import { t } from '../../i18n';
 import { Nova } from '../../mascots';
 import { Confetti } from '../../ui/Confetti';
 import { Modal } from '../../ui/Modal';
+import { PRACTICE_SESSION_PATH } from '../practice/PracticeScreen';
 import styles from './LearnScreen.module.css';
 
 /** Desplazamientos horizontales del zigzag, que se repiten a lo largo de todo el camino. */
@@ -21,7 +24,7 @@ type Reward = { unitName: string; gems: number; xp: number };
 
 /** Pantalla de inicio: meta diaria, llamada con Nova y el camino de unidades, lecciones y cofres. */
 export function LearnScreen() {
-  const { composition, progress: store } = useServices();
+  const { composition, progress: store, lesson } = useServices();
   const progress = useProgress((s) => s.progress);
   const navigate = useNavigate();
   const [reward, setReward] = useState<Reward | null>(null);
@@ -37,6 +40,19 @@ export function LearnScreen() {
   });
   const novaOpen = isNovaUnlocked(units, progress.lessonsDone);
   const pro = progress.settings.plan === 'pro';
+
+  const dueCount = dailyReviewCount({ units, progress, random: composition.random }, today);
+
+  function startDaily() {
+    const result = practiceConfig(
+      { kind: 'daily' },
+      { units, progress, random: composition.random },
+      today,
+    );
+    if (!result.ok) return;
+    lesson.getState().start(result.config);
+    navigate(PRACTICE_SESSION_PATH);
+  }
 
   // Al abrir, la lección actual se centra en pantalla.
   useEffect(() => {
@@ -70,6 +86,24 @@ export function LearnScreen() {
           </div>
         </div>
       </section>
+
+      <button
+        type="button"
+        className={styles.daily}
+        data-testid="daily-review"
+        disabled={dueCount === 0}
+        onClick={startDaily}
+      >
+        <span aria-hidden="true" style={{ fontSize: 28 }}>
+          🔁
+        </span>
+        <span className={styles.novaText}>
+          <span className={styles.novaTitle}>{t('learn.daily.title')}</span>
+          <span className={styles.novaSub}>
+            {dueCount === 0 ? t('learn.daily.done') : t('learn.daily.due', { n: dueCount })}
+          </span>
+        </span>
+      </button>
 
       <button
         type="button"

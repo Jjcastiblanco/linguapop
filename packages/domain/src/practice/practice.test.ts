@@ -15,6 +15,9 @@ import {
   PERSONALIZED_SIZE,
   PLACEMENT_SIZE,
   REVIEW_SIZE,
+  DAILY_REVIEW_SIZE,
+  buildDailyReviewList,
+  dailyReviewCount,
   TIMED_SECONDS,
   TIMED_SIZE,
   buildPersonalizedList,
@@ -432,3 +435,73 @@ describe('repaso y prueba de nivel con el pliegue de eventos', () => {
 function pro(o: Partial<ProgressState> = {}): ProgressState {
   return progreso({ ...o, settings: { ...initialProgress().settings, plan: 'pro' } });
 }
+
+describe('repaso de hoy', () => {
+  const abiertas = hechas(1);
+  const todos = units[0]!.exercises.filter((e) => !e.retired);
+  const rev = (entries: Array<[string, string]>) =>
+    Object.fromEntries(entries.map(([id, due]) => [id, { stage: 0 as const, due }]));
+
+  it('lista lo vencido, lo más antiguo primero, y cuenta el total', () => {
+    const [a, b, c] = todos;
+    const p = progreso({
+      lessonsDone: abiertas,
+      reviews: rev([
+        [a!.id, '2026-10-27'],
+        [b!.id, '2026-10-20'],
+        [c!.id, '2026-10-28'],
+      ]),
+    });
+    expect(ids(buildDailyReviewList(entrada(p), TODAY))).toEqual([b!.id, a!.id]);
+    expect(dailyReviewCount(entrada(p), TODAY)).toBe(2);
+  });
+
+  it('topa en 12 pero el contador cuenta todo lo vencido', () => {
+    const p = progreso({
+      lessonsDone: abiertas,
+      reviews: rev(todos.map((e) => [e.id, '2026-10-01'] as [string, string])),
+    });
+    expect(buildDailyReviewList(entrada(p), TODAY).length).toBe(
+      Math.min(DAILY_REVIEW_SIZE, todos.length),
+    );
+    expect(dailyReviewCount(entrada(p), TODAY)).toBe(todos.length);
+  });
+
+  it('ignora ids desconocidos, retirados y de unidades cerradas', () => {
+    const cerrada = units[1]!.exercises[0]!;
+    const p = progreso({
+      lessonsDone: {},
+      reviews: rev([
+        ['no-existe', '2026-10-01'],
+        [cerrada.id, '2026-10-01'],
+      ]),
+    });
+    expect(dailyReviewCount(entrada(p), TODAY)).toBe(0);
+  });
+
+  it('no incluye ni cuenta un ejercicio retirado con vencimiento pasado', () => {
+    const retirado = units.map((u) => ({
+      ...u,
+      exercises: u.exercises.map((e) => (e.id === todos[0]!.id ? { ...e, retired: true } : e)),
+    }));
+    const p = progreso({ lessonsDone: abiertas, reviews: rev([[todos[0]!.id, '2026-10-01']]) });
+    const entradaRetirado = { units: retirado, progress: p, random: azar() };
+    expect(dailyReviewCount(entradaRetirado, TODAY)).toBe(0);
+    expect(buildDailyReviewList(entradaRetirado, TODAY)).toEqual([]);
+  });
+
+  it('practiceConfig: modo review, sirve al plan gratis y falla sin vencidos', () => {
+    const gratis = { ...initialProgress().settings, plan: 'free' as const };
+    const p = progreso({
+      settings: gratis,
+      lessonsDone: abiertas,
+      reviews: rev([[todos[0]!.id, '2026-10-01']]),
+    });
+    const r = practiceConfig({ kind: 'daily' }, entrada(p), TODAY);
+    expect(r.ok && r.config.mode).toBe('review');
+    expect(r.ok && r.config.plan).toBe('free');
+    expect(
+      practiceConfig({ kind: 'daily' }, entrada(progreso({ settings: gratis })), TODAY),
+    ).toEqual({ ok: false, reason: 'nothing-to-review' });
+  });
+});

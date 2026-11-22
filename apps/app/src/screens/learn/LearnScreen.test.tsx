@@ -240,3 +240,38 @@ describe('cofres', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
+
+describe('repaso de hoy', () => {
+  const acierto = (exerciseId: string): PendingEvent => ({
+    type: 'exercise_answered@1',
+    payload: { exerciseId, correct: true, mode: 'lesson' },
+  });
+
+  async function conReloj(plan: 'free' | 'pro' = 'free') {
+    const clock = relojFalso();
+    const services = await crearServicios({ storage: memoria().storage, clock });
+    const store = services.progress.getState();
+    await store.record([{ type: 'settings_changed@1', payload: { plan } }]);
+    await store.record([acierto('u-saludos-e01'), acierto('u-saludos-e02')]);
+    return { clock, services };
+  }
+
+  it('sin vencidos la tarjeta dice que estás al día y no inicia sesión', async () => {
+    const { services } = await conReloj();
+    renderApp(services, '/aprender');
+    const tarjeta = screen.getByTestId('daily-review');
+    expect(tarjeta).toHaveTextContent('Estás al día');
+    expect(tarjeta).toBeDisabled();
+  });
+
+  it('con vencidos muestra el contador e inicia la sesión también en el plan gratis', async () => {
+    const { clock, services } = await conReloj('free');
+    clock.avanzar(2 * 24 * 3600 * 1000);
+    const { router } = renderApp(services, '/aprender');
+    const tarjeta = screen.getByTestId('daily-review');
+    expect(tarjeta).toHaveTextContent('2 por repasar');
+    await userEvent.click(tarjeta);
+    expect(router.state.location.pathname).toBe('/practicar/sesion');
+    expect(services.lesson.getState().lesson?.config.mode).toBe('review');
+  });
+});
