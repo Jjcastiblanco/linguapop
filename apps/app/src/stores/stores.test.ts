@@ -121,6 +121,17 @@ describe('almacén de preferencias', () => {
     expect(b.ui.getState()).toMatchObject({ theme: 'dark', sound: false, subtitles: false });
   });
 
+  it('las ofertas de prueba de nivel descartadas se guardan sin repetirse y sobreviven al reinicio', async () => {
+    const m = memoria();
+    const a = await arrancar(m);
+    await a.ui.getState().dismissPlacement('u-comida');
+    await a.ui.getState().dismissPlacement('u-comida');
+    expect(a.ui.getState().placementDismissed).toEqual(['u-comida']);
+    expect((await arrancar(m)).ui.getState().placementDismissed).toEqual(['u-comida']);
+    m.data.set('linguapop:ui:v1', JSON.stringify({ placementDismissed: ['x', 3, null, 'x'] }));
+    expect((await arrancar(m)).ui.getState().placementDismissed).toEqual(['x']);
+  });
+
   it('ignora preferencias corruptas o inválidas', async () => {
     const m = memoria();
     m.data.set('linguapop:ui:v1', '{roto');

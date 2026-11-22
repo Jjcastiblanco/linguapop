@@ -123,6 +123,42 @@ describe('camino de aprendizaje', () => {
   });
 });
 
+describe('oferta de la prueba de nivel', () => {
+  const oferta = () => screen.queryByTestId('placement-offer');
+
+  it('al empezar, un PRO ve la prueba de la primera unidad y la tarjeta inicia la sesión de prueba', async () => {
+    const { router, services } = await preparar([], { plan: 'pro' });
+    expect(within(oferta()!).getByText(/Saludos/)).toBeInTheDocument();
+    await userEvent.click(within(oferta()!).getByRole('button', { name: /¿Ya sabes esto\?/ }));
+    expect(router.state.location.pathname).toBe('/practicar/sesion');
+    expect(services.lesson.getState().lesson?.config.mode).toBe('test');
+    expect(services.lesson.getState().lesson?.config.unitId).toBe('u-saludos');
+    expect(services.ui.getState().placementDismissed).toEqual(['u-saludos']);
+  });
+
+  it('al cerrar una unidad ofrece la siguiente', async () => {
+    await preparar(unidad('u-saludos'), { plan: 'pro' });
+    expect(within(oferta()!).getByText(/Comida/)).toBeInTheDocument();
+  });
+
+  it('a mitad de una unidad no ofrece nada', async () => {
+    await preparar([leccion('u-saludos', 1)], { plan: 'pro' });
+    expect(oferta()).toBeNull();
+  });
+
+  it('el plan gratis no la ve', async () => {
+    await preparar([], { plan: 'free' });
+    expect(oferta()).toBeNull();
+  });
+
+  it('«Ahora no» la oculta y no vuelve al recargar', async () => {
+    const { services } = await preparar([], { plan: 'pro' });
+    await userEvent.click(within(oferta()!).getByRole('button', { name: 'Ahora no' }));
+    expect(oferta()).toBeNull();
+    expect(services.ui.getState().placementDismissed).toEqual(['u-saludos']);
+  });
+});
+
 describe('meta diaria', () => {
   it('empieza en 0 de 50 XP', async () => {
     await preparar();

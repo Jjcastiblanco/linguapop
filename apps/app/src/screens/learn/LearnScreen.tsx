@@ -3,6 +3,7 @@ import {
   dayKey,
   isNovaUnlocked,
   learningPath,
+  placementOffer,
   practiceConfig,
   reinforcementNeeded,
   rollChestReward,
@@ -10,7 +11,7 @@ import {
 } from '@linguapop/domain';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { useProgress, useServices } from '../../composition/context';
+import { useProgress, useServices, useUi } from '../../composition/context';
 import { t } from '../../i18n';
 import { Nova } from '../../mascots';
 import { Confetti } from '../../ui/Confetti';
@@ -25,7 +26,7 @@ type Reward = { unitName: string; gems: number; xp: number };
 
 /** Pantalla de inicio: meta diaria, llamada con Nova y el camino de unidades, lecciones y cofres. */
 export function LearnScreen() {
-  const { composition, progress: store, lesson } = useServices();
+  const { composition, progress: store, lesson, ui } = useServices();
   const progress = useProgress((s) => s.progress);
   const navigate = useNavigate();
   const [reward, setReward] = useState<Reward | null>(null);
@@ -45,6 +46,23 @@ export function LearnScreen() {
   const dueCount = dailyReviewCount({ units, progress, random: composition.random }, today);
 
   const reinforce = reinforcementNeeded(units, progress);
+
+  const dismissed = useUi((s) => s.placementDismissed);
+  const offered = placementOffer(units, progress.lessonsDone);
+  const placement = pro && offered && !dismissed.includes(offered.id) ? offered : null;
+
+  function startPlacement() {
+    if (!placement) return;
+    const result = practiceConfig(
+      { kind: 'placement', unitId: placement.id },
+      { units, progress, random: composition.random },
+      today,
+    );
+    if (!result.ok) return;
+    void ui.getState().dismissPlacement(placement.id);
+    lesson.getState().start(result.config);
+    navigate(PRACTICE_SESSION_PATH);
+  }
 
   function startReinforce() {
     if (!reinforce) return;
@@ -139,6 +157,29 @@ export function LearnScreen() {
             </span>
           </span>
         </button>
+      )}
+
+      {placement && (
+        <div className={styles.offer} data-testid="placement-offer">
+          <button type="button" className={styles.daily} onClick={startPlacement}>
+            <span aria-hidden="true" style={{ fontSize: 28 }}>
+              🏁
+            </span>
+            <span className={styles.novaText}>
+              <span className={styles.novaTitle}>{t('learn.placement.title')}</span>
+              <span className={styles.novaSub}>
+                {t('learn.placement.sub', { unit: placement.name })}
+              </span>
+            </span>
+          </button>
+          <button
+            type="button"
+            className={styles.offerDismiss}
+            onClick={() => void ui.getState().dismissPlacement(placement.id)}
+          >
+            {t('learn.placement.dismiss')}
+          </button>
+        </div>
       )}
 
       <button

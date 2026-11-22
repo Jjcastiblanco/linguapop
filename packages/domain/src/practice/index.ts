@@ -18,6 +18,7 @@ export {
   toRecallExercise,
   type PracticeInput,
 } from './lists';
+export { placementOffer } from './placement-offer';
 export {
   practiceConfig,
   type PracticeFailure,
