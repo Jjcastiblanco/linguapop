@@ -1,12 +1,13 @@
 import type { SessionMode } from '../events';
 import type { LessonConfig } from '../lesson';
-import { currentHearts, type ProgressState } from '../progress';
+import { currentHearts, type ProgressState, type Skill } from '../progress';
 import type { DayKey } from '../streak';
 import {
   TIMED_SECONDS,
   buildDailyReviewList,
   buildPersonalizedList,
   buildPlacementList,
+  buildReinforceList,
   buildReviewList,
   buildTimedList,
   type PracticeInput,
@@ -16,6 +17,7 @@ import { isUnitComplete } from './unlock';
 export type PracticeKind =
   | { kind: 'review' }
   | { kind: 'daily' }
+  | { kind: 'reinforce'; skill?: Skill }
   | { kind: 'personalized' }
   | { kind: 'timed' }
   | { kind: 'placement'; unitId: string };
@@ -29,13 +31,14 @@ export type PracticeResult =
 const MODE: Record<PracticeKind['kind'], SessionMode> = {
   review: 'review',
   daily: 'review',
+  reinforce: 'review',
   personalized: 'practice',
   timed: 'timed',
   placement: 'test',
 };
 
 /**
- * Prepara la configuración de una sesión de práctica. Todos son del plan PRO salvo el repaso de hoy (`daily`), que es para todos.
+ * Prepara la configuración de una sesión de práctica. Todos son del plan PRO salvo el repaso de hoy (`daily`) y el refuerzo (`reinforce`), que son para todos.
  * `today` sirve para saber las vidas del día en el plan gratis.
  */
 export function practiceConfig(
@@ -44,7 +47,7 @@ export function practiceConfig(
   today: DayKey,
 ): PracticeResult {
   const { progress } = input;
-  if (request.kind !== 'daily' && progress.settings.plan !== 'pro')
+  if (request.kind !== 'daily' && request.kind !== 'reinforce' && progress.settings.plan !== 'pro')
     return { ok: false, reason: 'pro-required' };
   const base = {
     mode: MODE[request.kind],
@@ -61,6 +64,16 @@ export function practiceConfig(
     }
     case 'daily': {
       const exercises = buildDailyReviewList(input, today);
+      return exercises.length === 0
+        ? { ok: false, reason: 'nothing-to-review' }
+        : { ok: true, config: { ...base, exercises } };
+    }
+    case 'reinforce': {
+      const exercises = buildReinforceList(
+        input,
+        request.skill ? 'skill' : 'retention',
+        request.skill,
+      );
       return exercises.length === 0
         ? { ok: false, reason: 'nothing-to-review' }
         : { ok: true, config: { ...base, exercises } };

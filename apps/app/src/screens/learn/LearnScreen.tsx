@@ -4,6 +4,7 @@ import {
   isNovaUnlocked,
   learningPath,
   practiceConfig,
+  reinforcementNeeded,
   rollChestReward,
   type PathUnit,
 } from '@linguapop/domain';
@@ -42,6 +43,20 @@ export function LearnScreen() {
   const pro = progress.settings.plan === 'pro';
 
   const dueCount = dailyReviewCount({ units, progress, random: composition.random }, today);
+
+  const reinforce = reinforcementNeeded(units, progress);
+
+  function startReinforce() {
+    if (!reinforce) return;
+    const result = practiceConfig(
+      { kind: 'reinforce', ...(reinforce.reason === 'skill' ? { skill: reinforce.skill } : {}) },
+      { units, progress, random: composition.random },
+      today,
+    );
+    if (!result.ok) return;
+    lesson.getState().start(result.config);
+    navigate(PRACTICE_SESSION_PATH);
+  }
 
   function startDaily() {
     const result = practiceConfig(
@@ -104,6 +119,27 @@ export function LearnScreen() {
           </span>
         </span>
       </button>
+
+      {reinforce && (
+        <button
+          type="button"
+          className={styles.daily}
+          data-testid="reinforce"
+          onClick={startReinforce}
+        >
+          <span aria-hidden="true" style={{ fontSize: 28 }}>
+            💪
+          </span>
+          <span className={styles.novaText}>
+            <span className={styles.novaTitle}>{t('learn.reinforce.title')}</span>
+            <span className={styles.novaSub}>
+              {reinforce.reason === 'retention'
+                ? t('learn.reinforce.retention')
+                : t(`learn.reinforce.skill.${reinforce.skill}`)}
+            </span>
+          </span>
+        </button>
+      )}
 
       <button
         type="button"
