@@ -31,3 +31,4 @@ export {
   type MasteryShare,
   type Skill,
 } from './mastery';
+export { A1_UNITS, estimatedLevel, type EstimatedLevel } from './level';

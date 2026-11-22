@@ -276,3 +276,54 @@ describe('Mi progreso', () => {
     expect(screen.getByTestId('retention7')).toHaveTextContent('60%');
   });
 });
+
+describe('Nivel estimado', () => {
+  const lec = (unitId: string, n: number): PendingEvent[] =>
+    Array.from({ length: n }, (_, i) => ({
+      type: 'session_completed@1' as const,
+      payload: {
+        mode: 'lesson' as const,
+        unitId,
+        lessonId: `${unitId}-l${i + 1}`,
+        correct: 5,
+        wrong: 0,
+        answered: 5,
+        durationSec: 30,
+        outOfHearts: false,
+      },
+    }));
+
+  it('sin avance dice Inicial y muestra la nota de estimación', async () => {
+    await abrir();
+    expect(screen.getByTestId('estimated-level')).toHaveTextContent('Inicial');
+    expect(screen.getByText(/es una estimación/i)).toBeInTheDocument();
+  });
+
+  it('con la unidad 3 completa por la prueba de nivel dice A1', async () => {
+    const { services } = await abrir();
+    const u3 = services.composition.course.units[2]!;
+    await act(() =>
+      services.progress.getState().record([
+        {
+          type: 'session_completed@1',
+          payload: {
+            mode: 'test',
+            unitId: u3.id,
+            lessonId: u3.lessons[0]!.id,
+            correct: 10,
+            wrong: 0,
+            answered: 10,
+            durationSec: 60,
+            outOfHearts: false,
+          },
+        },
+      ]),
+    );
+    expect(screen.getByTestId('estimated-level')).toHaveTextContent(/^A1$/);
+  });
+
+  it('con una lección jugada dice A1 en curso', async () => {
+    await abrir({ antes: lec('u-saludos', 1) });
+    expect(screen.getByTestId('estimated-level')).toHaveTextContent('A1 en curso');
+  });
+});

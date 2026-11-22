@@ -1,6 +1,7 @@
 import {
   SKILLS,
   dayKey,
+  estimatedLevel,
   isUnitComplete,
   masteryReport,
   recentXp,
@@ -67,6 +68,7 @@ export function ProfileScreen() {
   const { units, achievements } = composition.course;
   const unitsDone = units.filter((u) => isUnitComplete(u, progress.lessonsDone)).length;
   const unlocked = achievements.filter((a) => progress.achievements[a.id]).length;
+  const level = estimatedLevel(units, progress.lessonsDone);
   const mastery = masteryReport(units, progress);
   const goalY = 130 - (100 * settings.dailyGoalXp) / max;
 
@@ -143,6 +145,11 @@ export function ProfileScreen() {
 
       <section className={styles.card} aria-label={t('profile.mastery.title')}>
         <b>{t('profile.mastery.title')}</b>
+        <div className={styles.setrow}>
+          {t('profile.level.label')}
+          <b data-testid="estimated-level">{t(`profile.level.${level}`)}</b>
+        </div>
+        <p className={styles.muted}>{t('profile.level.note')}</p>
         <p className={styles.muted}>{t('profile.mastery.hint')}</p>
         <b className={styles.subhead}>{t('profile.mastery.byUnit')}</b>
         {units.map((u) => (
