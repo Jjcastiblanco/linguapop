@@ -210,6 +210,88 @@ describe('hablar (speak)', () => {
     });
   });
 
+  describe('inteligibilidad (sustituciones de sonido)', () => {
+    const frase = (en: string): ExerciseOf<'speak'> => ({ ...speak, en });
+
+    it('acepta la epéntesis «espeak» en una frase corta, donde el parecido de texto fallaría', () => {
+      const e = frase('Speak slowly');
+      expect(checkAnswer(e, { type: 'speak', heard: ['espeak slowly'] })).toMatchObject({
+        ok: true,
+      });
+      expect(checkAnswer(frase('Speak'), { type: 'speak', heard: ['espeak'] }).ok).toBe(true);
+    });
+
+    it('acepta /θ/ dicha como t aunque el parecido sea bajo', () => {
+      const r = checkAnswer(frase('Think'), { type: 'speak', heard: ['tink'] });
+      expect(r.ok).toBe(true);
+      expect(r.soundHint).toBeUndefined();
+    });
+
+    it('«berry» por «very» en una frase de 3 palabras acepta y avisa del sonido', () => {
+      const r = checkAnswer(frase('It is very good'), {
+        type: 'speak',
+        heard: ['it is berry good'],
+      });
+      expect(r.ok).toBe(true);
+      expect(r.soundHint).toEqual({ kind: 'b-v', expected: 'very', heard: 'berry' });
+    });
+
+    it('vocal corta por larga en una frase de 3 palabras acepta y avisa', () => {
+      const r = checkAnswer(frase('I like sheep'), { type: 'speak', heard: ['i like ship'] });
+      expect(r).toMatchObject({
+        ok: true,
+        soundHint: { kind: 'long-short-i', expected: 'sheep', heard: 'ship' },
+      });
+    });
+
+    it('con 2 palabras la regla no acepta, pero el parecido sí y el aviso se conserva', () => {
+      const r = checkAnswer(frase('Very good'), { type: 'speak', heard: ['berry good'] });
+      expect(r.soundHint?.kind).toBe('b-v');
+      const corta = checkAnswer(frase('Very'), { type: 'speak', heard: ['berry'] });
+      expect(corta.ok).toBe(false);
+      expect(corta.soundHint).toEqual({ kind: 'b-v', expected: 'very', heard: 'berry' });
+    });
+
+    it('si falla por una palabra la nombra en vez de reprobar la frase entera sin pista', () => {
+      const r = checkAnswer(frase('Thank you'), { type: 'speak', heard: ['banana you'] });
+      expect(r.ok).toBe(false);
+      expect(r.soundHint).toEqual({ kind: 'word', expected: 'thank', heard: 'banana' });
+    });
+
+    it('lo aceptado por regla no lleva porcentaje de pronunciación ni «heard»', () => {
+      const r = checkAnswer(frase('Think'), { type: 'speak', heard: ['sink'] });
+      expect(r.ok).toBe(true);
+      expect(r.pronunciation).toBeUndefined();
+      expect(r.heard).toBeUndefined();
+    });
+
+    it('la pista sale de la alternativa que decidió el resultado', () => {
+      const r = checkAnswer(frase('It is very good'), {
+        type: 'speak',
+        heard: ['it is very goat', 'it is berry good'],
+      });
+      expect(r.ok).toBe(true);
+      expect(r.soundHint).toEqual({ kind: 'b-v', expected: 'very', heard: 'berry' });
+      const limpia = checkAnswer(frase('It is very good'), {
+        type: 'speak',
+        heard: ['it is very good', 'it is berry good'],
+      });
+      expect(limpia.ok).toBe(true);
+    });
+
+    it('la pista nombra la palabra que falla y no una sustitución ya aceptada', () => {
+      const r = checkAnswer(frase('Think banana'), { type: 'speak', heard: ['tink zzz'] });
+      expect(r.ok).toBe(false);
+      expect(r.soundHint).toEqual({ kind: 'word', expected: 'banana', heard: 'zzz' });
+    });
+
+    it('una palabra mal pero con parecido alto acierta sin pista de palabra', () => {
+      const r = checkAnswer(speak, { type: 'speak', heard: ['I am fine thank u'] });
+      expect(r.ok).toBe(true);
+      expect(r.soundHint).toBeUndefined();
+    });
+  });
+
   it('un ejercicio omitido cuenta como acierto omitido', () => {
     expect(checkAnswer(speak, { type: 'speak-skipped' })).toEqual({
       ok: true,

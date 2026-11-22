@@ -10,3 +10,13 @@ export {
   correctAnswerOf,
   isCorrectPair,
 } from './check';
+export {
+  ACCEPTED_SUBSTITUTIONS,
+  WARNED_MIN_WORDS,
+  WARNED_SUBSTITUTIONS,
+  judgeSpeech,
+  substitutionOf,
+  type SoundHint,
+  type SoundSubstitution,
+  type SpeechJudgement,
+} from './sounds';

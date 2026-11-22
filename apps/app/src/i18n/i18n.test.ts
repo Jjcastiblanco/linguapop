@@ -24,4 +24,16 @@ describe('catálogo de textos', () => {
     expect(t('learn.unit')).toBe('UNIDAD {n}');
     expect(t('nav.learn', { n: 1 })).toBe('Aprender');
   });
+
+  it('las pistas de sonido de hablar traen la palabra esperada y la oída', () => {
+    expect(t('feedback.sound.b-v', { expected: 'very', heard: 'berry' })).toBe(
+      'Se oyó «berry» en lugar de «very». La v se dice con los dientes de arriba sobre el labio de abajo, sin juntar los labios.',
+    );
+    expect(t('feedback.sound.long-short-i', { expected: 'sheep', heard: 'ship' })).toContain(
+      'Se oyó «ship» en lugar de «sheep»',
+    );
+    expect(t('feedback.sound.word', { expected: 'thank', heard: 'banana' })).toBe(
+      'Revisa la palabra «thank»: se oyó «banana».',
+    );
+  });
 });

@@ -1,4 +1,4 @@
-import type { AnswerResult } from '@linguapop/domain';
+import type { AnswerResult, SoundHint } from '@linguapop/domain';
 import type { Exercise } from '@linguapop/content';
 import { useMemo } from 'react';
 import { useServices } from '../../composition/context';
@@ -12,6 +12,12 @@ const PRAISES: readonly TextKey[] = [
   'feedback.ok.4',
   'feedback.ok.5',
 ];
+
+const SOUND_TEXT: Record<SoundHint['kind'], TextKey> = {
+  'b-v': 'feedback.sound.b-v',
+  'long-short-i': 'feedback.sound.long-short-i',
+  word: 'feedback.sound.word',
+};
 
 /** Resultado de la comprobación: felicitación o respuesta correcta, con su aviso y la explicación del ejercicio. */
 export function FeedbackPanel({ exercise, result }: { exercise: Exercise; result: AnswerResult }) {
@@ -30,6 +36,12 @@ export function FeedbackPanel({ exercise, result }: { exercise: Exercise; result
       : null,
     result.pronunciation !== undefined
       ? t('feedback.pronunciation', { n: result.pronunciation })
+      : null,
+    result.soundHint
+      ? t(SOUND_TEXT[result.soundHint.kind], {
+          expected: result.soundHint.expected,
+          heard: result.soundHint.heard,
+        })
       : null,
     result.heard ? t('feedback.heard', { text: result.heard }) : null,
   ].filter((n): n is string => n !== null);
