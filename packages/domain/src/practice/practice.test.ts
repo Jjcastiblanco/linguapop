@@ -25,6 +25,8 @@ import {
   buildReviewList,
   buildTimedList,
   practiceConfig,
+  recognitionLast,
+  toRecallExercise,
   currentUnitId,
   isLessonUnlocked,
   isUnitComplete,
@@ -503,5 +505,109 @@ describe('repaso de hoy', () => {
     expect(
       practiceConfig({ kind: 'daily' }, entrada(progreso({ settings: gratis })), TODAY),
     ).toEqual({ ok: false, reason: 'nothing-to-review' });
+  });
+});
+
+describe('recordar antes que reconocer', () => {
+  const todas = units.flatMap((u) => u.exercises.filter((e) => !e.retired));
+  const mcs = todas.filter((e) => e.type === 'mc');
+  const mc = mcs.find((e) => e.type === 'mc' && e.prompt.startsWith('¿Cómo se dice'))!;
+  const matches = todas.filter((e) => e.type === 'match');
+
+  it('una mc con el patrón pasa a escribir conservando id y tip', () => {
+    const e: Exercise = {
+      id: 'u-x-e01',
+      type: 'mc',
+      prompt: '¿Cómo se dice "oficina"?',
+      options: [
+        { emoji: '🏢', text: 'Office' },
+        { emoji: '🏠', text: 'House' },
+      ],
+      answerIndex: 0,
+      tip: 'pista',
+    };
+    expect(toRecallExercise(e)).toEqual({
+      id: 'u-x-e01',
+      type: 'write',
+      es: 'oficina',
+      en: 'Office',
+      alternatives: [],
+      tip: 'pista',
+    });
+  });
+
+  it('una mc sin el patrón y los demás tipos quedan igual', () => {
+    const otra = { ...mc, prompt: 'Elige la correcta' } as Exercise;
+    expect(toRecallExercise(otra)).toBe(otra);
+    for (const e of todas.filter((x) => x.type !== 'mc')) expect(toRecallExercise(e)).toBe(e);
+  });
+
+  it('emparejar va al final y el resto conserva su orden', () => {
+    const [m1, m2] = matches;
+    const [a, b] = todas.filter((e) => e.type === 'write');
+    expect(ids(recognitionLast([m1!, a!, m2!, b!]))).toEqual([a!.id, b!.id, m1!.id, m2!.id]);
+  });
+
+  it('de las 25 mc de la semilla, las 22 de «¿Cómo se dice…?» se convierten con su respuesta como en y las 3 de «¿Qué significa…?» quedan igual', () => {
+    expect(mcs).toHaveLength(25);
+    let convertidas = 0;
+    for (const e of mcs) {
+      if (e.type !== 'mc') continue;
+      const r = toRecallExercise(e);
+      if (e.prompt.startsWith('¿Cómo se dice "')) {
+        convertidas++;
+        expect(r.type).toBe('write');
+        expect(r.id).toBe(e.id);
+        if (r.type === 'write') expect(r.en).toBe(e.options[e.answerIndex]!.text);
+      } else {
+        expect(r).toBe(e);
+      }
+    }
+    expect(convertidas).toBe(22);
+  });
+
+  it('el repaso de errores no trae mc con opciones y deja emparejar al final', () => {
+    const p = progreso({
+      errors: [mc.id, matches[0]!.id, todas.find((e) => e.type === 'write')!.id],
+    });
+    const lista = buildReviewList(entrada(p));
+    expect(lista.some((e) => e.type === 'mc')).toBe(false);
+    expect(lista.find((e) => e.id === mc.id)!.type).toBe('write');
+    expect(lista[lista.length - 1]!.type).toBe('match');
+  });
+
+  it('el repaso de hoy presenta la mc vencida como escribir', () => {
+    const p = progreso({
+      lessonsDone: hechas(units.length),
+      reviews: { [mc.id]: { stage: 0 as const, due: '2026-10-01' } },
+    });
+    const [e] = buildDailyReviewList(entrada(p), TODAY);
+    expect(e!.type).toBe('write');
+    expect(e!.id).toBe(mc.id);
+  });
+
+  it('acertar la versión de escribir en el repaso de hoy sube la etapa del mismo ejercicio', () => {
+    const inicial = progreso({
+      lessonsDone: hechas(units.length),
+      reviews: { [mc.id]: { stage: 0 as const, due: '2026-10-01' } },
+    });
+    const r = practiceConfig({ kind: 'daily' }, entrada(inicial), TODAY);
+    if (!r.ok) throw new Error(r.reason);
+    expect(r.config.mode).toBe('review');
+    const { effects } = jugar(r.config, () => true);
+    const estado = foldEvents(completar(effects, 5), TEST_CONTEXT, { initial: inicial });
+    expect(estado.reviews[mc.id]).toEqual({ stage: 1, due: '2026-11-03' });
+  });
+
+  it('en el repaso de hoy emparejar queda al final aunque venza antes', () => {
+    const p = progreso({
+      lessonsDone: hechas(units.length),
+      reviews: {
+        [matches[0]!.id]: { stage: 0 as const, due: '2026-09-01' },
+        [mc.id]: { stage: 0 as const, due: '2026-10-01' },
+      },
+    });
+    const lista = buildDailyReviewList(entrada(p), TODAY);
+    expect(ids(lista)).toEqual([mc.id, matches[0]!.id]);
   });
 });

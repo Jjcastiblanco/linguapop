@@ -70,7 +70,9 @@ describe('pantalla Practicar', () => {
     const { services, router } = await abrir('pro', [fallo(SALUDOS.mc[0])]);
     await userEvent.click(tarjeta(/Repaso de errores/));
     expect(router.state.location.pathname).toBe('/practicar/sesion');
-    await userEvent.click(await screen.findByRole('button', { name: /Hello/ }));
+    const campo = await screen.findByRole('textbox');
+    expect(screen.queryByRole('button', { name: /Good night/ })).not.toBeInTheDocument();
+    await userEvent.type(campo, 'Hello');
     await userEvent.click(screen.getByRole('button', { name: 'Comprobar' }));
     await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
     expect(
