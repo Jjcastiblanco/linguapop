@@ -1,4 +1,4 @@
-import { audioKey, speedFor, type AudioManifest } from '@linguapop/content';
+import { audioKey, DEFAULT_VOICE, speedFor, type AudioManifest } from '@linguapop/content';
 import type { ListenOptions, SpeakOptions, Speech } from '@linguapop/domain';
 
 /** Reproduce un archivo de audio; `stop` lo corta. */
@@ -81,12 +81,16 @@ export function withRecordings(base: Speech, env: RecordingsEnv): Speech {
       await ready;
       const wanted = options.rate ?? 1;
       let { speed, playbackRate } = speedFor(wanted);
-      let key = audioKey(text, speed);
+      let key = audioKey(text, speed, options.voice);
       if (!keys.has(key) && speed === 'slow') {
         // Las palabras sueltas no tienen versión lenta: se estira la normal.
-        key = audioKey(text, 'normal');
+        key = audioKey(text, 'normal', options.voice);
         playbackRate = wanted;
         speed = 'normal';
+      }
+      // Sin la grabación de esa voz suena la voz por defecto del curso.
+      if (!keys.has(key) && options.voice && options.voice !== DEFAULT_VOICE) {
+        key = audioKey(text, speed, DEFAULT_VOICE);
       }
       if (keys.has(key)) {
         try {

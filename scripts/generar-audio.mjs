@@ -10,7 +10,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Mp3Encoder } from '@breezystack/lamejs';
 import { KokoroTTS } from 'kokoro-js';
-import { audioKey, collectPairTexts, collectSpokenTexts } from '../packages/content/src/audio.ts';
+import {
+  DEFAULT_VOICE,
+  audioKey,
+  collectPairTexts,
+  collectSpokenTexts,
+} from '../packages/content/src/audio.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const unitsDir = path.join(root, 'packages/content/seed/units');
@@ -18,7 +23,6 @@ const outDir = path.join(root, 'apps/app/public/audio');
 const force = process.argv.includes('--force');
 
 const MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';
-const VOICE = 'af_heart';
 /** Velocidad de Kokoro de cada grabación; la lenta coincide con la tortuga de la app. */
 const KOKORO_SPEED = { normal: 1, slow: 0.6 };
 const KBPS = 40;
@@ -32,7 +36,7 @@ const pairs = JSON.parse(
   fs.readFileSync(path.join(root, 'packages/content/seed/pairs.json'), 'utf8'),
 );
 const spoken = [...collectSpokenTexts(units), ...collectPairTexts(pairs)];
-const wanted = new Map(spoken.map((s) => [audioKey(s.text, s.speed), s]));
+const wanted = new Map(spoken.map((s) => [audioKey(s.text, s.speed, s.voice), s]));
 
 fs.mkdirSync(outDir, { recursive: true });
 const file = (key) => path.join(outDir, `${key}.mp3`);
@@ -59,8 +63,11 @@ console.log(`${wanted.size} textos en el curso, ${todo.length} por generar`);
 if (todo.length > 0) {
   const tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'cpu' });
   let n = 0;
-  for (const [key, { text, speed }] of todo) {
-    const audio = await tts.generate(text, { voice: VOICE, speed: KOKORO_SPEED[speed] });
+  for (const [key, { text, speed, voice }] of todo) {
+    const audio = await tts.generate(text, {
+      voice: voice ?? DEFAULT_VOICE,
+      speed: KOKORO_SPEED[speed],
+    });
     fs.writeFileSync(file(key), encodeMp3(audio.audio, audio.sampling_rate));
     n++;
     if (n % 25 === 0 || n === todo.length) console.log(`  ${n}/${todo.length}`);

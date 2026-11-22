@@ -117,4 +117,31 @@ describe('voz pregrabada', () => {
     expect(player.stop).toHaveBeenCalled();
     expect(base.cancel).toHaveBeenCalled();
   });
+
+  it('con una voz pedida reproduce la grabación de esa voz', async () => {
+    const { env, player } = entornoFalso([audioKey('sheep', 'normal', 'am_michael')]);
+    const base = baseFalsa();
+    await withRecordings(base, env).speak('sheep', { rate: 1, voice: 'am_michael' });
+    expect(player.play).toHaveBeenCalledWith(
+      `/audio/${audioKey('sheep', 'normal', 'am_michael')}.mp3`,
+      1,
+    );
+    expect(base.speak).not.toHaveBeenCalled();
+  });
+
+  it('sin la grabación de esa voz suena la voz por defecto', async () => {
+    const { env, player } = entornoFalso([audioKey('sheep')]);
+    const base = baseFalsa();
+    expect(await withRecordings(base, env).speak('sheep', { voice: 'am_michael' })).toBe(true);
+    expect(player.play).toHaveBeenCalledWith(`/audio/${audioKey('sheep')}.mp3`, 1);
+    expect(base.speak).not.toHaveBeenCalled();
+  });
+
+  it('sin ninguna grabación habla la voz de respaldo con las mismas opciones', async () => {
+    const { env, player } = entornoFalso([]);
+    const base = baseFalsa();
+    await withRecordings(base, env).speak('sheep', { rate: 1, voice: 'am_michael' });
+    expect(player.play).not.toHaveBeenCalled();
+    expect(base.speak).toHaveBeenCalledWith('sheep', { rate: 1, voice: 'am_michael' });
+  });
 });

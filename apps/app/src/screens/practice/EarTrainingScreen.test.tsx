@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { MinimalPair } from '@linguapop/content';
+import { AUDIO_VOICES, type MinimalPair } from '@linguapop/content';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -92,6 +92,37 @@ describe('Entrena tu oído', () => {
     await tocar('Escuchar de nuevo');
     await waitFor(() => expect(dichas.length).toBe(2));
     expect(dichas[1]).toBe(dichas[0]);
+  });
+
+  it('cada intento suena con una voz de la lista y al volver a oír suena la misma', async () => {
+    const llamadas: { texto: string; voice?: string }[] = [];
+    const speech = {
+      capabilities: () => ({ canSpeak: true, canListen: false }),
+      speak: vi.fn(async (texto: string, opts?: { voice?: string }) => {
+        llamadas.push({ texto, ...(opts?.voice ? { voice: opts.voice } : {}) });
+        return true;
+      }),
+      listen: vi.fn(),
+      cancel: vi.fn(),
+    };
+    let n = 0;
+    const services = await crearServicios({
+      storage: memoria().storage,
+      clock: relojFalso(),
+      random: { next: () => [0.15, 0.55, 0.95, 0.35, 0.75][n++ % 5]! },
+      pairs: PARES,
+      speech: speech as never,
+    });
+    renderApp(services, '/practicar/oido');
+    await waitFor(() => expect(llamadas.length).toBe(1));
+    await tocar('Escuchar de nuevo');
+    await waitFor(() => expect(llamadas.length).toBe(2));
+    expect(llamadas[1]).toEqual(llamadas[0]);
+    expect(AUDIO_VOICES).toContain(llamadas[0]!.voice);
+    await tocar(llamadas[0]!.texto);
+    await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+    await waitFor(() => expect(llamadas.length).toBe(3));
+    expect(AUDIO_VOICES).toContain(llamadas[2]!.voice);
   });
 
   it('sin audio avisa y permite saltar el intento', async () => {
