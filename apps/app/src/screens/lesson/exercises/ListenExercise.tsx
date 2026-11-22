@@ -2,6 +2,7 @@ import type { ExerciseOf } from '@linguapop/domain';
 import { useState } from 'react';
 import { useServices } from '../../../composition/context';
 import { t } from '../../../i18n';
+import { Instruction } from '../../../ui/Instruction';
 import styles from './Exercise.module.css';
 import type { ExerciseProps } from './types';
 
@@ -36,7 +37,9 @@ export function ListenExercise({
 
   return (
     <>
-      <p className={styles.prompt}>{t('listen.title')}</p>
+      <p className={styles.prompt}>
+        <Instruction k="listen.title" exerciseId={exercise.id} />
+      </p>
       <div className={styles.speakers}>
         <button
           type="button"
