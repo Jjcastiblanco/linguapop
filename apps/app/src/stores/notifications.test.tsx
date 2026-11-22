@@ -64,8 +64,13 @@ describe('avisos que nacen del progreso', () => {
   it('avisa cuando el protector salva la racha, pero no al comprar uno', async () => {
     const { services, clock, avisos } = await preparar();
     await services.progress.getState().record([leccion(1)]);
-    clock.avanzar(2 * DIA); // falta un día: el protector del mes se usa
+    clock.avanzar(2 * DIA); // falta un día: se usa el día de gracia de la semana, no el protector
     await services.progress.getState().record([leccion(2)]);
+    expect(avisos()).toContain('🌿 Día de gracia: faltaste un día y tu racha sigue viva');
+    expect(avisos()).not.toContain('🛡️ Protector de racha usado: tu racha sigue viva');
+    expect(services.progress.getState().progress.streak.shieldMonth).toBe('');
+    clock.avanzar(2 * DIA); // otro día perdido en la misma semana: ahora sí, el protector del mes
+    await services.progress.getState().record([leccion(3)]);
     expect(avisos()).toContain('🛡️ Protector de racha usado: tu racha sigue viva');
     expect(services.progress.getState().progress.streak.shieldMonth).not.toBe('');
 

@@ -34,6 +34,10 @@ export function notifyProgress(
   // Comprar un protector lo deja libre (mes vacío): eso no es usarlo.
   const month = next.streak.shieldMonth;
   if (month !== '' && month !== prev.streak.shieldMonth) show(t('toast.shield'));
+
+  // El día de gracia semanal se gasta solo, sin que la persona haga nada: se le avisa.
+  const grace = next.streak.graceWeek ?? '';
+  if (grace !== '' && grace !== (prev.streak.graceWeek ?? '')) show(t('toast.grace'));
 }
 
 /**

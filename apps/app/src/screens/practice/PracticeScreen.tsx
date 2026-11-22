@@ -223,6 +223,7 @@ export function PracticeScreen() {
             <div className={styles.muted} data-testid="shield-status">
               {t(shieldText)}
             </div>
+            <div className={styles.muted}>{t('shield.grace')}</div>
           </div>
         </div>
       </section>

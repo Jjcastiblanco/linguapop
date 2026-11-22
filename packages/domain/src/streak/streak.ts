@@ -1,4 +1,4 @@
-import { daysBetween, monthKey, type DayKey } from './day';
+import { addDays, daysBetween, monthKey, weekKey, type DayKey } from './day';
 
 export type StreakPlan = 'free' | 'pro';
 
@@ -9,9 +9,20 @@ export type StreakState = {
   lastDay: DayKey;
   /** Mes (`AAAA-MM`) en que se usó el protector; cadena vacía si nunca. */
   shieldMonth: string;
+  /** Semana ISO (`AAAA-Www`) del último día de gracia usado; cadena vacía si nunca. */
+  graceWeek?: string;
 };
 
 export const INITIAL_STREAK: StreakState = { streak: 0, best: 0, lastDay: '', shieldMonth: '' };
+
+/**
+ * El día de gracia semanal (todos los planes): faltar un solo día no rompe la racha si en la semana
+ * de ese día no se usó ya la gracia. Es una pausa amable, no un premio: se renueva sola cada semana.
+ */
+function graceAvailable(state: StreakState): boolean {
+  const week = weekKey(addDays(state.lastDay, 1));
+  return week !== '' && (state.graceWeek ?? '') !== week;
+}
 
 /** El protector mensual existe solo en el plan PRO y se usa una vez por mes. */
 function shieldAvailable(state: StreakState, today: DayKey, plan: StreakPlan): boolean {
@@ -24,11 +35,16 @@ export function visibleStreak(state: StreakState, today: DayKey, plan: StreakPla
   const gap = daysBetween(state.lastDay, today);
   if (gap === null) return 0;
   if (gap <= 1) return state.streak;
-  if (gap === 2 && shieldAvailable(state, today, plan)) return state.streak;
+  if (gap === 2 && (graceAvailable(state) || shieldAvailable(state, today, plan))) {
+    return state.streak;
+  }
   return 0;
 }
 
-/** Registra actividad en `today`: suma, mantiene (con protector) o reinicia la racha. */
+/**
+ * Registra actividad en `today`: suma, mantiene (con el día de gracia semanal o, en PRO, el
+ * protector mensual) o reinicia la racha. Con un solo día perdido se gasta primero la gracia.
+ */
 export function registerActivity(
   state: StreakState,
   today: DayKey,
@@ -36,6 +52,7 @@ export function registerActivity(
 ): { state: StreakState; shieldUsed: boolean } {
   if (state.lastDay === today) return { state, shieldUsed: false };
   let { streak, shieldMonth } = state;
+  let graceWeek = state.graceWeek ?? '';
   let shieldUsed = false;
   const gap = state.lastDay ? daysBetween(state.lastDay, today) : null;
   // El día retrocedió (zona horaria al oeste o reloj atrasado): la racha y el último día no cambian.
@@ -43,6 +60,9 @@ export function registerActivity(
   if (!state.lastDay || gap === null) {
     streak = 1;
   } else if (gap === 1) {
+    streak += 1;
+  } else if (gap === 2 && graceAvailable(state)) {
+    graceWeek = weekKey(addDays(state.lastDay, 1));
     streak += 1;
   } else if (gap === 2 && shieldAvailable(state, today, plan)) {
     shieldMonth = monthKey(today);
@@ -52,7 +72,13 @@ export function registerActivity(
     streak = 1;
   }
   return {
-    state: { streak, best: Math.max(state.best, streak), lastDay: today, shieldMonth },
+    state: {
+      streak,
+      best: Math.max(state.best, streak),
+      lastDay: today,
+      shieldMonth,
+      ...(graceWeek ? { graceWeek } : {}),
+    },
     shieldUsed,
   };
 }

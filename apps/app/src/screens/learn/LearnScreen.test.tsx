@@ -30,9 +30,10 @@ async function preparar(
   const sound = Object.assign(createWebSound({ createContext: () => null }), {
     play: (e: SoundEffect) => void sonidos.push(e),
   });
+  const clock = relojFalso();
   const services = await crearServicios({
     storage: memoria().storage,
-    clock: relojFalso(),
+    clock,
     sound,
     ...(opts.random !== undefined ? { random: { next: () => opts.random! } } : {}),
   });
@@ -42,7 +43,7 @@ async function preparar(
       .record([{ type: 'settings_changed@1', payload: { plan: opts.plan } }]);
   if (eventos.length) await services.progress.getState().record(eventos);
   const app = renderApp(services, '/aprender');
-  return { services, sonidos, ...app };
+  return { services, sonidos, clock, ...app };
 }
 
 const nodo = (id: string) => screen.getByTestId(`node-${id}`);
@@ -380,5 +381,72 @@ describe('reforzar', () => {
     await userEvent.click(tarjeta);
     expect(router.state.location.pathname).toBe('/practicar/sesion');
     expect(services.lesson.getState().lesson?.config.mode).toBe('review');
+  });
+});
+
+describe('racha detenida', () => {
+  const pausa = () => screen.queryByTestId('streak-paused');
+
+  it('al detenerse la racha lo dice sin culpa e invita a retomar', async () => {
+    const { services, clock } = await preparar([leccion('u-saludos', 1)]);
+    expect(pausa()).toBeNull();
+    clock.avanzar(5 * 86_400_000);
+    await act(async () => {
+      await services.progress.getState().load();
+    });
+    // el reloj cambió: la pantalla se vuelve a pintar al llegar cualquier cambio de progreso
+    await act(async () => {
+      await services.progress
+        .getState()
+        .record([{ type: 'settings_changed@1', payload: { dailyGoalXp: 60 } }]);
+    });
+    expect(pausa()).toHaveTextContent('Tu racha (🔥 1) hizo una pausa');
+    expect(pausa()?.textContent).not.toMatch(/perdiste|fallaste|culpa/i);
+  });
+
+  it('con un solo día perdido la gracia mantiene la racha y no hay aviso', async () => {
+    const { services, clock } = await preparar([leccion('u-saludos', 1)]);
+    clock.avanzar(2 * 86_400_000);
+    await act(async () => {
+      await services.progress
+        .getState()
+        .record([{ type: 'settings_changed@1', payload: { dailyGoalXp: 60 } }]);
+    });
+    expect(pausa()).toBeNull();
+  });
+
+  it('el aviso nombra la racha y la mejor marca, que pueden ser distintas', async () => {
+    const { services, clock } = await preparar([leccion('u-saludos', 1)], { plan: 'free' });
+    clock.avanzar(86_400_000);
+    await services.progress.getState().record([leccion('u-saludos', 2)]);
+    clock.avanzar(86_400_000);
+    await services.progress.getState().record([leccion('u-saludos', 3)]); // racha 3, mejor 3
+    clock.avanzar(10 * 86_400_000);
+    await services.progress.getState().record([leccion('u-comida', 1)]); // racha nueva de 1
+    clock.avanzar(5 * 86_400_000);
+    await act(async () => {
+      await services.progress
+        .getState()
+        .record([{ type: 'settings_changed@1', payload: { dailyGoalXp: 60 } }]);
+    });
+    expect(pausa()).toHaveTextContent('Tu racha (🔥 1) hizo una pausa');
+    expect(pausa()).toHaveTextContent('tu mejor marca (🔥 3)');
+  });
+
+  it('con la gracia gastada, PRO sigue con la racha viva por el protector y el plan gratis ve el aviso', async () => {
+    for (const plan of ['pro', 'free'] as const) {
+      const { services, clock, unmount } = await preparar([leccion('u-saludos', 1)], { plan });
+      clock.avanzar(2 * 86_400_000); // día perdido: gasta la gracia de la semana
+      await services.progress.getState().record([leccion('u-saludos', 2)]);
+      clock.avanzar(2 * 86_400_000); // otro día perdido en la misma semana
+      await act(async () => {
+        await services.progress
+          .getState()
+          .record([{ type: 'settings_changed@1', payload: { dailyGoalXp: 60 } }]);
+      });
+      if (plan === 'pro') expect(pausa()).toBeNull();
+      else expect(pausa()).not.toBeNull();
+      unmount();
+    }
   });
 });

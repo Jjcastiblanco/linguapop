@@ -7,6 +7,7 @@ import {
   practiceConfig,
   reinforcementNeeded,
   rollChestReward,
+  visibleStreak,
   type PathUnit,
 } from '@linguapop/domain';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
@@ -42,6 +43,12 @@ export function LearnScreen() {
   });
   const novaOpen = isNovaUnlocked(units, progress.lessonsDone);
   const pro = progress.settings.plan === 'pro';
+
+  // Racha detenida: se dice sin culpa y se invita a retomar; desaparece con la primera actividad.
+  const streakPaused =
+    progress.streak.streak > 0 &&
+    progress.streak.lastDay !== '' &&
+    visibleStreak(progress.streak, today, progress.settings.plan) === 0;
 
   const dueCount = dailyReviewCount({ units, progress, random: composition.random }, today);
 
@@ -119,6 +126,16 @@ export function LearnScreen() {
           </div>
         </div>
       </section>
+
+      {streakPaused && (
+        <p className={styles.pause} role="status" data-testid="streak-paused">
+          🌱{' '}
+          {t('learn.streakBroken', {
+            n: progress.streak.streak,
+            best: progress.streak.best,
+          })}
+        </p>
+      )}
 
       <button
         type="button"
