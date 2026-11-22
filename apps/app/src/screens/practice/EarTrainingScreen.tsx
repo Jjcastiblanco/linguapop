@@ -26,10 +26,10 @@ export function EarTrainingScreen() {
   // Cada reproducción lleva un número: si cambió el intento, un resultado tardío no cuenta.
   const playing = useRef(0);
   const play = useCallback(
-    async (text: string) => {
+    async (text: string, voice: string) => {
       const mine = ++playing.current;
       const ok = composition.speech.capabilities().canSpeak
-        ? await composition.speech.speak(text, { rate: 1 })
+        ? await composition.speech.speak(text, { rate: 1, voice })
         : false;
       if (mine === playing.current) setNoSound(!ok);
     },
@@ -38,13 +38,14 @@ export function EarTrainingScreen() {
 
   // Cada intento suena al aparecer.
   const word = attempt?.word.en;
+  const voice = attempt?.voice;
   useEffect(() => {
-    if (word) void play(word);
+    if (word && voice) void play(word, voice);
     return () => {
       playing.current++;
       composition.speech.cancel();
     };
-  }, [word, index, play, composition]);
+  }, [word, voice, index, play, composition]);
 
   const exit = () => navigate('/practicar', { replace: true });
 
@@ -121,7 +122,7 @@ export function EarTrainingScreen() {
           type="button"
           className={styles.listen}
           aria-label={t('practice.ear.listen')}
-          onClick={() => void play(attempt.word.en)}
+          onClick={() => void play(attempt.word.en, attempt.voice)}
         >
           🔊
         </button>

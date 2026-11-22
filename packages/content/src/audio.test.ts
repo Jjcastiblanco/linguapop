@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { audioKey, audioText, collectSpokenTexts, speedFor } from './audio';
-import { seedUnits } from './seed';
+import {
+  AUDIO_VOICES,
+  DEFAULT_VOICE,
+  audioKey,
+  audioText,
+  collectPairTexts,
+  collectSpokenTexts,
+  speedFor,
+} from './audio';
+import { seedPairs, seedUnits } from './seed';
 
 describe('audio pregrabado: nombres', () => {
   it('el mismo texto da la misma clave y se ignoran los espacios sobrantes', () => {
@@ -42,5 +50,33 @@ describe('audio pregrabado: qué se dice', () => {
   it('el curso trae cientos de textos y ninguno vacío', () => {
     expect(spoken.length).toBeGreaterThan(300);
     expect(spoken.every((s) => s.text.length > 0)).toBe(true);
+  });
+});
+
+describe('audio pregrabado: voces', () => {
+  it('la voz por defecto o ausente da la clave de siempre', () => {
+    expect(audioKey('Hello', 'normal', DEFAULT_VOICE)).toBe(audioKey('Hello'));
+    expect(audioKey('Hello', 'slow', undefined)).toBe(audioKey('Hello', 'slow'));
+  });
+
+  it('cada voz da una clave propia y estable', () => {
+    const claves = AUDIO_VOICES.map((v) => audioKey('sheep', 'normal', v));
+    expect(new Set(claves).size).toBe(AUDIO_VOICES.length);
+    expect(audioKey('sheep', 'normal', 'am_michael')).toBe(
+      audioKey(' sheep ', 'normal', 'am_michael'),
+    );
+  });
+
+  it('hay de 4 a 6 voces y la primera es la por defecto', () => {
+    expect(AUDIO_VOICES.length).toBeGreaterThanOrEqual(4);
+    expect(AUDIO_VOICES.length).toBeLessThanOrEqual(6);
+    expect(AUDIO_VOICES[0]).toBe(DEFAULT_VOICE);
+  });
+
+  it('cada palabra de los pares sale con cada voz, sin claves repetidas', () => {
+    const textos = collectPairTexts(seedPairs);
+    const palabras = new Set(textos.map((s) => s.text));
+    expect(textos).toHaveLength(palabras.size * AUDIO_VOICES.length);
+    expect(new Set(textos.map((s) => audioKey(s.text, s.speed, s.voice))).size).toBe(textos.length);
   });
 });

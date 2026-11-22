@@ -1,4 +1,4 @@
-import type { MinimalPair } from '@linguapop/content';
+import { AUDIO_VOICES, DEFAULT_VOICE, type MinimalPair } from '@linguapop/content';
 import { describe, expect, it } from 'vitest';
 import type { Random } from '../ports';
 import { buildEarSession } from './ear';
@@ -44,5 +44,24 @@ describe('buildEarSession', () => {
 
   it('respeta el tamaño pedido', () => {
     expect(buildEarSession(pares(30), secuencia(0.5), 3)).toHaveLength(3);
+  });
+
+  it('cada intento lleva una voz de la lista y el sorteo llega a varias', () => {
+    const intentos = buildEarSession(pares(30), secuencia(0.1, 0.9, 0.5, 0.3, 0.7), 30);
+    expect(intentos.every((a) => AUDIO_VOICES.includes(a.voice as never))).toBe(true);
+    expect(new Set(intentos.map((a) => a.voice)).size).toBeGreaterThan(1);
+  });
+
+  it('un aleatorio en el límite superior no sale de la lista', () => {
+    const [intento] = buildEarSession(pares(1), secuencia(0.999999));
+    const [limite] = buildEarSession(pares(1), secuencia(1));
+    expect(AUDIO_VOICES).toContain(limite!.voice);
+    expect(AUDIO_VOICES).toContain(intento!.voice);
+  });
+
+  it('con una lista de voces propia sortea solo de ella; vacía usa la por defecto', () => {
+    const solo = buildEarSession(pares(5), secuencia(0.4), 5, ['x']);
+    expect(solo.every((a) => a.voice === 'x')).toBe(true);
+    expect(buildEarSession(pares(2), secuencia(0.4), 2, [])[0]!.voice).toBe(DEFAULT_VOICE);
   });
 });

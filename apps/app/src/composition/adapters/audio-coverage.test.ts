@@ -26,8 +26,8 @@ describe('audio pregrabado del curso', () => {
 
   it('cada texto que dice el curso tiene su grabación en el manifiesto', () => {
     const missing = spoken
-      .filter((s) => !keys.has(audioKey(s.text, s.speed)))
-      .map((s) => `${s.speed}: ${s.text}`);
+      .filter((s) => !keys.has(audioKey(s.text, s.speed, s.voice)))
+      .map((s) => `${s.speed} ${s.voice ?? ''}: ${s.text}`);
     expect(missing, 'faltan grabaciones: corre `pnpm audio:generar`').toEqual([]);
   });
 
@@ -43,11 +43,11 @@ describe('audio pregrabado del curso', () => {
     }
   });
 
-  it('el audio del curso no pasa de 5 MB', () => {
+  it('el audio del curso no pasa de 8 MB', () => {
     const bytes = manifest.keys.reduce(
       (sum, k) => sum + fs.statSync(path.join(dir, `${k}.mp3`)).size,
       0,
     );
-    expect(bytes).toBeLessThan(5_000_000);
+    expect(bytes).toBeLessThan(8_000_000);
   });
 });

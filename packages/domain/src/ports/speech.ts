@@ -20,6 +20,8 @@ export type SpeakOptions = {
   /** 1 es la velocidad normal; menos de 1 es más lento. */
   rate?: number;
   pitch?: number;
+  /** Voz de las grabaciones del curso (`AUDIO_VOICES`); las voces del sistema la ignoran. */
+  voice?: string;
 };
 
 export type ListenOptions = {

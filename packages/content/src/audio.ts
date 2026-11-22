@@ -9,6 +9,18 @@ import type { MinimalPair, Unit } from './schema';
 /** Velocidad del archivo: la lenta (tortuga) se graba más despacio, no se estira al reproducir. */
 export type AudioSpeed = 'normal' | 'slow';
 
+/** Voces de Kokoro con grabación (todas americanas, mujeres y hombres): variar hablante es lo que entrena el oído. */
+export const AUDIO_VOICES = [
+  'af_heart',
+  'af_bella',
+  'af_nicole',
+  'am_michael',
+  'am_fenrir',
+] as const;
+
+/** La voz del resto del curso; su clave no lleva la voz, para no renombrar lo ya grabado. */
+export const DEFAULT_VOICE: string = AUDIO_VOICES[0];
+
 /** Por debajo de esta velocidad se usa la grabación lenta; por encima, la normal con ajuste. */
 export const SLOW_AT_MOST = 0.7;
 
@@ -29,9 +41,16 @@ function hash53(input: string): string {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(14, '0');
 }
 
-/** Nombre (sin extensión) del archivo de un texto a una velocidad. */
-export const audioKey = (text: string, speed: AudioSpeed = 'normal'): string =>
-  hash53(`${speed}|${audioText(text)}`);
+/**
+ * Nombre (sin extensión) del archivo de un texto a una velocidad y, si no es la voz por defecto,
+ * con una voz: sin voz o con `DEFAULT_VOICE` la clave es la de siempre.
+ */
+export const audioKey = (text: string, speed: AudioSpeed = 'normal', voice?: string): string =>
+  hash53(
+    voice && voice !== DEFAULT_VOICE
+      ? `${speed}|${voice}|${audioText(text)}`
+      : `${speed}|${audioText(text)}`,
+  );
 
 /** Qué grabación usar para una velocidad pedida y con qué ajuste de reproducción. */
 export function speedFor(rate: number): { speed: AudioSpeed; playbackRate: number } {
@@ -43,7 +62,7 @@ export function speedFor(rate: number): { speed: AudioSpeed; playbackRate: numbe
 /** Lo que dice el archivo `audio/manifest.json`: las claves que tienen grabación. */
 export type AudioManifest = { version: 1; keys: string[] };
 
-export type SpokenText = { text: string; speed: AudioSpeed };
+export type SpokenText = { text: string; speed: AudioSpeed; voice?: string };
 
 /**
  * Todo lo que la app dice con la voz del curso: las frases (enseñadas, escuchadas, escritas,
@@ -95,12 +114,14 @@ export function collectSpokenTexts(units: readonly Unit[]): SpokenText[] {
   ];
 }
 
-/** Las palabras de los pares mínimos, a velocidad normal (una sola voz; las varias son la 12.15). */
+/** Las palabras de los pares mínimos, a velocidad normal y con cada una de las voces. */
 export function collectPairTexts(pairs: readonly MinimalPair[]): SpokenText[] {
   const words = new Set<string>();
   for (const pair of pairs) {
     words.add(audioText(pair.a.en));
     words.add(audioText(pair.b.en));
   }
-  return [...words].map((text): SpokenText => ({ text, speed: 'normal' }));
+  return [...words].flatMap((text) =>
+    AUDIO_VOICES.map((voice): SpokenText => ({ text, speed: 'normal', voice })),
+  );
 }
