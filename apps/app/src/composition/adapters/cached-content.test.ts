@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { seedCourse } from '@linguapop/content';
+import { seedCourse, seedReadings } from '@linguapop/content';
 import type { ContentRemote, ContentSnapshot } from '@linguapop/domain';
 import { createCachedContent, CONTENT_CACHE_KEY } from './cached-content';
 import { createLocalStore } from './local-store';
@@ -108,5 +108,118 @@ describe('contenido remoto con caché', () => {
       schemaVersion: 1,
     });
     expect(await sinServidor.refresh()).toBe('skipped');
+  });
+});
+
+describe('lecturas dentro del snapshot', () => {
+  const lecturas = () => JSON.parse(JSON.stringify(seedReadings)) as Array<Record<string, any>>;
+  const conLecturas = (
+    version: number,
+    cambio: (l: Array<Record<string, any>>) => void = () => undefined,
+  ) =>
+    publicado(version, (c) => {
+      const l = lecturas();
+      cambio(l);
+      c.readings = l;
+    });
+
+  it('un snapshot con lecturas válidas las trae y las guarda para el próximo arranque', async () => {
+    const { content } = montar(() =>
+      conLecturas(2, (l) => {
+        l[0]!.title = 'Un título cambiado desde la base de datos';
+      }),
+    );
+    expect(await content.refresh()).toBe('updated');
+    const local = await content.loadLocal();
+    expect(local.readings).toHaveLength(seedReadings.length);
+    expect(local.readings![0]!.title).toBe('Un título cambiado desde la base de datos');
+  });
+
+  it('sin el campo `readings`, con `null` o sin lecturas válidas, no hay lecturas y el curso sí cambia', async () => {
+    for (const cambio of [
+      (c: Record<string, any>) => void c,
+      (c: Record<string, any>) => void (c.readings = null),
+    ]) {
+      const { content, m } = montar(() => publicado(2, cambio));
+      expect(await content.refresh()).toBe('updated');
+      const local = await content.loadLocal();
+      expect(local.course.level).toBe('A1-A2 v2');
+      expect(local).not.toHaveProperty('readings');
+      expect(m.data.has(CONTENT_CACHE_KEY)).toBe(true);
+    }
+  });
+
+  it('una lectura inválida descarta todas las lecturas, se registra con su ubicación y el curso se conserva', async () => {
+    const { content, log } = montar(() =>
+      conLecturas(2, (l) => {
+        l[0]!.lines[0] = 'Hello zebra giraffe okapi';
+      }),
+    );
+    expect(await content.refresh()).toBe('updated');
+    const local = await content.loadLocal();
+    expect(local.course.level).toBe('A1-A2 v2');
+    expect(local).not.toHaveProperty('readings');
+    expect(log).toHaveBeenCalledWith(
+      expect.stringMatching(/Lecturas del snapshot 2 descartadas.*read-saludos-1: solo el/),
+    );
+  });
+
+  it('lecturas que no son una lista, o con un id repetido, se descartan sin perder el snapshot', async () => {
+    for (const malas of ['no soy una lista', {}, [...lecturas(), ...lecturas()]]) {
+      const { content } = montar(() => publicado(2, (c) => void (c.readings = malas)));
+      expect(await content.refresh()).toBe('updated');
+      const local = await content.loadLocal();
+      expect(local.course.level).toBe('A1-A2 v2');
+      expect(local).not.toHaveProperty('readings');
+    }
+  });
+
+  it('lecturas que apuntan a una unidad que el snapshot no tiene se descartan', async () => {
+    const { content } = montar(() =>
+      conLecturas(2, (l) => {
+        l[0]!.unitId = 'u-inventada';
+      }),
+    );
+    await content.refresh();
+    expect(await content.loadLocal()).not.toHaveProperty('readings');
+  });
+
+  it('las lecturas se validan contra las unidades del propio snapshot, no contra la semilla', async () => {
+    const { content } = montar(() =>
+      publicado(2, (c) => {
+        c.readings = lecturas();
+        for (const l of c.units[0].lessons) {
+          l.teach = (l.teach ?? []).filter((t: { en: string }) => !/Ana|name/i.test(t.en));
+        }
+      }),
+    );
+    await content.refresh();
+    expect(await content.loadLocal()).not.toHaveProperty('readings');
+  });
+
+  it('una lista vacía en el snapshot es una decisión: no hay lecturas propias, pero tampoco error', async () => {
+    const { content } = montar(() => publicado(2, (c) => void (c.readings = [])));
+    await content.refresh();
+    expect((await content.loadLocal()).readings).toEqual([]);
+  });
+
+  it('una caché guardada por una versión anterior, sin lecturas, sigue funcionando', async () => {
+    const { content, m } = montar(() => null);
+    m.data.set(CONTENT_CACHE_KEY, JSON.stringify({ schemaVersion: 1, ...publicado(4) }));
+    const local = await content.loadLocal();
+    expect(local.version).toBe(4);
+    expect(local).not.toHaveProperty('readings');
+  });
+
+  it('una caché con lecturas dañadas conserva el curso en vez de borrarse', async () => {
+    const { content, m } = montar(() => null);
+    m.data.set(
+      CONTENT_CACHE_KEY,
+      JSON.stringify({ schemaVersion: 1, ...publicado(4, (c) => void (c.readings = [{ id: 1 }])) }),
+    );
+    const local = await content.loadLocal();
+    expect(local.version).toBe(4);
+    expect(local).not.toHaveProperty('readings');
+    expect(m.data.has(CONTENT_CACHE_KEY)).toBe(true);
   });
 });
