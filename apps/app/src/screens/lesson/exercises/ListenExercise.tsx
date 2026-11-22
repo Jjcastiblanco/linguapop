@@ -15,6 +15,7 @@ export const SLOW_RATE = 0.55;
 export function ListenExercise({
   exercise,
   locked,
+  result,
   onAnswer,
   onSubmit,
 }: ExerciseProps<ExerciseOf<'listen'>>) {
@@ -28,6 +29,10 @@ export function ListenExercise({
     // Un "no" suele ser solo una voz cortada por otra; si la voz se dio por averiada, se enseña la frase.
     if (!ok && !composition.speech.capabilities().canSpeak) setNoVoice(true);
   };
+
+  // Al responder aparece la frase en inglés escrita (subtítulo). Si ya se mostró antes, o si el
+  // panel de respuesta ya la dice (fallo o errata), no se repite.
+  const showHeard = result !== null && result.ok && !result.typo && !noVoice && !revealed;
 
   return (
     <>
@@ -60,6 +65,11 @@ export function ListenExercise({
         <button type="button" className={styles.reveal} onClick={() => setRevealed(true)}>
           {t('listen.reveal.button')}
         </button>
+      )}
+      {showHeard && (
+        <p className={styles.notice} role="status" data-testid="listen-heard">
+          {t('listen.heard')} <b>{exercise.en}</b>
+        </p>
       )}
       <textarea
         className={styles.field}

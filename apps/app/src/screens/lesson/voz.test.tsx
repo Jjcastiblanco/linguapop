@@ -227,6 +227,45 @@ describe('escuchar', () => {
     expect(screen.getByText(e.es)).toBeInTheDocument();
   });
 
+  it('la frase en inglés no se ve antes de responder y aparece al acertar', async () => {
+    await abrir([LISTEN]);
+    expect(screen.queryByTestId('listen-heard')).toBeNull();
+    await userEvent.type(screen.getByRole('textbox'), e.en.toLowerCase());
+    expect(screen.queryByTestId('listen-heard')).toBeNull();
+    await comprobar();
+    expect(screen.getByTestId('listen-heard')).toHaveTextContent(`La frase era: ${e.en}`);
+  });
+
+  it('al fallar o con errata el panel ya dice la frase y no se repite', async () => {
+    const a = await abrir([LISTEN]);
+    await userEvent.type(screen.getByRole('textbox'), 'See you tomorrow');
+    await comprobar();
+    expect(screen.queryByTestId('listen-heard')).toBeNull();
+    a.unmount();
+    await abrir([LISTEN]);
+    await userEvent.type(screen.getByRole('textbox'), 'Nice to meett you');
+    await comprobar();
+    expect(screen.getByText(/Casi perfecto/)).toBeInTheDocument();
+    expect(screen.queryByTestId('listen-heard')).toBeNull();
+  });
+
+  it('si se pidió ver la frase («No puedo escuchar») no se repite al responder', async () => {
+    await abrir([LISTEN]);
+    await userEvent.click(
+      screen.getByRole('button', { name: 'No puedo escuchar: mostrar la frase' }),
+    );
+    await userEvent.type(screen.getByRole('textbox'), e.en);
+    await comprobar();
+    expect(screen.queryByTestId('listen-heard')).toBeNull();
+  });
+
+  it('si la frase ya se mostró escrita no se repite al responder', async () => {
+    await abrir([LISTEN], { canSpeak: false });
+    await userEvent.type(screen.getByRole('textbox'), e.en);
+    await comprobar();
+    expect(screen.queryByTestId('listen-heard')).toBeNull();
+  });
+
   it('Enter comprueba', async () => {
     await abrir([LISTEN]);
     await userEvent.type(screen.getByRole('textbox'), `${e.en}{Enter}`);
