@@ -3,6 +3,7 @@ export * from './reading';
 export * from './schema';
 export * from './teach';
 export * from './tolerant';
+export * from './validate';
 export {
   seedAchievements,
   seedCourse,
