@@ -226,3 +226,53 @@ describe('instalar la app', () => {
     expect(inst.prompt).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('Mi progreso', () => {
+  const resp = (correct: boolean): PendingEvent => ({
+    type: 'exercise_answered@1',
+    payload: { exerciseId: 'u-saludos-e03', correct, mode: 'lesson' },
+  });
+
+  it('sin repasos muestra 0 % y la retención como «—»', async () => {
+    await abrir();
+    expect(screen.getByTestId('mastery-skill-listen')).toHaveAttribute('data-percent', '0');
+    expect(screen.getByTestId('retention7')).toHaveTextContent('—');
+  });
+
+  it('tras dominar un ejercicio sube el porcentaje de su unidad y habilidad', async () => {
+    const { services, clock } = await abrir();
+    for (const dias of [0, 1, 8, 38]) {
+      clock.set(MIERCOLES + dias * DIA);
+      await act(() => services.progress.getState().record([resp(true)]));
+    }
+    expect(progreso(services).reviews['u-saludos-e03']?.mastered).toBe(true);
+    const unidad = screen.getByTestId('mastery-unit-u-saludos');
+    expect(Number(unidad.getAttribute('data-percent'))).toBeGreaterThan(0);
+    expect(screen.getByTestId('retention7')).toHaveTextContent('—');
+  });
+
+  it('con cinco repasos a +7 muestra el porcentaje de retención', async () => {
+    const { services, clock } = await abrir();
+    const ids = [
+      'u-saludos-e01',
+      'u-saludos-e02',
+      'u-saludos-e03',
+      'u-saludos-e04',
+      'u-saludos-e05',
+    ];
+    const responder = (aciertos: boolean[]) =>
+      ids.map((exerciseId, i) => ({
+        type: 'exercise_answered@1' as const,
+        payload: { exerciseId, correct: aciertos[i]!, mode: 'lesson' as const },
+      }));
+    for (const [dias, aciertos] of [
+      [0, [true, true, true, true, true]],
+      [1, [true, true, true, true, true]],
+      [8, [true, true, true, false, false]],
+    ] as const) {
+      clock.set(MIERCOLES + dias * DIA);
+      await act(() => services.progress.getState().record(responder([...aciertos])));
+    }
+    expect(screen.getByTestId('retention7')).toHaveTextContent('60%');
+  });
+});

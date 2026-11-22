@@ -7,10 +7,12 @@ import {
   MAX_HEARTS,
   MAX_PENDING_ERRORS,
   PRICES,
+  RETENTION7_WINDOW,
   REVIEW_INTERVALS,
   WORD_EXERCISE_PREFIX,
   initialProgress,
   type ProgressState,
+  type ReviewSlot,
 } from './state';
 
 /** Lo que el pliegue necesita saber del contenido: la estructura de las unidades y los logros. */
@@ -125,12 +127,21 @@ function scheduleReview(
   if (exerciseId.startsWith(WORD_EXERCISE_PREFIX)) return state;
   const prev = state.reviews[exerciseId];
   let stage: 0 | 1 | 2 = 0;
-  if (correct && prev) {
+  let mastered = false;
+  let retention7 = state.retention7;
+  if (prev) {
     const overdue = day >= prev.due; // las claves YYYY-MM-DD se ordenan como texto
-    stage = overdue && prev.stage < 2 ? ((prev.stage + 1) as 1 | 2) : prev.stage;
+    if (prev.stage === 1 && overdue) {
+      retention7 = [...retention7, correct].slice(-RETENTION7_WINDOW);
+    }
+    if (correct) {
+      stage = overdue && prev.stage < 2 ? ((prev.stage + 1) as 1 | 2) : prev.stage;
+      mastered = prev.stage === 2 && (overdue || prev.mastered === true);
+    }
   }
-  const slot = { stage, due: addDays(day, REVIEW_INTERVALS[stage]) };
-  return { ...state, reviews: { ...state.reviews, [exerciseId]: slot } };
+  const slot: ReviewSlot = { stage, due: addDays(day, REVIEW_INTERVALS[stage]) };
+  if (mastered) slot.mastered = true;
+  return { ...state, retention7, reviews: { ...state.reviews, [exerciseId]: slot } };
 }
 
 type Of<T extends ProgressEvent['type']> = Extract<ProgressEvent, { type: T }>;
