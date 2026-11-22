@@ -84,6 +84,16 @@
   cursor: default;
 }
 
+.pause {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 .offer {
   margin-bottom: 14px;
 }

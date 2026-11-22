@@ -207,6 +207,10 @@ export const es = {
   'shield.free': 'Solo para PRO',
   'shield.available': 'Disponible este mes: salva tu racha si faltas un día',
   'shield.used': 'Ya lo usaste este mes',
+  'shield.grace':
+    'Todos los planes tienen un día de gracia por semana: faltar un día no rompe tu racha',
+  'learn.streakBroken':
+    'Tu racha (🔥 {n}) hizo una pausa. Con una lección hoy empiezas otra, y tu mejor marca (🔥 {best}) se queda contigo.',
   'pro.title': '🔒 {feature}',
   'pro.text': 'Esta función es parte de LinguaPop PRO.',
   'pro.activate': 'Activar PRO',
@@ -365,6 +369,7 @@ export const es = {
   'toast.goal': '🎯 ¡Meta diaria cumplida! +10 💎',
   'toast.achievement': '{icon} Logro: {name} (+5 💎)',
   'toast.shield': '🛡️ Protector de racha usado: tu racha sigue viva',
+  'toast.grace': '🌿 Día de gracia: faltaste un día y tu racha sigue viva',
   'toast.installed': '✅ LinguaPop instalada',
   'toast.novoice': '🔇 Este navegador no puede reproducir voz.',
   'lesson.nohearts.recharge': 'Recargar vidas · 30 💎',

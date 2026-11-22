@@ -4,6 +4,7 @@ import { ProgressEventSchema } from '../events';
 import { applyEvent, foldEvents, parseKnownEvents } from './fold';
 import { MAX_HEARTS, PRICES, currentHearts, initialProgress, type ProgressState } from './state';
 import { isLessonUnlocked } from '../practice';
+import { weekKey } from '../streak';
 import { TEST_CONTEXT as ctx, UNIT_IDS, evento, sesion } from './test-support';
 
 const HOY = '2026-10-27';
@@ -479,10 +480,16 @@ describe('pliegue: ajustes, meta diaria y logros', () => {
     expect(utc.streak.lastDay).toBe('2026-10-28');
   });
 
-  it('el plan gratis desactiva el protector de racha', () => {
+  it('el plan gratis desactiva el protector de racha (con la gracia semanal ya gastada)', () => {
     const base = {
       ...initialProgress(),
-      streak: { streak: 4, best: 4, lastDay: '2026-10-25', shieldMonth: '' },
+      streak: {
+        streak: 4,
+        best: 4,
+        lastDay: '2026-10-25',
+        shieldMonth: '',
+        graceWeek: weekKey('2026-10-26'),
+      },
     };
     const pro = foldEvents([lec('2026-10-27T10:00:00.000Z')], ctx, { initial: base });
     expect(pro.streak.streak).toBe(5);

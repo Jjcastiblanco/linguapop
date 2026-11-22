@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ProgressEventSchema } from '../events';
 import { visibleStreak } from '../streak';
 import { foldEvents } from './fold';
+import { initialProgress } from './state';
 import { legacyEventId, legacyImportEvent } from './legacy';
 import { TEST_CONTEXT as ctx } from './test-support';
 
@@ -119,5 +120,21 @@ describe('importar el progreso heredado', () => {
     expect(ProgressEventSchema.safeParse({ ...evento, id: legacyEventId('otra') }).success).toBe(
       true,
     );
+  });
+});
+
+describe('importar el progreso heredado y la gracia semanal', () => {
+  it('conserva la gracia gastada de la semana aunque la racha heredada sea más reciente', () => {
+    const local = {
+      ...initialProgress(),
+      streak: { streak: 3, best: 3, lastDay: '2026-10-25', shieldMonth: '', graceWeek: '2026-W44' },
+    };
+    const r = foldEvents([legacyImportEvent(heredado, meta)!], ctx, { initial: local });
+    expect(r.streak).toMatchObject({
+      streak: 4,
+      best: 9,
+      lastDay: '2026-10-27',
+      graceWeek: '2026-W44',
+    });
   });
 });

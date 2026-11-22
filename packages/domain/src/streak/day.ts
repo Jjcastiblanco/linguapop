@@ -75,6 +75,19 @@ export function addDays(day: DayKey, n: number): DayKey {
   return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
+/**
+ * Semana ISO de un día, `AAAA-Www` (lunes a domingo; la semana es del año de su jueves). Cadena
+ * vacía si el día es inválido.
+ */
+export function weekKey(day: DayKey): string {
+  const wd = weekday(day);
+  if (wd === null) return '';
+  const thursday = addDays(day, 3 - wd);
+  const year = thursday.slice(0, 4);
+  const dayOfYear = (daysBetween(`${year}-01-01`, thursday) ?? 0) + 1;
+  return `${year}-W${String(Math.floor((dayOfYear - 1) / 7) + 1).padStart(2, '0')}`;
+}
+
 /** Hora local (0-23) de un instante en la zona horaria del usuario; si la zona no es válida usa UTC. */
 export function localHour(nowMs: number, timeZone: string): number {
   const format = (zone: string) =>

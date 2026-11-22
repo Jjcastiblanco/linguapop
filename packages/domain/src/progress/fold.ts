@@ -303,10 +303,13 @@ function onLegacyImported(state: ProgressState, e: Of<'legacy_imported@1'>): Pro
   }
   const mine = state.streak;
   const theirs = p.streak;
-  const streak =
-    theirs.lastDay > mine.lastDay
-      ? { ...theirs, best: Math.max(theirs.best, mine.best) }
-      : { ...mine, best: Math.max(theirs.best, mine.best) };
+  // La gracia gastada de esta semana no se olvida al importar: se queda la local (el progreso heredado no la conoce).
+  const graceWeek = mine.graceWeek ?? '';
+  const streak = {
+    ...(theirs.lastDay > mine.lastDay ? theirs : mine),
+    best: Math.max(theirs.best, mine.best),
+    ...(graceWeek ? { graceWeek } : {}),
+  };
   const start = initialProgress();
   return {
     ...state,

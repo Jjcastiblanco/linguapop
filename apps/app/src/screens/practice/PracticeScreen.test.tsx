@@ -205,9 +205,12 @@ describe('tienda y protector de racha', () => {
     expect(screen.getByTestId('shield-status')).toHaveTextContent(
       'Disponible este mes: salva tu racha si faltas un día',
     );
-    // Faltar un día lo gasta: la racha se salva con el protector.
+    // Faltar un día usa primero el día de gracia de la semana; faltar otro en la misma semana
+    // gasta el protector del mes y la racha se salva.
     clock.avanzar(2 * DIA);
-    await services.progress.getState().record([leccion(2), leccion(3)]);
+    await services.progress.getState().record([leccion(2)]);
+    clock.avanzar(2 * DIA);
+    await services.progress.getState().record([leccion(3)]);
     expect(progreso(services).gems).toBeGreaterThanOrEqual(60);
     await waitFor(() =>
       expect(screen.getByTestId('shield-status')).toHaveTextContent('Ya lo usaste este mes'),
