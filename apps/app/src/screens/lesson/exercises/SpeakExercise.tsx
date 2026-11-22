@@ -2,6 +2,7 @@ import type { ExerciseOf, ListenResult } from '@linguapop/domain';
 import { useEffect, useRef, useState } from 'react';
 import { useServices } from '../../../composition/context';
 import { t, type TextKey } from '../../../i18n';
+import { Instruction } from '../../../ui/Instruction';
 import styles from './Exercise.module.css';
 import { RecognitionPackPrompt, usePackUpdates } from './RecognitionPackPrompt';
 import type { ExerciseProps } from './types';
@@ -83,7 +84,9 @@ export function SpeakExercise({
 
   return (
     <>
-      <p className={styles.prompt}>{t('speak.title')}</p>
+      <p className={styles.prompt}>
+        <Instruction k="speak.title" exerciseId={exercise.id} />
+      </p>
       <div className={styles.phraseCard}>
         <div className={styles.phrase}>{exercise.en}</div>
         <div className={styles.translation}>{exercise.es}</div>

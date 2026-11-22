@@ -3,6 +3,7 @@ import type { ExerciseOf } from '@linguapop/domain';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServices } from '../../../composition/context';
 import { t } from '../../../i18n';
+import { Instruction } from '../../../ui/Instruction';
 import styles from './Exercise.module.css';
 import type { ExerciseProps } from './types';
 
@@ -72,7 +73,9 @@ export function MatchExercise({ exercise, locked, onAnswer }: ExerciseProps<Exer
 
   return (
     <>
-      <p className={styles.prompt}>{t('match.title')}</p>
+      <p className={styles.prompt}>
+        <Instruction k="match.title" exerciseId={exercise.id} />
+      </p>
       <div className={styles.columns}>
         <div className={styles.column} aria-label={t('match.spanish')}>
           {left.map((es) => {

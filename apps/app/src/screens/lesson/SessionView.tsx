@@ -7,6 +7,7 @@ import { activatePro, buyItem } from '../shop';
 import { t } from '../../i18n';
 import { Fox } from '../../mascots';
 import { Modal } from '../../ui/Modal';
+import { Instruction } from '../../ui/Instruction';
 import { FeedbackPanel } from './FeedbackPanel';
 import { HelpSheet } from './HelpSheet';
 import { TeachIntro } from './TeachIntro';
@@ -133,22 +134,28 @@ export function SessionView({ unit, exitTo, teach = [], glossary = [] }: Props) 
   const percent = Math.round(lessonProgress(lesson) * 100);
   const left = remainingSec(lesson, now);
 
-  const hintKey =
-    exercise.type === 'mc'
-      ? 'lesson.hint.mc'
-      : exercise.type === 'order'
-        ? 'lesson.hint.order'
-        : exercise.type === 'write'
-          ? 'lesson.hint.write'
-          : 'lesson.translate';
+  const hintKey = (
+    {
+      mc: 'lesson.hint.mc',
+      order: 'lesson.hint.order',
+      write: 'lesson.hint.write',
+      match: 'lesson.hint.match',
+      listen: 'lesson.hint.listen',
+      speak: 'lesson.hint.speak',
+    } as const
+  )[exercise.type];
   const mood = feedback ? (feedback.result.ok ? 'happy' : 'sad') : 'idle';
-  const bubble = feedback
-    ? feedback.result.ok
-      ? t('lesson.fox.ok')
-      : lesson.outOfHearts
-        ? t('lesson.fox.nohearts')
-        : t('lesson.fox.bad')
-    : t(hintKey);
+  const bubble = feedback ? (
+    feedback.result.ok ? (
+      t('lesson.fox.ok')
+    ) : lesson.outOfHearts ? (
+      t('lesson.fox.nohearts')
+    ) : (
+      t('lesson.fox.bad')
+    )
+  ) : (
+    <Instruction key={exercise.id} k={hintKey} exerciseId={exercise.id} />
+  );
 
   const check = (answer?: Answer) => {
     const toSend = answer ?? draft;

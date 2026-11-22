@@ -53,6 +53,7 @@ export const es = {
   'match.title': 'Empareja los pares',
   'match.spanish': 'Español',
   'match.english': 'Inglés',
+  'instruction.translate': 'Ver la traducción en español',
   'listen.title': '¿Qué dice?',
   'listen.play': 'Escuchar',
   'listen.slow': 'Escuchar despacio',
