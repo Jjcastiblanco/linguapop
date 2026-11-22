@@ -10,7 +10,6 @@ describe('instrucciones en inglés', () => {
       expect(es[key].trim().length, key).toBeGreaterThan(0);
       expect(en[key], key).not.toBe(es[key]);
     }
-    expect(Object.keys(en).sort()).toEqual([...INSTRUCTION_KEYS].sort());
   });
 
   it('la unidad 1 queda en español y desde la unidad 2 salen en inglés', () => {
@@ -26,5 +25,41 @@ describe('instrucciones en inglés', () => {
     expect(instructionsInEnglish(seedUnits, 'read-comida-1-q1')).toBe(false);
     expect(instructionsInEnglish(seedUnits, 'pair-ship-sheep')).toBe(false);
     expect(instructionsInEnglish([], 'u-comida-e01')).toBe(false);
+  });
+});
+
+describe('catálogo en inglés (modo inmersión)', () => {
+  it('tiene exactamente las mismas claves que el español, sin vacías', () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(es).sort());
+    for (const [key, text] of Object.entries(en))
+      expect(text.trim().length, key).toBeGreaterThan(0);
+  });
+
+  it('cada texto conserva los mismos marcadores que el español', () => {
+    const marcadores = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+    for (const key of Object.keys(es) as Array<keyof typeof es>) {
+      expect(marcadores(en[key]), key).toEqual(marcadores(es[key]));
+    }
+  });
+
+  it('solo coinciden con el español los nombres propios, las siglas y los símbolos', () => {
+    const iguales = (Object.keys(es) as Array<keyof typeof es>).filter((k) => en[k] === es[k]);
+    expect(iguales.sort()).toEqual(
+      [
+        'app.name',
+        'app.pro',
+        'topbar.unlimited',
+        'speak.heard',
+        'result.xp',
+        'learn.chest.reward',
+        'pro.title',
+        'league.xp',
+        'league.bot',
+        'profile.minutes',
+        'profile.level.a1',
+        'profile.level.a2',
+        'mascot.nova',
+      ].sort(),
+    );
   });
 });

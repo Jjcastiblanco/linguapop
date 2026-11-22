@@ -50,6 +50,8 @@ const Payloads = {
       plan: z.enum(['free', 'pro']).optional(),
       timeZone: z.string().min(1).optional(),
       displayName: z.string().trim().min(1).max(40).optional(),
+      /** Modo inmersión: la interfaz entera en inglés. Quedan en los eventos cuándo se activa y se desactiva. */
+      immersion: z.boolean().optional(),
     })
     .refine((p) => Object.keys(p).length > 0, {
       message: 'settings_changed necesita al menos un campo',

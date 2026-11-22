@@ -287,6 +287,14 @@ export function ProfileScreen() {
           />
         </div>
         <div className={styles.setrow}>
+          {t('profile.immersion')}
+          <Switch
+            on={settings.immersion === true}
+            label={t('profile.immersion')}
+            onToggle={() => void change({ immersion: settings.immersion !== true })}
+          />
+        </div>
+        <div className={styles.setrow}>
           {t('profile.plan')}
           <Switch
             on={pro}

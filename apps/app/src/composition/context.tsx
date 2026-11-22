@@ -1,4 +1,12 @@
-import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react';
+import {
+  Fragment,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 import { useStore } from 'zustand';
 import {
   createCallStore,
@@ -19,6 +27,7 @@ import {
   type UiState,
   type UiStore,
 } from '../stores';
+import { setInterfaceLanguage } from '../i18n';
 import type { Composition } from '.';
 
 export type AppServices = {
@@ -56,7 +65,26 @@ export function AppProvider({
   children: ReactNode;
 }) {
   const value = useMemo(() => services, [services]);
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+      <LanguageBoundary services={services}>{children}</LanguageBoundary>
+    </AppContext.Provider>
+  );
+}
+
+/**
+ * Fija el idioma de la interfaz según el modo inmersión del progreso. Al cambiar de idioma el
+ * árbol se vuelve a montar (la clave cambia): `t` no es reactiva, así que todo se recalcula.
+ */
+function LanguageBoundary({ services, children }: { services: AppServices; children: ReactNode }) {
+  const immersion = useStore(services.progress, (s) => s.progress.settings.immersion === true);
+  const language = immersion ? 'en' : 'es';
+  setInterfaceLanguage(language);
+  // Los lectores de pantalla y el corrector del navegador usan el idioma del documento.
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+  return <Fragment key={language}>{children}</Fragment>;
 }
 
 export function useServices(): AppServices {

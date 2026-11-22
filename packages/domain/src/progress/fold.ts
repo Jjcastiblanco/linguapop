@@ -273,7 +273,11 @@ function onSettingsChanged(state: ProgressState, e: Of<'settings_changed@1'>): P
     timeZone: p.timeZone ?? state.settings.timeZone,
     displayName: p.displayName ?? state.settings.displayName,
   };
-  return { ...state, settings };
+  const immersion = p.immersion ?? state.settings.immersion;
+  return {
+    ...state,
+    settings: immersion === undefined ? settings : { ...settings, immersion },
+  };
 }
 
 /** Una compra inválida (precio distinto, sin gemas o sin necesidad) no cambia nada. */
