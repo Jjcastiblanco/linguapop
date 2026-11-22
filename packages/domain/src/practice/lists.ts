@@ -1,4 +1,4 @@
-import type { Course, Exercise } from '@linguapop/content';
+import { readingExercises, type Course, type Exercise, type ReadingText } from '@linguapop/content';
 import {
   WORD_EXERCISE_PREFIX,
   openExerciseIndex,
@@ -10,12 +10,14 @@ import {
 import type { Random } from '../ports';
 import type { DayKey } from '../streak';
 import { shuffle } from '../random';
-import { isUnitUnlocked } from './unlock';
+import { isUnitComplete, isUnitUnlocked } from './unlock';
 
 export type PracticeInput = {
   units: Course['units'];
   progress: Pick<ProgressState, 'errors' | 'weak' | 'words' | 'lessonsDone' | 'reviews'>;
   random: Random;
+  /** Textos de «Lectura corta»: sus preguntas también se repasan. */
+  readings?: readonly ReadingText[];
 };
 
 /** Cuántos ejercicios arma cada modo (reglas de la versión heredada). */
@@ -36,10 +38,21 @@ function wordExercise(word: string, type: 'speak' | 'listen', es: string): Exerc
   return { id: `${WORD_EXERCISE_PREFIX}${word}`, type, en: word, es, tip: WORD_TIP };
 }
 
-function exerciseIndex(units: Course['units']): Map<string, Exercise> {
+function exerciseIndex(input: PracticeInput): Map<string, Exercise> {
   const index = new Map<string, Exercise>();
-  for (const u of units) for (const e of u.exercises) if (!e.retired) index.set(e.id, e);
+  for (const u of input.units) for (const e of u.exercises) if (!e.retired) index.set(e.id, e);
+  for (const text of input.readings ?? []) {
+    for (const e of readingExercises(text)) index.set(e.id, e);
+  }
   return index;
+}
+
+/** Textos de lectura abiertos: los de las unidades ya completas, cuyas palabras ya se enseñaron. */
+export function unlockedReadings(input: PracticeInput): ReadingText[] {
+  return (input.readings ?? []).filter((text) => {
+    const unit = input.units.find((u) => u.id === text.unitId);
+    return unit !== undefined && isUnitComplete(unit, input.progress.lessonsDone);
+  });
 }
 
 /** Ejercicios de las unidades abiertas que no se han descartado. */
@@ -73,7 +86,7 @@ const forRecall = (list: Exercise[]): Exercise[] => recognitionLast(list.map(toR
 
 /** Repaso de errores: los ejercicios fallados y las palabras a mejorar, mezclados. */
 export function buildReviewList(input: PracticeInput): Exercise[] {
-  const index = exerciseIndex(input.units);
+  const index = exerciseIndex(input);
   const items: Exercise[] = [];
   for (const id of input.progress.errors) {
     const e = index.get(id);
@@ -110,8 +123,13 @@ export function buildReinforceList(
 
 /** Ejercicios vencidos (hoy o antes) de unidades abiertas, del vencimiento más antiguo al más nuevo. */
 function dueExercises(input: PracticeInput, today: DayKey): Exercise[] {
-  const index = exerciseIndex(input.units);
-  const open = new Set(unlockedExercises(input).map((e) => e.id));
+  const index = exerciseIndex(input);
+  const open = new Set([
+    ...unlockedExercises(input).map((e) => e.id),
+    ...unlockedReadings(input)
+      .flatMap(readingExercises)
+      .map((e) => e.id),
+  ]);
   return Object.entries(input.progress.reviews)
     .filter(([id, slot]) => slot.due <= today && open.has(id) && index.has(id))
     .sort((a, b) => (a[1].due < b[1].due ? -1 : a[1].due > b[1].due ? 1 : a[0] < b[0] ? -1 : 1))
@@ -130,7 +148,7 @@ export function dailyReviewCount(input: PracticeInput, today: DayKey): number {
 
 /** Práctica personalizada: lo más débil primero y, si sobra sitio, ejercicios de las unidades abiertas. */
 export function buildPersonalizedList(input: PracticeInput): Exercise[] {
-  const index = exerciseIndex(input.units);
+  const index = exerciseIndex(input);
   const weakest = Object.entries(input.progress.weak)
     .sort((a, b) => b[1] - a[1])
     .slice(0, PERSONALIZED_WEAK_MAX)

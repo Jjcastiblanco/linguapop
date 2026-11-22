@@ -2,8 +2,16 @@ import { describe, expect, it } from 'vitest';
 import puntuacion from '../../fixtures/puntuacion.json';
 import { ProgressEventSchema } from '../events';
 import { applyEvent, foldEvents, parseKnownEvents } from './fold';
-import { MAX_HEARTS, PRICES, currentHearts, initialProgress, type ProgressState } from './state';
+import {
+  MAX_HEARTS,
+  PRICES,
+  READING_EXERCISE_PREFIX,
+  currentHearts,
+  initialProgress,
+  type ProgressState,
+} from './state';
 import { isLessonUnlocked } from '../practice';
+import { READING_ID_PREFIX } from '@linguapop/content';
 import { weekKey } from '../streak';
 import { TEST_CONTEXT as ctx, UNIT_IDS, evento, sesion } from './test-support';
 
@@ -831,5 +839,52 @@ describe('pliegue: pares mínimos (Entrena tu oído)', () => {
     expect(despues.reviews).toEqual({});
     expect(despues.words).toEqual({});
     expect(despues.weak).toEqual({});
+  });
+});
+
+describe('preguntas de lectura en el pliegue', () => {
+  const contestar = (
+    correct: boolean,
+    plan: 'free' | 'pro' = 'free',
+    mode: 'practice' | 'review' | 'lesson' = 'practice',
+  ) =>
+    foldEvents(
+      [
+        evento('settings_changed@1', { plan }, '2026-10-27T09:00:00.000Z'),
+        evento(
+          'exercise_answered@1',
+          { exerciseId: 'read-saludos-1-q1', correct, mode },
+          '2026-10-27T10:00:00.000Z',
+        ),
+      ],
+      ctx,
+    );
+
+  it('un acierto entra al calendario a +1 día sin tocar errores', () => {
+    const s = contestar(true);
+    expect(s.reviews['read-saludos-1-q1']).toEqual({ stage: 0, due: '2026-10-28' });
+    expect(s.errors).toEqual([]);
+  });
+
+  it('en el repaso o en una lección un fallo tampoco gasta vidas ni suma errores', () => {
+    for (const mode of ['review', 'lesson'] as const) {
+      const s = contestar(false, 'free', mode);
+      expect(s.errors).toEqual([]);
+      expect(s.weak).toEqual({});
+      expect(s.hearts).toBe(MAX_HEARTS);
+      expect(s.reviews['read-saludos-1-q1']).toEqual({ stage: 0, due: '2026-10-28' });
+    }
+  });
+
+  it('el prefijo del pliegue es el mismo que el de los textos de lectura', () => {
+    expect(READING_EXERCISE_PREFIX).toBe(READING_ID_PREFIX);
+  });
+
+  it('un fallo también se programa a +1 día, pero no gasta vidas ni suma errores', () => {
+    const s = contestar(false);
+    expect(s.reviews['read-saludos-1-q1']).toEqual({ stage: 0, due: '2026-10-28' });
+    expect(s.errors).toEqual([]);
+    expect(s.weak).toEqual({});
+    expect(s.hearts).toBe(MAX_HEARTS);
   });
 });

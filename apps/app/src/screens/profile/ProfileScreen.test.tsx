@@ -239,6 +239,24 @@ describe('Mi progreso', () => {
     expect(screen.getByTestId('retention7')).toHaveTextContent('—');
   });
 
+  it('muestra la habilidad «Leer» y sube cuando se domina una pregunta de lectura', async () => {
+    const { services, clock } = await abrir();
+    expect(screen.getByTestId('mastery-skill-read')).toHaveAttribute('data-percent', '0');
+    const pregunta: PendingEvent = {
+      type: 'exercise_answered@1',
+      payload: { exerciseId: 'read-saludos-1-q1', correct: true, mode: 'practice' },
+    };
+    for (const dias of [0, 1, 8, 38]) {
+      clock.set(MIERCOLES + dias * DIA);
+      await act(() => services.progress.getState().record([pregunta]));
+    }
+    expect(progreso(services).reviews['read-saludos-1-q1']?.mastered).toBe(true);
+    expect(
+      Number(screen.getByTestId('mastery-skill-read').getAttribute('data-percent')),
+    ).toBeGreaterThan(0);
+    expect(screen.getByText('Leer')).toBeInTheDocument();
+  });
+
   it('tras dominar un ejercicio sube el porcentaje de su unidad y habilidad', async () => {
     const { services, clock } = await abrir();
     for (const dias of [0, 1, 8, 38]) {

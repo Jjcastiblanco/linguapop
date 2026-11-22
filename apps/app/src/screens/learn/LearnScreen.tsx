@@ -50,7 +50,10 @@ export function LearnScreen() {
     progress.streak.lastDay !== '' &&
     visibleStreak(progress.streak, today, progress.settings.plan) === 0;
 
-  const dueCount = dailyReviewCount({ units, progress, random: composition.random }, today);
+  const dueCount = dailyReviewCount(
+    { units, progress, random: composition.random, readings: composition.readings },
+    today,
+  );
 
   const reinforce = reinforcementNeeded(units, progress);
 
@@ -62,7 +65,7 @@ export function LearnScreen() {
     if (!placement) return;
     const result = practiceConfig(
       { kind: 'placement', unitId: placement.id },
-      { units, progress, random: composition.random },
+      { units, progress, random: composition.random, readings: composition.readings },
       today,
     );
     if (!result.ok) return;
@@ -75,7 +78,7 @@ export function LearnScreen() {
     if (!reinforce) return;
     const result = practiceConfig(
       { kind: 'reinforce', ...(reinforce.reason === 'skill' ? { skill: reinforce.skill } : {}) },
-      { units, progress, random: composition.random },
+      { units, progress, random: composition.random, readings: composition.readings },
       today,
     );
     if (!result.ok) return;
@@ -86,7 +89,7 @@ export function LearnScreen() {
   function startDaily() {
     const result = practiceConfig(
       { kind: 'daily' },
-      { units, progress, random: composition.random },
+      { units, progress, random: composition.random, readings: composition.readings },
       today,
     );
     if (!result.ok) return;

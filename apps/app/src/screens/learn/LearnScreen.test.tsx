@@ -313,6 +313,28 @@ describe('repaso de hoy', () => {
   });
 });
 
+describe('repaso de hoy con lectura', () => {
+  it('las preguntas de lectura vencidas de una unidad completa entran al contador y a la sesión', async () => {
+    const clock = relojFalso();
+    const services = await crearServicios({ storage: memoria().storage, clock });
+    await services.progress.getState().record([
+      ...unidad('u-saludos'),
+      ...['q1', 'q2', 'q3'].map((q): PendingEvent => ({
+        type: 'exercise_answered@1',
+        payload: { exerciseId: `read-saludos-1-${q}`, correct: true, mode: 'practice' },
+      })),
+    ]);
+    clock.avanzar(2 * 24 * 3600 * 1000);
+    const { router } = renderApp(services, '/aprender');
+    const tarjeta = screen.getByTestId('daily-review');
+    expect(tarjeta).toHaveTextContent('3 por repasar');
+    await userEvent.click(tarjeta);
+    expect(router.state.location.pathname).toBe('/practicar/sesion');
+    const ids = services.lesson.getState().lesson?.config.exercises.map((e) => e.id);
+    expect(ids).toEqual(['read-saludos-1-q1', 'read-saludos-1-q2', 'read-saludos-1-q3']);
+  });
+});
+
 describe('reforzar', () => {
   const fallo = (exerciseId: string): PendingEvent => ({
     type: 'exercise_answered@1',

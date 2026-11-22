@@ -1,4 +1,4 @@
-import { seedCourse, type Exercise } from '@linguapop/content';
+import { readingExercises, seedCourse, seedReadings, type Exercise } from '@linguapop/content';
 import { describe, expect, it } from 'vitest';
 import { completeEvent } from '../events';
 import type { Answer } from '../exercises';
@@ -31,6 +31,7 @@ import {
   isLessonUnlocked,
   isUnitComplete,
   isUnitUnlocked,
+  unlockedReadings,
   type PracticeInput,
 } from './index';
 
@@ -609,5 +610,43 @@ describe('recordar antes que reconocer', () => {
     });
     const lista = buildDailyReviewList(entrada(p), TODAY);
     expect(ids(lista)).toEqual([mc.id, matches[0]!.id]);
+  });
+});
+
+describe('lectura corta en el repaso', () => {
+  const [texto1] = seedReadings.filter((t) => t.unitId === units[0]!.id);
+  const preguntas = readingExercises(texto1!);
+  const vencidas = Object.fromEntries(
+    preguntas.map((q) => [q.id, { stage: 0 as const, due: '2026-10-20' }]),
+  );
+  const conLectura = (p: ProgressState): PracticeInput & { progress: ProgressState } => ({
+    ...entrada(p),
+    readings: seedReadings,
+  });
+
+  it('los textos se abren al completar su unidad', () => {
+    expect(unlockedReadings(conLectura(progreso()))).toEqual([]);
+    const abiertos = unlockedReadings(conLectura(progreso({ lessonsDone: hechas(1) })));
+    expect(new Set(abiertos.map((t) => t.unitId))).toEqual(new Set([units[0]!.id]));
+  });
+
+  it('las preguntas vencidas de un texto abierto entran al repaso de hoy', () => {
+    const p = progreso({ lessonsDone: hechas(1), reviews: vencidas });
+    expect(dailyReviewCount(conLectura(p), TODAY)).toBe(preguntas.length);
+    expect(ids(buildDailyReviewList(conLectura(p), TODAY))).toEqual(preguntas.map((q) => q.id));
+  });
+
+  it('sin la unidad completa o sin los textos en la entrada no se repasan', () => {
+    expect(dailyReviewCount(conLectura(progreso({ reviews: vencidas })), TODAY)).toBe(0);
+    expect(
+      dailyReviewCount(entrada(progreso({ lessonsDone: hechas(1), reviews: vencidas })), TODAY),
+    ).toBe(0);
+  });
+
+  it('las preguntas no entran en las demás prácticas del curso', () => {
+    const p = progreso({ lessonsDone: hechas(5) });
+    const todas = new Set(preguntas.map((q) => q.id));
+    expect(buildTimedList(conLectura(p)).some((e) => todas.has(e.id))).toBe(false);
+    expect(buildPersonalizedList(conLectura(p)).some((e) => todas.has(e.id))).toBe(false);
   });
 });

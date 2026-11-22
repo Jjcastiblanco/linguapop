@@ -1,0 +1,144 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  padding-top: calc(14px + env(safe-area-inset-top));
+}
+
+.close {
+  background: none;
+  font-size: 24px;
+  color: var(--muted);
+  font-weight: 900;
+  padding: 0 4px;
+}
+
+.count {
+  flex: 1;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.body {
+  flex: 1;
+  overflow: auto;
+  padding: 6px 18px calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.grow {
+  flex: 1;
+  text-align: left;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  color: inherit;
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  font-weight: 800;
+  box-shadow: 0 4px 0 var(--line);
+}
+
+.done {
+  color: var(--ok);
+  font-size: 13px;
+}
+
+.notice {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.text {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  padding: 14px 16px;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.text p {
+  margin: 0 0 6px;
+}
+
+.focus {
+  background: var(--ok-bg);
+  border-radius: 8px;
+  padding: 0 6px;
+}
+
+.prompt {
+  font-weight: 800;
+  font-size: 17px;
+  margin: 0;
+}
+
+.options {
+  display: grid;
+  gap: 10px;
+}
+
+.option {
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  font-weight: 800;
+  font-size: 16px;
+  box-shadow: 0 4px 0 var(--line);
+  text-align: left;
+}
+
+.option:disabled {
+  cursor: default;
+}
+
+.good {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+  box-shadow: 0 4px 0 var(--ok);
+}
+
+.miss {
+  border-color: var(--bad, #ea2b2b);
+  box-shadow: 0 4px 0 var(--bad, #ea2b2b);
+}
+
+.feedback {
+  font-weight: 800;
+}
+
+.action {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--brand);
+  box-shadow: 0 5px 0 var(--brand-d);
+}

@@ -5,11 +5,13 @@ import tHablarDelTrabajo from '../seed/dialogues/t-hablar-del-trabajo.json';
 import tPlanearUnViaje from '../seed/dialogues/t-planear-un-viaje.json';
 import tPresentarse from '../seed/dialogues/t-presentarse.json';
 import pairs from '../seed/pairs.json';
+import readings from '../seed/readings.json';
 import comida from '../seed/units/comida.json';
 import familia from '../seed/units/familia.json';
 import saludos from '../seed/units/saludos.json';
 import trabajo from '../seed/units/trabajo.json';
 import viajes from '../seed/units/viajes.json';
+import { ReadingTextsSchema, type ReadingText } from './reading';
 import {
   AchievementSchema,
   CourseSchema,
@@ -43,6 +45,9 @@ export const seedAchievements: Achievement[] = achievements.map((a) => Achieveme
 
 /** Pares mínimos de «Entrena tu oído»: contenido aparte del curso, validado al cargarse. */
 export const seedPairs: MinimalPair[] = MinimalPairsSchema.parse(pairs);
+
+/** Textos de «Lectura corta»: contenido aparte del curso, validado al cargarse. */
+export const seedReadings: ReadingText[] = ReadingTextsSchema.parse(readings);
 
 /** El curso completo (español a inglés, A1–A2) validado, con todas sus referencias cruzadas. */
 export const seedCourse: Course = CourseSchema.parse({

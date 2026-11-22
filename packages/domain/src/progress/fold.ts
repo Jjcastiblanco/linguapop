@@ -10,6 +10,7 @@ import {
   RETENTION7_WINDOW,
   REVIEW_INTERVALS,
   PAIR_EXERCISE_PREFIX,
+  READING_EXERCISE_PREFIX,
   WORD_EXERCISE_PREFIX,
   initialProgress,
   type ProgressState,
@@ -158,6 +159,9 @@ function onExerciseAnswered(
   const { exerciseId, correct, mode, skipped } = e.payload;
   if (skipped) return s;
   const scheduled = scheduleReview(s, exerciseId, correct, day);
+  // Una pregunta de lectura fallada vuelve a +1 día en el calendario, sin errores ni vidas: el
+  // repaso de errores no tiene el texto delante.
+  if (exerciseId.startsWith(READING_EXERCISE_PREFIX)) return scheduled;
   if (correct) return mode === 'review' ? removeError(scheduled, exerciseId) : scheduled;
   const failed = addError(scheduled, exerciseId);
   const losesHeart = failed.settings.plan === 'free' && mode !== 'timed';
