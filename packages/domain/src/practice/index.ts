@@ -11,6 +11,8 @@ export {
   buildReviewList,
   buildTimedList,
   dailyReviewCount,
+  recognitionLast,
+  toRecallExercise,
   type PracticeInput,
 } from './lists';
 export {

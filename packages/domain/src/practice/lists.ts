@@ -43,6 +43,26 @@ function unlockedExercises(input: PracticeInput): Exercise[] {
   );
 }
 
+const RECALL_PROMPT = /^¿Cómo se dice "(.+)"\?$/;
+
+/** En el repaso se recuerda en vez de reconocer: «¿Cómo se dice "X"?» se escribe, sin opciones. */
+export function toRecallExercise(e: Exercise): Exercise {
+  if (e.type !== 'mc') return e;
+  const es = RECALL_PROMPT.exec(e.prompt.trim())?.[1];
+  const answer = e.options[e.answerIndex]?.text;
+  if (!es || !answer) return e;
+  const recall: Exercise = { id: e.id, type: 'write', es, en: answer, alternatives: [] };
+  if (e.tip !== undefined) recall.tip = e.tip;
+  return recall;
+}
+
+/** Emparejar (solo reconocer) va al final de la sesión; el resto conserva su orden. */
+export function recognitionLast(list: Exercise[]): Exercise[] {
+  return [...list.filter((e) => e.type !== 'match'), ...list.filter((e) => e.type === 'match')];
+}
+
+const forRecall = (list: Exercise[]): Exercise[] => recognitionLast(list.map(toRecallExercise));
+
 /** Repaso de errores: los ejercicios fallados y las palabras a mejorar, mezclados. */
 export function buildReviewList(input: PracticeInput): Exercise[] {
   const index = exerciseIndex(input.units);
@@ -55,7 +75,7 @@ export function buildReviewList(input: PracticeInput): Exercise[] {
     items.push(wordExercise(word, 'speak', 'Palabra para mejorar'));
     items.push(wordExercise(word, 'listen', 'Palabra para mejorar'));
   }
-  return shuffle(items, input.random).slice(0, REVIEW_SIZE);
+  return forRecall(shuffle(items, input.random).slice(0, REVIEW_SIZE));
 }
 
 /** Ejercicios vencidos (hoy o antes) de unidades abiertas, del vencimiento más antiguo al más nuevo. */
@@ -70,7 +90,7 @@ function dueExercises(input: PracticeInput, today: DayKey): Exercise[] {
 
 /** «Repaso de hoy»: lo vencido, lo más atrasado primero. */
 export function buildDailyReviewList(input: PracticeInput, today: DayKey): Exercise[] {
-  return dueExercises(input, today).slice(0, DAILY_REVIEW_SIZE);
+  return forRecall(dueExercises(input, today).slice(0, DAILY_REVIEW_SIZE));
 }
 
 /** Cuántos ejercicios vencidos hay en total (el contador de la tarjeta). */
