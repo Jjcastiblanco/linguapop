@@ -59,6 +59,7 @@ export const es = {
   'listen.placeholder': 'Escribe lo que escuchas…',
   'listen.reveal.button': 'No puedo escuchar: mostrar la frase',
   'listen.reveal': 'La frase es:',
+  'listen.heard': 'La frase era:',
   'listen.novoice': 'Este dispositivo no puede reproducir voz. La frase es:',
   'speak.title': 'Repite esta frase',
   'speak.hear': 'Escuchar',
