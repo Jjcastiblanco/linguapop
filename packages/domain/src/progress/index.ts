@@ -32,3 +32,10 @@ export {
   type Skill,
 } from './mastery';
 export { A1_UNITS, estimatedLevel, type EstimatedLevel } from './level';
+export {
+  RETENTION_LOW_PERCENT,
+  SKILL_ERRORS_MIN,
+  openExerciseIndex,
+  reinforcementNeeded,
+  type ReinforceReason,
+} from './reinforce';

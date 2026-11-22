@@ -275,3 +275,74 @@ describe('repaso de hoy', () => {
     expect(services.lesson.getState().lesson?.config.mode).toBe('review');
   });
 });
+
+describe('reforzar', () => {
+  const fallo = (exerciseId: string): PendingEvent => ({
+    type: 'exercise_answered@1',
+    payload: { exerciseId, correct: false, mode: 'lesson' },
+  });
+
+  it('sin condiciones no hay tarjeta', async () => {
+    await preparar();
+    expect(screen.queryByTestId('reinforce')).toBeNull();
+  });
+
+  it('con 5 errores de escribir muestra la tarjeta, inicia la sesión y desaparece al acertar', async () => {
+    const services = await crearServicios({ storage: memoria().storage, clock: relojFalso() });
+    const exercises = services.composition.course.units[0]!.exercises.filter(
+      (e) => (e.type === 'write' || e.type === 'order') && !e.retired,
+    );
+    const five = exercises.slice(0, 5).map((e) => e.id);
+    await services.progress.getState().record(five.map(fallo));
+    const { router } = renderApp(services, '/aprender');
+    const tarjeta = screen.getByTestId('reinforce');
+    expect(tarjeta).toHaveTextContent('Hay frases de escribir que conviene repasar');
+    await userEvent.click(tarjeta);
+    expect(router.state.location.pathname).toBe('/practicar/sesion');
+    const config = services.lesson.getState().lesson?.config;
+    expect(config?.mode).toBe('review');
+    expect(config?.exercises.map((e) => e.id).sort()).toEqual([...five].sort());
+
+    await act(async () => {
+      await services.progress.getState().record(
+        five.map((id) => ({
+          type: 'exercise_answered@1' as const,
+          payload: { exerciseId: id, correct: true, mode: 'review' as const },
+        })),
+      );
+    });
+    router.navigate('/aprender');
+    await act(async () => {});
+    expect(screen.queryByTestId('reinforce')).toBeNull();
+  });
+
+  it('con retención baja y algo que reforzar muestra el texto de retención e inicia la sesión', async () => {
+    const reloj = relojFalso();
+    const services = await crearServicios({ storage: memoria().storage, clock: reloj });
+    const ids = services.composition.course.units[0]!.exercises.filter((e) => !e.retired)
+      .slice(0, 5)
+      .map((e) => e.id);
+    const base = reloj.now();
+    const DIA = 86_400_000;
+    // Cinco ejercicios con repaso a +7 días: dos aciertos y tres fallos dejan la retención en 40 %.
+    for (const [dias, aciertos] of [
+      [0, [true, true, true, true, true]],
+      [1, [true, true, true, true, true]],
+      [8, [true, true, false, false, false]],
+    ] as const) {
+      reloj.set(base + dias * DIA);
+      await services.progress.getState().record(
+        ids.map((exerciseId, i) => ({
+          type: 'exercise_answered@1' as const,
+          payload: { exerciseId, correct: aciertos[i]!, mode: 'lesson' as const },
+        })),
+      );
+    }
+    const { router } = renderApp(services, '/aprender');
+    const tarjeta = screen.getByTestId('reinforce');
+    expect(tarjeta).toHaveTextContent('Conviene repasar lo que viste hace unos días');
+    await userEvent.click(tarjeta);
+    expect(router.state.location.pathname).toBe('/practicar/sesion');
+    expect(services.lesson.getState().lesson?.config.mode).toBe('review');
+  });
+});

@@ -1,5 +1,12 @@
 import type { Course, Exercise } from '@linguapop/content';
-import { WORD_EXERCISE_PREFIX, type ProgressState } from '../progress';
+import {
+  WORD_EXERCISE_PREFIX,
+  openExerciseIndex,
+  skillOf,
+  type ProgressState,
+  type ReinforceReason,
+  type Skill,
+} from '../progress';
 import type { Random } from '../ports';
 import type { DayKey } from '../streak';
 import { shuffle } from '../random';
@@ -20,6 +27,7 @@ export const PERSONALIZED_WORDS_MAX = 3;
 export const TIMED_SIZE = 40;
 export const TIMED_SECONDS = 90;
 export const PLACEMENT_SIZE = 12;
+export const REINFORCE_SIZE = 12;
 
 const WORD_TIP = 'Palabra que te costó en una llamada con Nova.';
 
@@ -76,6 +84,28 @@ export function buildReviewList(input: PracticeInput): Exercise[] {
     items.push(wordExercise(word, 'listen', 'Palabra para mejorar'));
   }
   return forRecall(shuffle(items, input.random).slice(0, REVIEW_SIZE));
+}
+
+/** Refuerzo: errores y los de más fallos de unidades abiertas (de la habilidad si el motivo lo es), hasta 12. */
+export function buildReinforceList(
+  input: PracticeInput,
+  reason: ReinforceReason['reason'],
+  skill?: Skill,
+): Exercise[] {
+  const index = openExerciseIndex(input.units, input.progress.lessonsDone);
+  const weakIds = Object.entries(input.progress.weak)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id]) => id);
+  const seen = new Set<string>();
+  const items: Exercise[] = [];
+  for (const id of [...input.progress.errors, ...weakIds]) {
+    const e = index.get(id);
+    if (!e || seen.has(id)) continue;
+    if (reason === 'skill' && skill && skillOf(e.type) !== skill) continue;
+    seen.add(id);
+    items.push(e);
+  }
+  return forRecall(items.slice(0, REINFORCE_SIZE));
 }
 
 /** Ejercicios vencidos (hoy o antes) de unidades abiertas, del vencimiento más antiguo al más nuevo. */
