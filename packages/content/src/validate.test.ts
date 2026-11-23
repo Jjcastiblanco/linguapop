@@ -159,3 +159,60 @@ describe('validateContent', () => {
     expect(problemas(menos)[0]!.message).toContain('90.0 %');
   });
 });
+
+describe('audio remoto en el contenido', () => {
+  const audio = (cambio: Record<string, unknown> = {}) => ({
+    baseUrl: 'https://proyecto.supabase.co/storage/v1/object/public/audio/',
+    keys: ['0123456789abcd', 'abcdef0123456'],
+    ...cambio,
+  });
+
+  it('es opcional: sin él no hay campo en el resultado', () => {
+    const r = validateContent(semilla());
+    expect(r.ok && 'audio' in r.content).toBe(false);
+  });
+
+  it('un audio válido pasa y se devuelve tipado', () => {
+    const r = validateContent({ ...semilla(), audio: audio() });
+    expect(r.ok && r.content.audio?.keys).toHaveLength(2);
+  });
+
+  it('rechaza direcciones que no son https con barra final y sin credenciales ni parámetros', () => {
+    for (const baseUrl of [
+      'http://proyecto.supabase.co/audio/',
+      'https://proyecto.supabase.co/audio',
+      'https://usuario:clave@proyecto.supabase.co/audio/',
+      'https://proyecto.supabase.co/audio/?x=1',
+      'https://proyecto.supabase.co/audio/#a',
+      'javascript:alert(1)//',
+      'https://a..b/audio/',
+      'https://proyecto.supabase.co:99999/audio/',
+      'https://proyecto.supabase.co/../audio/',
+      'https://proyecto.supabase.co/%2e%2e/audio/',
+      'https://proyecto.supabase.co/./audio/',
+      '/audio/',
+      '',
+    ]) {
+      const p = problemas({ ...semilla(), audio: audio({ baseUrl }) } as never);
+      expect(
+        p.map((x) => x.code),
+        baseUrl,
+      ).toContain('audio-schema');
+    }
+  });
+
+  it('rechaza claves que no son una huella, repetidas o en exceso', () => {
+    for (const keys of [
+      ['../x'],
+      ['0123456789ABCD'],
+      ['abc'],
+      ['0123456789abcd', '0123456789abcd'],
+    ]) {
+      const p = problemas({ ...semilla(), audio: audio({ keys }) } as never);
+      expect(
+        p.map((x) => x.code),
+        keys.join(),
+      ).toContain('audio-schema');
+    }
+  });
+});

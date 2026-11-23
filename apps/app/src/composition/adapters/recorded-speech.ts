@@ -1,5 +1,6 @@
 import { audioKey, DEFAULT_VOICE, speedFor, type AudioManifest } from '@linguapop/content';
 import type { ListenOptions, SpeakOptions, Speech } from '@linguapop/domain';
+import { browserClipCache, createRemoteClips, type RemoteClips } from './remote-clips';
 
 /** Reproduce un archivo de audio; `stop` lo corta. */
 export type ClipPlayer = {
@@ -15,6 +16,8 @@ export type RecordingsEnv = {
   player: ClipPlayer;
   /** Dónde viven los archivos, con la barra final: `/audio/`. */
   baseUrl: string;
+  /** Clips que publica el snapshot y no vienen empaquetados; opcional. */
+  remote?: RemoteClips;
 };
 
 export function browserRecordingsEnv(): RecordingsEnv {
@@ -29,6 +32,7 @@ export function browserRecordingsEnv(): RecordingsEnv {
   };
   return {
     baseUrl,
+    remote: createRemoteClips({ openCache: browserClipCache }),
     async loadManifest() {
       const response = await fetch(`${baseUrl}manifest.json`);
       if (!response.ok) throw new Error(`manifest ${response.status}`);
@@ -81,22 +85,38 @@ export function withRecordings(base: Speech, env: RecordingsEnv): Speech {
       await ready;
       const wanted = options.rate ?? 1;
       let { speed, playbackRate } = speedFor(wanted);
+      // Lo empaquetado manda; lo que publicó el snapshot completa lo que falta.
+      const have = (k: string) => keys.has(k) || (env.remote?.has(k) ?? false);
       let key = audioKey(text, speed, options.voice);
-      if (!keys.has(key) && speed === 'slow') {
+      if (!have(key) && speed === 'slow') {
         // Las palabras sueltas no tienen versión lenta: se estira la normal.
         key = audioKey(text, 'normal', options.voice);
         playbackRate = wanted;
         speed = 'normal';
       }
       // Sin la grabación de esa voz suena la voz por defecto del curso.
-      if (!keys.has(key) && options.voice && options.voice !== DEFAULT_VOICE) {
+      if (!have(key) && options.voice && options.voice !== DEFAULT_VOICE) {
         key = audioKey(text, speed, DEFAULT_VOICE);
       }
-      if (keys.has(key)) {
+      if (have(key)) {
         try {
-          return (await env.player.play(`${env.baseUrl}${key}.mp3`, playbackRate)) === 'ended';
+          const url = keys.has(key) ? `${env.baseUrl}${key}.mp3` : await env.remote!.urlOf(key);
+          return (await env.player.play(url, playbackRate)) === 'ended';
         } catch {
-          /* no se pudo reproducir el archivo: lo dice la voz de respaldo */
+          /* no se pudo reproducir el archivo: se prueba lo empaquetado y, si no, la voz de respaldo */
+        }
+        if (!keys.has(key)) {
+          const packaged = [
+            audioKey(text, 'normal', options.voice),
+            audioKey(text, 'normal', DEFAULT_VOICE),
+          ].find((k) => keys.has(k));
+          if (packaged) {
+            try {
+              return (await env.player.play(`${env.baseUrl}${packaged}.mp3`, wanted)) === 'ended';
+            } catch {
+              /* también falló: voz de respaldo */
+            }
+          }
         }
       }
       return base.speak(text, options);

@@ -12,8 +12,12 @@ import { appRoutes } from './routes';
 // Google (público) la app ofrece solo correo y contraseña.
 const googleWebClientId = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID;
 
+const recordings = browserRecordingsEnv();
+
 void composeWithContent(createNativeComposition, {
-  speech: withRecordings(createNativeSpeech(), browserRecordingsEnv()),
+  speech: withRecordings(createNativeSpeech(), recordings),
+  onRemoteAudio: (audio) =>
+    void recordings.remote?.use(audio).catch((e: unknown) => console.warn('Audio remoto:', e)),
   googleSignIn: false,
   nativeGoogle: googleWebClientId ? createNativeGoogle(googleWebClientId) : undefined,
 }).then((composition) => startApp(composition, { router: createBrowserRouter(appRoutes) }));

@@ -145,3 +145,60 @@ describe('voz pregrabada', () => {
     expect(base.speak).toHaveBeenCalledWith('sheep', { rate: 1, voice: 'am_michael' });
   });
 });
+
+describe('voz pregrabada con clips remotos', () => {
+  const remotoFalso = (claves: string[], urlOf?: (k: string) => Promise<string>) => ({
+    has: (k: string) => claves.includes(k),
+    urlOf: vi.fn(urlOf ?? (async (k: string) => `blob:${k}`)),
+    use: vi.fn(async () => undefined),
+  });
+
+  it('una clave que solo tiene el snapshot suena desde el clip remoto', async () => {
+    const { env, player } = entornoFalso([]);
+    const remote = remotoFalso([audioKey('Brand new')]);
+    const base = baseFalsa();
+    await withRecordings(base, { ...env, remote }).speak('Brand new');
+    expect(player.play).toHaveBeenCalledWith(`blob:${audioKey('Brand new')}`, 1);
+    expect(base.speak).not.toHaveBeenCalled();
+  });
+
+  it('lo empaquetado manda sobre lo remoto', async () => {
+    const { env, player } = entornoFalso([audioKey('Hello')]);
+    const remote = remotoFalso([audioKey('Hello')]);
+    await withRecordings(baseFalsa(), { ...env, remote }).speak('Hello');
+    expect(player.play).toHaveBeenCalledWith(`/audio/${audioKey('Hello')}.mp3`, 1);
+    expect(remote.urlOf).not.toHaveBeenCalled();
+  });
+
+  it('si el clip remoto no se puede obtener suena la voz de respaldo', async () => {
+    const { env, player } = entornoFalso([]);
+    const remote = remotoFalso([audioKey('Brand new')], async () => {
+      throw new Error('sin red');
+    });
+    const base = baseFalsa();
+    expect(await withRecordings(base, { ...env, remote }).speak('Brand new')).toBe(true);
+    expect(player.play).not.toHaveBeenCalled();
+    expect(base.speak).toHaveBeenCalledWith('Brand new', {});
+  });
+
+  it('la velocidad lenta y la voz por defecto también encuentran lo remoto', async () => {
+    const { env, player } = entornoFalso([]);
+    const remote = remotoFalso([audioKey('Brand new')]);
+    await withRecordings(baseFalsa(), { ...env, remote }).speak('Brand new', {
+      rate: 0.55,
+      voice: 'am_michael',
+    });
+    expect(player.play).toHaveBeenCalledWith(`blob:${audioKey('Brand new')}`, 0.55);
+  });
+
+  it('si el clip remoto falla y existe el empaquetado de la voz por defecto, suena ese y no la voz del sistema', async () => {
+    const { env, player } = entornoFalso([audioKey('Hello')]);
+    const remote = remotoFalso([audioKey('Hello', 'normal', 'am_michael')], async () => {
+      throw new Error('sin red');
+    });
+    const base = baseFalsa();
+    await withRecordings(base, { ...env, remote }).speak('Hello', { voice: 'am_michael' });
+    expect(player.play).toHaveBeenCalledWith(`/audio/${audioKey('Hello')}.mp3`, 1);
+    expect(base.speak).not.toHaveBeenCalled();
+  });
+});

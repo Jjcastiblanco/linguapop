@@ -1,5 +1,5 @@
 import { seedCourse, seedPairs, seedReadings } from '@linguapop/content';
-import type { Course, MinimalPair, ReadingText } from '@linguapop/content';
+import type { Course, MinimalPair, ReadingText, RemoteAudio } from '@linguapop/content';
 import type {
   Auth,
   Clock,
@@ -143,6 +143,8 @@ export async function composeWithContent(
   make: (overrides: CompositionOverrides) => Composition = createComposition,
   overrides: CompositionOverrides & {
     contentRemote?: ContentRemote;
+    /** Recibe el audio remoto del snapshot (o `undefined`) al arrancar, para quien reproduce. */
+    onRemoteAudio?: (audio: RemoteAudio | undefined) => void;
     googleSignIn?: boolean;
     nativeGoogle?: NativeGoogle;
   } = {},
@@ -161,7 +163,8 @@ export async function composeWithContent(
     seed: overrides.course ?? seedCourse,
     schemaVersion: CONTENT_SCHEMA_VERSION,
   });
-  const { course, version, readings, pairs } = await content.loadLocal();
+  const { course, version, readings, pairs, audio } = await content.loadLocal();
+  overrides.onRemoteAudio?.(audio);
   const composition = make({
     auth: supabase.auth,
     progressRemote: supabase.progressRemote,

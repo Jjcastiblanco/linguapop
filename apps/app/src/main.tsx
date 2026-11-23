@@ -28,7 +28,11 @@ if (import.meta.env.PROD) {
   });
 }
 
+const recordings = browserRecordingsEnv();
+
 void composeWithContent(undefined, {
   update,
-  speech: withRecordings(withWhisperRecognition(createWebSpeech()), browserRecordingsEnv()),
+  speech: withRecordings(withWhisperRecognition(createWebSpeech()), recordings),
+  onRemoteAudio: (audio) =>
+    void recordings.remote?.use(audio).catch((e: unknown) => console.warn('Audio remoto:', e)),
 }).then((composition) => startApp(composition, { router: createBrowserRouter(appRoutes) }));

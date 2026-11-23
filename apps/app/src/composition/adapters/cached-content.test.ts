@@ -291,3 +291,51 @@ describe('pares dentro del snapshot', () => {
     expect((await content.loadLocal()).pairs).toEqual([]);
   });
 });
+
+describe('audio remoto dentro del snapshot', () => {
+  const audio = {
+    baseUrl: 'https://proyecto.supabase.co/storage/v1/object/public/audio/',
+    keys: ['0123456789abcd'],
+  };
+
+  it('un snapshot con audio válido lo trae y lo guarda para el próximo arranque', async () => {
+    const { content } = montar(() => publicado(2, (c) => void (c.audio = audio)));
+    await content.refresh();
+    expect((await content.loadLocal()).audio).toEqual(audio);
+  });
+
+  it('sin el campo o con null no hay audio y el curso sí cambia', async () => {
+    for (const cambio of [
+      (c: Record<string, any>) => void c,
+      (c: Record<string, any>) => void (c.audio = null),
+    ]) {
+      const { content } = montar(() => publicado(2, cambio));
+      await content.refresh();
+      const local = await content.loadLocal();
+      expect(local.course.level).toBe('A1-A2 v2');
+      expect(local).not.toHaveProperty('audio');
+    }
+  });
+
+  it('un audio inválido se descarta entero con su motivo, sin tocar curso, lecturas ni pares', async () => {
+    for (const malo of [
+      { ...audio, baseUrl: 'http://inseguro.test/audio/' },
+      { ...audio, keys: ['../x'] },
+      'no',
+      [],
+    ]) {
+      const { content, log } = montar(() =>
+        publicado(2, (c) => {
+          c.audio = malo;
+          c.pairs = JSON.parse(JSON.stringify(seedPairs));
+        }),
+      );
+      await content.refresh();
+      const local = await content.loadLocal();
+      expect(local.course.level).toBe('A1-A2 v2');
+      expect(local).not.toHaveProperty('audio');
+      expect(local.pairs).toHaveLength(seedPairs.length);
+      expect(log).toHaveBeenCalledWith(expect.stringMatching(/Audio del snapshot 2 descartado/));
+    }
+  });
+});
