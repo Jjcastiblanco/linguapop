@@ -1,8 +1,10 @@
 import {
+  MinimalPairsSchema,
   ReadingTextsSchema,
   parseCourseTolerant,
   validateContent,
   type Course,
+  type MinimalPair,
   type ReadingText,
 } from '@linguapop/content';
 import type { ContentRemote, LocalStore } from '@linguapop/domain';
@@ -11,9 +13,15 @@ export const CONTENT_CACHE_KEY = 'linguapop:content:v1';
 
 /**
  * El contenido con el que se arranca y la versión de snapshot que lo respalda (0 = semilla).
- * `readings` solo está si el snapshot trae lecturas válidas; si falta, se usan las de la semilla.
+ * `readings` y `pairs` solo están si el snapshot los trae válidos; si faltan, se usan los de la
+ * semilla.
  */
-export type LocalContent = { course: Course; version: number; readings?: ReadingText[] };
+export type LocalContent = {
+  course: Course;
+  version: number;
+  readings?: ReadingText[];
+  pairs?: MinimalPair[];
+};
 
 export type RefreshResult = 'updated' | 'unchanged' | 'offline' | 'invalid' | 'skipped';
 
@@ -41,39 +49,63 @@ export function createCachedContent({
   log = (m) => console.warn(m),
 }: CachedContentOptions) {
   /**
-   * Lecturas del snapshot, validadas contra el curso del propio snapshot. Un defecto en ellas las
-   * descarta (y se registra) sin tocar el curso: cada pieza se acepta o se rechaza aparte. Sin
-   * campo, o con `null`, no hay lecturas propias y se usan las de la semilla.
+   * Una pieza opcional del snapshot (lecturas o pares), validada contra el curso del propio
+   * snapshot. Un defecto la descarta entera (y se registra) sin tocar el curso ni la otra pieza.
+   * Sin campo, o con `null`, no hay pieza propia y se usa la de la semilla.
    */
-  function readingsOf(
+  function pieceOf<T>(
+    piece: 'readings' | 'pairs',
+    label: string,
+    discarded: string,
+    schema: { safeParse(v: unknown): { success: true; data: T } | { success: false } },
+    isMine: (code: string) => boolean,
     course: Course,
     content: unknown,
     version: number,
-  ): ReadingText[] | undefined {
+  ): T | undefined {
     const raw =
       typeof content === 'object' && content !== null
-        ? (content as Record<string, unknown>).readings
+        ? (content as Record<string, unknown>)[piece]
         : undefined;
     if (raw === undefined || raw === null) return undefined;
-    const result = validateContent({ course, readings: raw });
-    // Si el propio curso no valida no hay contra qué comprobar las lecturas: se descartan también.
+    const result = validateContent({ course, [piece]: raw });
+    // Si el propio curso no valida no hay contra qué comprobar la pieza: se descarta también.
     const problems = result.ok
       ? []
-      : result.problems.filter(
-          (p) =>
-            p.code === 'course-schema' ||
-            p.code === 'readings-schema' ||
-            p.code.startsWith('reading-'),
-        );
+      : result.problems.filter((p) => p.code === 'course-schema' || isMine(p.code));
     if (problems.length > 0) {
       log(
-        `Lecturas del snapshot ${version} descartadas (todas, no solo la defectuosa): ${problems.map((p) => `${p.where}: ${p.message}`).join('; ')}`,
+        `${label} del snapshot ${version} ${discarded} (${discarded === 'descartadas' ? 'todas, no solo la defectuosa' : 'todos, no solo el defectuoso'}): ${problems.map((p) => `${p.where}: ${p.message}`).join('; ')}`,
       );
       return undefined;
     }
-    const parsed = ReadingTextsSchema.safeParse(raw);
+    const parsed = schema.safeParse(raw);
     return parsed.success ? parsed.data : undefined;
   }
+
+  const readingsOf = (course: Course, content: unknown, version: number) =>
+    pieceOf(
+      'readings',
+      'Lecturas',
+      'descartadas',
+      ReadingTextsSchema,
+      (c) => c === 'readings-schema' || c.startsWith('reading-'),
+      course,
+      content,
+      version,
+    );
+
+  const pairsOf = (course: Course, content: unknown, version: number) =>
+    pieceOf(
+      'pairs',
+      'Pares',
+      'descartados',
+      MinimalPairsSchema,
+      (c) => c === 'pairs-schema',
+      course,
+      content,
+      version,
+    );
 
   function read(raw: unknown): LocalContent | null {
     if (typeof raw !== 'object' || raw === null) return null;
@@ -87,7 +119,13 @@ export function createCachedContent({
       log(`Ejercicio omitido (${s.type} desconocido): ${s.unitId}/${s.exerciseId}`),
     );
     const readings = readingsOf(parsed.course, content, version);
-    return { course: parsed.course, version, ...(readings ? { readings } : {}) };
+    const pairs = pairsOf(parsed.course, content, version);
+    return {
+      course: parsed.course,
+      version,
+      ...(readings ? { readings } : {}),
+      ...(pairs ? { pairs } : {}),
+    };
   }
 
   async function cached(): Promise<LocalContent | null> {
@@ -127,7 +165,9 @@ export function createCachedContent({
       parsed.skipped.forEach((s) =>
         log(`Ejercicio omitido (${s.type} desconocido): ${s.unitId}/${s.exerciseId}`),
       );
-      readingsOf(parsed.course, snapshot.content, snapshot.version); // solo para registrar si se descartan
+      // Solo para registrar si se descartan; el arranque los vuelve a comprobar.
+      readingsOf(parsed.course, snapshot.content, snapshot.version);
+      pairsOf(parsed.course, snapshot.content, snapshot.version);
       await store.set(
         CONTENT_CACHE_KEY,
         JSON.stringify({ schemaVersion, version: snapshot.version, content: snapshot.content }),

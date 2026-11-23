@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { seedCourse, seedReadings } from '@linguapop/content';
+import { seedCourse, seedPairs, seedReadings } from '@linguapop/content';
 import { composeWithContent } from '.';
 import { createNativeComposition } from './native';
 import { CONTENT_CACHE_KEY } from './adapters/cached-content';
@@ -142,5 +142,54 @@ describe('entrar con Google según la plataforma', () => {
       contentRemote: sinRed,
     });
     expect(c.auth.googleAvailable()).toBe(false);
+  });
+});
+
+describe('pares del contenido publicado', () => {
+  const sinRed = { available: () => false, latest: async () => null };
+  const conPares = (version: number, es: string) => {
+    const p = publicado(version);
+    const pares = JSON.parse(JSON.stringify(seedPairs)) as Array<Record<string, unknown>>;
+    (pares[0]!.a as Record<string, unknown>).es = es;
+    (p.content as Record<string, unknown>).pairs = pares;
+    return p;
+  };
+
+  it('sin caché usa los pares de la semilla y, tras publicar, los del snapshot', async () => {
+    const m = memoria();
+    const primero = await composeWithContent(undefined, {
+      storage: m.storage,
+      newId: nuevoId,
+      contentRemote: { available: () => true, latest: async () => conPares(2, 'Desde la base') },
+    });
+    expect(primero.pairs).toBe(seedPairs);
+    await vi.waitFor(() => expect(m.data.has(CONTENT_CACHE_KEY)).toBe(true));
+    const siguiente = await composeWithContent(undefined, {
+      storage: m.storage,
+      contentRemote: sinRed,
+    });
+    expect(siguiente.pairs[0]!.a.es).toBe('Desde la base');
+    expect(siguiente.pairs).toHaveLength(seedPairs.length);
+  });
+
+  it('unos pares pedidos a mano ganan a los del snapshot', async () => {
+    const m = memoria();
+    m.data.set(
+      CONTENT_CACHE_KEY,
+      JSON.stringify({ schemaVersion: 1, ...conPares(3, 'Desde la base') }),
+    );
+    const c = await composeWithContent(undefined, {
+      storage: m.storage,
+      contentRemote: sinRed,
+      pairs: [],
+    });
+    expect(c.pairs).toEqual([]);
+  });
+
+  it('un snapshot sin pares deja los de la semilla', async () => {
+    const m = memoria();
+    m.data.set(CONTENT_CACHE_KEY, JSON.stringify({ schemaVersion: 1, ...publicado(2) }));
+    const c = await composeWithContent(undefined, { storage: m.storage, contentRemote: sinRed });
+    expect(c.pairs).toBe(seedPairs);
   });
 });
