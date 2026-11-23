@@ -8,6 +8,12 @@ export type ContentSnapshot = { version: number; content: unknown };
 export interface ContentRemote {
   /** Hay un servidor configurado. */
   available(): boolean;
+  /**
+   * Solo el número de versión del snapshot vigente (o `null` si no hay ninguno), sin su contenido:
+   * así la app sabe si hay algo nuevo sin bajar el curso entero en cada arranque. Opcional: sin él
+   * se pide `latest` directamente.
+   */
+  latestVersion?(schemaVersion: number): Promise<number | null>;
   /** El snapshot vigente para esta versión de esquema, o `null` si aún no hay ninguno publicado. */
   latest(schemaVersion: number): Promise<ContentSnapshot | null>;
 }

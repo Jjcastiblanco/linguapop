@@ -339,3 +339,78 @@ describe('audio remoto dentro del snapshot', () => {
     }
   });
 });
+
+describe('arranque sin bajar el curso si no hay nada nuevo', () => {
+  function montarConVersion(
+    version: () => number | null | Promise<number | null>,
+    snapshot: () => ContentSnapshot | null,
+  ) {
+    const m = memoria();
+    const store = createLocalStore(m.storage);
+    const latest = vi.fn(async () => snapshot());
+    const latestVersion = vi.fn(async () => version());
+    const remote: ContentRemote = { available: () => true, latest, latestVersion };
+    const content = createCachedContent({
+      store,
+      remote,
+      seed: seedCourse,
+      schemaVersion: 1,
+      log: vi.fn(),
+    });
+    return { m, content, latest, latestVersion };
+  }
+
+  it('si la versión publicada no es mayor que la guardada, no pide el contenido', async () => {
+    const { content, latest, latestVersion } = montarConVersion(
+      () => 3,
+      () => publicado(3),
+    );
+    expect(await content.refresh()).toBe('updated'); // sin caché: 3 > 0
+    latest.mockClear();
+    expect(await content.refresh()).toBe('unchanged');
+    expect(latestVersion).toHaveBeenCalledTimes(2);
+    expect(latest).not.toHaveBeenCalled();
+  });
+
+  it('si hay una versión mayor, pide el contenido una sola vez y lo guarda', async () => {
+    let publicada = 3;
+    const { content, latest } = montarConVersion(
+      () => publicada,
+      () => publicado(publicada),
+    );
+    await content.refresh();
+    latest.mockClear();
+    publicada = 4;
+    expect(await content.refresh()).toBe('updated');
+    expect(latest).toHaveBeenCalledTimes(1);
+    expect((await content.loadLocal()).version).toBe(4);
+  });
+
+  it('sin snapshot publicado (null) no pide nada', async () => {
+    const { content, latest } = montarConVersion(
+      () => null,
+      () => null,
+    );
+    expect(await content.refresh()).toBe('unchanged');
+    expect(latest).not.toHaveBeenCalled();
+  });
+
+  it('si falla pedir la versión es sin conexión y se conserva lo guardado', async () => {
+    const { content, latest } = montarConVersion(
+      () => Promise.reject(new Error('sin red')),
+      () => publicado(5),
+    );
+    expect(await content.refresh()).toBe('offline');
+    expect(latest).not.toHaveBeenCalled();
+    expect((await content.loadLocal()).course).toBe(seedCourse);
+  });
+
+  it('si la versión cambia entre las dos peticiones, manda lo que trae el contenido', async () => {
+    const { content } = montarConVersion(
+      () => 9,
+      () => publicado(2),
+    );
+    expect(await content.refresh()).toBe('updated');
+    expect((await content.loadLocal()).version).toBe(2);
+  });
+});
