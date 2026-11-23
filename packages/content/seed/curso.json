@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "from": "es",
+  "to": "en",
+  "level": "A1-A2",
+  "units": ["saludos", "comida", "familia", "viajes", "trabajo"],
+  "dialogues": [
+    "t-presentarse",
+    "t-pedir-comida",
+    "t-hablar-de-la-familia",
+    "t-planear-un-viaje",
+    "t-hablar-del-trabajo"
+  ]
+}
