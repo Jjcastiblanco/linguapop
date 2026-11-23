@@ -27,6 +27,8 @@ jobs:
     name: build-apk
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    # El APK de depuración apunta a staging: lee sus variables del entorno (o, mientras no existan, las del repositorio).
+    environment: staging
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

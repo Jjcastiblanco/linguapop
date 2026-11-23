@@ -1,0 +1,127 @@
+name: Desplegar web
+
+# Flujo reutilizable: construye la web con las variables del entorno indicado y la publica en su
+# proyecto de Cloudflare Pages. Lo llaman `staging.yml` (cada push a main) y `produccion.yml` (solo a
+# mano y con la aprobación del entorno `production`).
+on:
+  workflow_call:
+    inputs:
+      entorno:
+        description: 'Entorno de GitHub (staging o production): de él salen las variables'
+        type: string
+        required: true
+      proyecto:
+        description: 'Nombre del proyecto de Cloudflare Pages'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: deploy-${{ inputs.entorno }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.entorno }}
+    steps:
+      - name: Comprobar credenciales de Cloudflare
+        id: credenciales
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PROYECTO: ${{ inputs.proyecto }}
+        run: |
+          if ! printf '%s' "$PROYECTO" | grep -Eq '^[a-z0-9][a-z0-9-]{0,56}$'; then
+            echo "::error::Nombre de proyecto de Pages no válido: solo minúsculas, números y guiones."
+            echo "listas=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::Faltan los secretos CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID: no se despliega."
+            echo "listas=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "listas=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.credenciales.outputs.listas == 'true'
+      - uses: pnpm/action-setup@v6
+        if: steps.credenciales.outputs.listas == 'true'
+      - uses: actions/setup-node@v7
+        if: steps.credenciales.outputs.listas == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.credenciales.outputs.listas == 'true'
+      # Una variable de entorno que falta cae en la del repositorio, que apunta a staging: sin esta
+      # comprobación una web de producción podría salir hablando con la base de staging. La base de
+      # cada entorno es la de su `SUPABASE_PROJECT_REF`.
+      - name: Comprobar que la web apunta a la base de este entorno
+        if: steps.credenciales.outputs.listas == 'true'
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          ENTORNO: ${{ inputs.entorno }}
+        run: |
+          if [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "::error::Falta la variable SUPABASE_PROJECT_REF en el entorno $ENTORNO."
+            exit 1
+          fi
+          if [ "$SUPABASE_URL" != "https://$SUPABASE_PROJECT_REF.supabase.co" ]; then
+            echo "::error::SUPABASE_URL no es la base del entorno $ENTORNO (https://$SUPABASE_PROJECT_REF.supabase.co). Defínela como variable del entorno, no del repositorio."
+            exit 1
+          fi
+      # La URL y la clave anónima de Supabase son públicas (AD-9); si faltan, la app sale sin cuentas.
+      - run: pnpm --filter @linguapop/app build
+        if: steps.credenciales.outputs.listas == 'true'
+        env:
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+      - name: Armar el sitio (app nueva y versión heredada)
+        if: steps.credenciales.outputs.listas == 'true'
+        run: |
+          mkdir site
+          cp -r apps/app/dist/. site/
+          cp -r legacy site/legacy
+          printf '/legacy /legacy/linguapop.html 302\n/legacy/ /legacy/linguapop.html 302\n' > site/_redirects
+
+      # Las credenciales solo se exponen a los pasos que hablan con Cloudflare.
+      - name: Comprobar el acceso a Cloudflare Pages
+        id: pages
+        if: steps.credenciales.outputs.listas == 'true'
+        env:
+          PROYECTO: ${{ inputs.proyecto }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          respuesta=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects")
+          if [ "$(echo "$respuesta" | jq -r '.success // false')" != "true" ]; then
+            motivo=$(echo "$respuesta" | jq -r '[.errors[]?.message] | join("; ")')
+            echo "::error::Cloudflare rechazó el acceso a Pages (${motivo:-sin detalle}). El token necesita el permiso Cuenta > Cloudflare Pages > Editar sobre esta cuenta, y CLOUDFLARE_ACCOUNT_ID debe ser el de esa cuenta."
+            exit 1
+          fi
+          if echo "$respuesta" | jq -e --arg proyecto "$PROYECTO" '.result[]? | select(.name == $proyecto)' > /dev/null; then
+            echo "existe=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "existe=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Crear el proyecto de Pages
+        if: steps.pages.outputs.existe == 'false'
+        env:
+          PROYECTO: ${{ inputs.proyecto }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm dlx wrangler@4.152.0 pages project create "$PROYECTO" --production-branch main
+
+      - name: Publicar la web (${{ inputs.entorno }})
+        if: steps.credenciales.outputs.listas == 'true'
+        env:
+          PROYECTO: ${{ inputs.proyecto }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm dlx wrangler@4.152.0 pages deploy site --project-name "$PROYECTO" --branch main

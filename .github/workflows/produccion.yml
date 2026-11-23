@@ -1,0 +1,29 @@
+name: Producción
+
+# La web de producción solo se publica a mano («Run workflow») y pasa por la aprobación del entorno
+# `production`. Usa las variables de ese entorno (base de producción, clave publicable, Turnstile y
+# Google); el flujo se detiene si `SUPABASE_URL` no es la base de su `SUPABASE_PROJECT_REF`.
+on:
+  workflow_dispatch:
+    inputs:
+      proyecto:
+        description: 'Proyecto de Cloudflare Pages de producción (se crea si no existe)'
+        type: string
+        default: linguapop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: produccion
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Producción solo sale de `main`: un «Run workflow» desde otra rama no publica.
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/desplegar-web.yml
+    with:
+      entorno: production
+      proyecto: ${{ inputs.proyecto }}
+    secrets: inherit
