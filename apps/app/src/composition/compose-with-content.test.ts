@@ -24,7 +24,7 @@ describe('arranque con contenido publicado', () => {
     });
     expect(c.course).toBe(seedCourse);
     expect(c.contentVersion).toBe(0);
-    expect(latest).toHaveBeenCalledWith(1);
+    await vi.waitFor(() => expect(latest).toHaveBeenCalledWith(1));
     responder(publicado(2));
     await vi.waitFor(() => expect(m.data.has(CONTENT_CACHE_KEY)).toBe(true));
 
@@ -35,6 +35,22 @@ describe('arranque con contenido publicado', () => {
     expect(siguiente.course.level).toBe('A1-A2 v2');
     expect(siguiente.contentVersion).toBe(2);
     expect(await siguiente.content.load()).toBe(siguiente.course);
+  });
+});
+
+describe('el arranque no baja el curso si no hay una versión nueva', () => {
+  it('con la versión ya guardada solo pregunta por la versión', async () => {
+    const m = memoria();
+    m.data.set(CONTENT_CACHE_KEY, JSON.stringify({ schemaVersion: 1, ...publicado(3) }));
+    const latest = vi.fn(async () => publicado(3));
+    const latestVersion = vi.fn(async () => 3);
+    await composeWithContent(undefined, {
+      storage: m.storage,
+      contentRemote: { available: () => true, latest, latestVersion },
+    });
+    await vi.waitFor(() => expect(latestVersion).toHaveBeenCalledWith(1));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(latest).not.toHaveBeenCalled();
   });
 });
 

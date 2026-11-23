@@ -165,6 +165,17 @@ export function createCachedContent({
 
     async refresh(): Promise<RefreshResult> {
       if (!remote.available()) return 'skipped';
+      const current = (await cached())?.version ?? 0;
+      // Primero solo el número de versión: si no hay nada nuevo no se baja el curso (cada arranque).
+      if (remote.latestVersion) {
+        let published;
+        try {
+          published = await remote.latestVersion(schemaVersion);
+        } catch {
+          return 'offline';
+        }
+        if (published === null || published <= current) return 'unchanged';
+      }
       let snapshot;
       try {
         snapshot = await remote.latest(schemaVersion);
@@ -172,7 +183,6 @@ export function createCachedContent({
         return 'offline';
       }
       if (!snapshot) return 'unchanged';
-      const current = (await cached())?.version ?? 0;
       if (snapshot.version <= current) return 'unchanged';
       const parsed = parseCourseTolerant(snapshot.content);
       if (!parsed.ok) {

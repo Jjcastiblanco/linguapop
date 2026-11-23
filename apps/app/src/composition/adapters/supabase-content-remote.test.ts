@@ -43,6 +43,29 @@ describe('contenido publicado en Supabase', () => {
     ).rejects.toThrow('caído');
   });
 
+  it('la versión sola se pide sin el contenido', async () => {
+    const { client, select, eq } = cliente({
+      data: { content_snapshots: { version: 7 } },
+      error: null,
+    });
+    expect(await createSupabaseContentRemote(client).latestVersion!(1)).toBe(7);
+    expect(select).toHaveBeenCalledWith('content_snapshots(version)');
+    expect(select).not.toHaveBeenCalledWith(expect.stringContaining('content,'));
+    expect(eq).toHaveBeenCalledWith('schema_version', 1);
+  });
+
+  it('sin puntero la versión es null y un error lanza', async () => {
+    const remoto = (r: Parameters<typeof cliente>[0]) =>
+      createSupabaseContentRemote(cliente(r).client);
+    expect(await remoto({ data: null, error: null }).latestVersion!(1)).toBeNull();
+    expect(
+      await remoto({ data: { content_snapshots: null }, error: null }).latestVersion!(1),
+    ).toBeNull();
+    await expect(
+      remoto({ data: null, error: { message: 'caído' } }).latestVersion!(1),
+    ).rejects.toThrow('caído');
+  });
+
   it('sin servidor no está disponible', async () => {
     expect(unavailableContentRemote.available()).toBe(false);
     expect(await unavailableContentRemote.latest(1)).toBeNull();
