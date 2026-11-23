@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { MinimalPair, Unit } from './schema';
 
 /**
@@ -125,3 +126,30 @@ export function collectPairTexts(pairs: readonly MinimalPair[]): SpokenText[] {
     AUDIO_VOICES.map((voice): SpokenText => ({ text, speed: 'normal', voice })),
   );
 }
+
+/** Una clave de audio: el hexadecimal de `audioKey` (13 o 14 caracteres hoy, con margen). */
+export const AUDIO_KEY_PATTERN = /^[0-9a-f]{10,16}$/;
+
+/**
+ * El audio que el snapshot publica aparte de lo empaquetado: dónde está (siempre https, sin
+ * credenciales ni parámetros, con barra final) y qué claves tiene. Cambiar de alojamiento es
+ * cambiar `baseUrl`, sin versión nueva de la app.
+ */
+export const RemoteAudioSchema = z.object({
+  baseUrl: z
+    .string()
+    .regex(
+      /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d\d|655[0-2]\d|6553[0-5]))?\/([A-Za-z0-9_-][A-Za-z0-9._-]*\/)*$/i,
+      'baseUrl debe ser una dirección https con barra final, sin credenciales, parámetros ni segmentos relativos',
+    ),
+  keys: z
+    .array(z.string().regex(AUDIO_KEY_PATTERN, 'clave de audio no válida'))
+    .max(1500)
+    .superRefine((keys, ctx) => {
+      if (new Set(keys).size !== keys.length) {
+        ctx.addIssue({ code: 'custom', message: 'clave de audio repetida' });
+      }
+    }),
+});
+
+export type RemoteAudio = z.infer<typeof RemoteAudioSchema>;

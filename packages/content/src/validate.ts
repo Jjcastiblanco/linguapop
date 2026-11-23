@@ -1,5 +1,11 @@
 import type { ZodError } from 'zod';
-import { audioKey, collectPairTexts, collectSpokenTexts } from './audio';
+import {
+  RemoteAudioSchema,
+  audioKey,
+  collectPairTexts,
+  collectSpokenTexts,
+  type RemoteAudio,
+} from './audio';
 import {
   READING_ID_PREFIX,
   READING_MIN_COVERAGE,
@@ -25,6 +31,7 @@ export type ContentProblemCode =
   | 'course-schema'
   | 'readings-schema'
   | 'pairs-schema'
+  | 'audio-schema'
   | 'reserved-prefix'
   | 'reading-unit'
   | 'reading-coverage'
@@ -38,6 +45,8 @@ export type ContentBundle = {
   course: Course;
   readings: ReadingText[];
   pairs: MinimalPair[];
+  /** El audio remoto, solo si se publicó. */
+  audio?: RemoteAudio;
 };
 
 export type ContentValidation =
@@ -47,8 +56,8 @@ const path = (parts: ReadonlyArray<PropertyKey>): string => parts.map(String).jo
 
 /** Ubicación de un defecto de esquema: la pieza y, en listas, el id de la entrada cuando lo tiene. */
 function schemaProblems(
-  code: 'course-schema' | 'readings-schema' | 'pairs-schema',
-  piece: 'course' | 'readings' | 'pairs',
+  code: 'course-schema' | 'readings-schema' | 'pairs-schema' | 'audio-schema',
+  piece: 'course' | 'readings' | 'pairs' | 'audio',
   error: ZodError,
   raw: unknown,
 ): ContentProblem[] {
@@ -72,7 +81,7 @@ function schemaProblems(
  * disponibles, que todo lo que se dice tenga su grabación. Es pura y devuelve todos los problemas.
  */
 export function validateContent(
-  input: { course: unknown; readings?: unknown; pairs?: unknown },
+  input: { course: unknown; readings?: unknown; pairs?: unknown; audio?: unknown },
   options: { audioKeys?: ReadonlySet<string> } = {},
 ): ContentValidation {
   const problems: ContentProblem[] = [];
@@ -89,6 +98,13 @@ export function validateContent(
   const pairs = MinimalPairsSchema.safeParse(rawPairs);
   if (!pairs.success) {
     problems.push(...schemaProblems('pairs-schema', 'pairs', pairs.error, rawPairs));
+  }
+  const audio =
+    input.audio === undefined || input.audio === null
+      ? null
+      : RemoteAudioSchema.safeParse(input.audio);
+  if (audio && !audio.success) {
+    problems.push(...schemaProblems('audio-schema', 'audio', audio.error, input.audio));
   }
 
   // Cada comprobación corre en cuanto sus piezas son válidas: un par roto no esconde una lectura rota.
@@ -140,7 +156,19 @@ export function validateContent(
       }
     }
   }
-  return problems.length > 0 || !course.success || !readings.success || !pairs.success
+  return problems.length > 0 ||
+    !course.success ||
+    !readings.success ||
+    !pairs.success ||
+    (audio && !audio.success)
     ? { ok: false, problems }
-    : { ok: true, content: { course: course.data, readings: readings.data, pairs: pairs.data } };
+    : {
+        ok: true,
+        content: {
+          course: course.data,
+          readings: readings.data,
+          pairs: pairs.data,
+          ...(audio?.success ? { audio: audio.data } : {}),
+        },
+      };
 }

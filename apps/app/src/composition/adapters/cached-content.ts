@@ -1,10 +1,12 @@
 import {
   MinimalPairsSchema,
   ReadingTextsSchema,
+  RemoteAudioSchema,
   parseCourseTolerant,
   validateContent,
   type Course,
   type MinimalPair,
+  type RemoteAudio,
   type ReadingText,
 } from '@linguapop/content';
 import type { ContentRemote, LocalStore } from '@linguapop/domain';
@@ -21,6 +23,7 @@ export type LocalContent = {
   version: number;
   readings?: ReadingText[];
   pairs?: MinimalPair[];
+  audio?: RemoteAudio;
 };
 
 export type RefreshResult = 'updated' | 'unchanged' | 'offline' | 'invalid' | 'skipped';
@@ -54,7 +57,7 @@ export function createCachedContent({
    * Sin campo, o con `null`, no hay pieza propia y se usa la de la semilla.
    */
   function pieceOf<T>(
-    piece: 'readings' | 'pairs',
+    piece: 'readings' | 'pairs' | 'audio',
     label: string,
     discarded: string,
     schema: { safeParse(v: unknown): { success: true; data: T } | { success: false } },
@@ -75,7 +78,7 @@ export function createCachedContent({
       : result.problems.filter((p) => p.code === 'course-schema' || isMine(p.code));
     if (problems.length > 0) {
       log(
-        `${label} del snapshot ${version} ${discarded} (${discarded === 'descartadas' ? 'todas, no solo la defectuosa' : 'todos, no solo el defectuoso'}): ${problems.map((p) => `${p.where}: ${p.message}`).join('; ')}`,
+        `${label} del snapshot ${version} ${discarded} (${discarded === 'descartadas' ? 'todas, no solo la defectuosa' : discarded === 'descartado' ? 'entero' : 'todos, no solo el defectuoso'}): ${problems.map((p) => `${p.where}: ${p.message}`).join('; ')}`,
       );
       return undefined;
     }
@@ -90,6 +93,18 @@ export function createCachedContent({
       'descartadas',
       ReadingTextsSchema,
       (c) => c === 'readings-schema' || c.startsWith('reading-'),
+      course,
+      content,
+      version,
+    );
+
+  const audioOf = (course: Course, content: unknown, version: number) =>
+    pieceOf(
+      'audio',
+      'Audio',
+      'descartado',
+      RemoteAudioSchema,
+      (c) => c === 'audio-schema',
       course,
       content,
       version,
@@ -120,11 +135,13 @@ export function createCachedContent({
     );
     const readings = readingsOf(parsed.course, content, version);
     const pairs = pairsOf(parsed.course, content, version);
+    const audio = audioOf(parsed.course, content, version);
     return {
       course: parsed.course,
       version,
       ...(readings ? { readings } : {}),
       ...(pairs ? { pairs } : {}),
+      ...(audio ? { audio } : {}),
     };
   }
 
@@ -168,6 +185,7 @@ export function createCachedContent({
       // Solo para registrar si se descartan; el arranque los vuelve a comprobar.
       readingsOf(parsed.course, snapshot.content, snapshot.version);
       pairsOf(parsed.course, snapshot.content, snapshot.version);
+      audioOf(parsed.course, snapshot.content, snapshot.version);
       await store.set(
         CONTENT_CACHE_KEY,
         JSON.stringify({ schemaVersion, version: snapshot.version, content: snapshot.content }),

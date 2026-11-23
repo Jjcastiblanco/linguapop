@@ -193,3 +193,31 @@ describe('pares del contenido publicado', () => {
     expect(c.pairs).toBe(seedPairs);
   });
 });
+
+describe('audio remoto del contenido publicado', () => {
+  const sinRed = { available: () => false, latest: async () => null };
+  const audio = {
+    baseUrl: 'https://proyecto.supabase.co/storage/v1/object/public/audio/',
+    keys: ['0123456789abcd'],
+  };
+
+  it('avisa del audio del snapshot guardado y de su ausencia', async () => {
+    const m = memoria();
+    const aviso = vi.fn();
+    await composeWithContent(undefined, {
+      storage: m.storage,
+      contentRemote: sinRed,
+      onRemoteAudio: aviso,
+    });
+    expect(aviso).toHaveBeenLastCalledWith(undefined);
+    const p = publicado(2);
+    (p.content as Record<string, unknown>).audio = audio;
+    m.data.set(CONTENT_CACHE_KEY, JSON.stringify({ schemaVersion: 1, ...p }));
+    await composeWithContent(undefined, {
+      storage: m.storage,
+      contentRemote: sinRed,
+      onRemoteAudio: aviso,
+    });
+    expect(aviso).toHaveBeenLastCalledWith(audio);
+  });
+});
