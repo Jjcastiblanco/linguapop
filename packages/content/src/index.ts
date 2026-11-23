@@ -1,5 +1,6 @@
 export * from './audio';
 export * from './reading';
+export * from './publish';
 export * from './schema';
 export * from './teach';
 export * from './tolerant';

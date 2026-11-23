@@ -8,24 +8,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Mp3Encoder } from '@breezystack/lamejs';
-import { KokoroTTS } from 'kokoro-js';
-import {
-  DEFAULT_VOICE,
-  audioKey,
-  collectPairTexts,
-  collectSpokenTexts,
-} from '../packages/content/src/audio.ts';
+import { audioKey, collectPairTexts, collectSpokenTexts } from '../packages/content/src/audio.ts';
+import { loadSynthesizer } from './lib/kokoro.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const unitsDir = path.join(root, 'packages/content/seed/units');
 const outDir = path.join(root, 'apps/app/public/audio');
 const force = process.argv.includes('--force');
-
-const MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';
-/** Velocidad de Kokoro de cada grabación; la lenta coincide con la tortuga de la app. */
-const KOKORO_SPEED = { normal: 1, slow: 0.6 };
-const KBPS = 40;
 
 const units = fs
   .readdirSync(unitsDir)
@@ -41,34 +30,14 @@ const wanted = new Map(spoken.map((s) => [audioKey(s.text, s.speed, s.voice), s]
 fs.mkdirSync(outDir, { recursive: true });
 const file = (key) => path.join(outDir, `${key}.mp3`);
 
-function encodeMp3(samples, rate) {
-  const pcm = new Int16Array(samples.length);
-  for (let i = 0; i < samples.length; i++) {
-    pcm[i] = Math.max(-1, Math.min(1, samples[i])) * 0x7fff;
-  }
-  const encoder = new Mp3Encoder(1, rate, KBPS);
-  const chunks = [];
-  for (let i = 0; i < pcm.length; i += 1152) {
-    const part = encoder.encodeBuffer(pcm.subarray(i, i + 1152));
-    if (part.length) chunks.push(Buffer.from(part));
-  }
-  const tail = encoder.flush();
-  if (tail.length) chunks.push(Buffer.from(tail));
-  return Buffer.concat(chunks);
-}
-
 const todo = [...wanted].filter(([key]) => force || !fs.existsSync(file(key)));
 console.log(`${wanted.size} textos en el curso, ${todo.length} por generar`);
 
 if (todo.length > 0) {
-  const tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'cpu' });
+  const synthesize = await loadSynthesizer();
   let n = 0;
-  for (const [key, { text, speed, voice }] of todo) {
-    const audio = await tts.generate(text, {
-      voice: voice ?? DEFAULT_VOICE,
-      speed: KOKORO_SPEED[speed],
-    });
-    fs.writeFileSync(file(key), encodeMp3(audio.audio, audio.sampling_rate));
+  for (const [key, spoken] of todo) {
+    fs.writeFileSync(file(key), await synthesize(spoken));
     n++;
     if (n % 25 === 0 || n === todo.length) console.log(`  ${n}/${todo.length}`);
   }

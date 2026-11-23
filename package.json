@@ -19,7 +19,8 @@
     "db:test": "supabase test db",
     "db:test:auth": "sh -c 'eval \"$(supabase status -o env)\" && SUPABASE_TEST_URL=$API_URL SUPABASE_TEST_ANON_KEY=$ANON_KEY vitest run integration'",
     "audio:generar": "node scripts/generar-audio.mjs",
-    "verificar:alta": "node scripts/verificar-alta-segura.mjs"
+    "verificar:alta": "node scripts/verificar-alta-segura.mjs",
+    "contenido": "node --import ./scripts/lib/registrar.mjs scripts/publicar-contenido.mjs"
   },
   "devDependencies": {
     "@breezystack/lamejs": "^1.2.7",

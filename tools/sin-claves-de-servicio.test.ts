@@ -22,3 +22,13 @@ describe('sin claves de servicio en los clientes', () => {
     }
   });
 });
+
+// La herramienta de publicación tampoco: quien publica lo hace con la sesión de su cuenta y su rol (13.8).
+describe('sin claves de servicio en las herramientas', () => {
+  it('scripts/ no menciona ninguna', () => {
+    const prohibido = /service_role|SERVICE_ROLE|SUPABASE_SERVICE|sb_secret_/;
+    for (const ruta of archivos(join(RAIZ, 'scripts')).filter((r) => /\.mjs$/.test(r))) {
+      expect(readFileSync(ruta, 'utf8'), ruta).not.toMatch(prohibido);
+    }
+  });
+});
