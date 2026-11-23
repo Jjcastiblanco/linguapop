@@ -161,7 +161,7 @@ export async function composeWithContent(
     seed: overrides.course ?? seedCourse,
     schemaVersion: CONTENT_SCHEMA_VERSION,
   });
-  const { course, version, readings } = await content.loadLocal();
+  const { course, version, readings, pairs } = await content.loadLocal();
   const composition = make({
     auth: supabase.auth,
     progressRemote: supabase.progressRemote,
@@ -170,8 +170,9 @@ export async function composeWithContent(
     store,
     course,
     contentVersion: version,
-    // Las lecturas del snapshot valen si nadie pidió otras; sin ellas, la semilla.
+    // Lecturas y pares del snapshot valen si nadie pidió otros; sin ellos, la semilla.
     ...(readings && overrides.readings === undefined ? { readings } : {}),
+    ...(pairs && overrides.pairs === undefined ? { pairs } : {}),
   });
   void content.refresh().catch(() => undefined);
   return composition;

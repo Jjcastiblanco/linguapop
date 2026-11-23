@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { seedCourse, seedReadings } from '@linguapop/content';
+import { seedCourse, seedPairs, seedReadings } from '@linguapop/content';
 import type { ContentRemote, ContentSnapshot } from '@linguapop/domain';
 import { createCachedContent, CONTENT_CACHE_KEY } from './cached-content';
 import { createLocalStore } from './local-store';
@@ -221,5 +221,73 @@ describe('lecturas dentro del snapshot', () => {
     expect(local.version).toBe(4);
     expect(local).not.toHaveProperty('readings');
     expect(m.data.has(CONTENT_CACHE_KEY)).toBe(true);
+  });
+});
+
+describe('pares dentro del snapshot', () => {
+  const pares = () => JSON.parse(JSON.stringify(seedPairs)) as Array<Record<string, any>>;
+  const conPares = (
+    version: number,
+    cambio: (p: Array<Record<string, any>>) => void = () => undefined,
+  ) =>
+    publicado(version, (c) => {
+      const p = pares();
+      cambio(p);
+      c.pairs = p;
+    });
+
+  it('un snapshot con pares válidos los trae y los guarda para el próximo arranque', async () => {
+    const { content } = montar(() =>
+      conPares(2, (p) => {
+        p[0]!.a.es = 'Un par cambiado desde la base de datos';
+      }),
+    );
+    expect(await content.refresh()).toBe('updated');
+    const local = await content.loadLocal();
+    expect(local.pairs).toHaveLength(seedPairs.length);
+    expect(local.pairs![0]!.a.es).toBe('Un par cambiado desde la base de datos');
+  });
+
+  it('sin el campo `pairs` o con `null` no hay pares y el curso sí cambia', async () => {
+    for (const cambio of [
+      (c: Record<string, any>) => void c,
+      (c: Record<string, any>) => void (c.pairs = null),
+    ]) {
+      const { content } = montar(() => publicado(2, cambio));
+      await content.refresh();
+      const local = await content.loadLocal();
+      expect(local.course.level).toBe('A1-A2 v2');
+      expect(local).not.toHaveProperty('pairs');
+    }
+  });
+
+  it('pares inválidos o con id repetido se descartan todos, se registran y el curso se conserva', async () => {
+    for (const malos of ['no soy una lista', {}, [...pares(), ...pares()], [{ id: 1 }]]) {
+      const { content, log } = montar(() => publicado(2, (c) => void (c.pairs = malos)));
+      expect(await content.refresh()).toBe('updated');
+      const local = await content.loadLocal();
+      expect(local.course.level).toBe('A1-A2 v2');
+      expect(local).not.toHaveProperty('pairs');
+      expect(log).toHaveBeenCalledWith(expect.stringMatching(/Pares del snapshot 2 descartados/));
+    }
+  });
+
+  it('pares malos no tiran las lecturas buenas, ni al revés', async () => {
+    const { content } = montar(() =>
+      publicado(2, (c) => {
+        c.pairs = 'mal';
+        c.readings = JSON.parse(JSON.stringify(seedReadings));
+      }),
+    );
+    await content.refresh();
+    const local = await content.loadLocal();
+    expect(local).not.toHaveProperty('pairs');
+    expect(local.readings).toHaveLength(seedReadings.length);
+  });
+
+  it('una lista vacía en el snapshot es una decisión: sin pares propios, pero sin error', async () => {
+    const { content } = montar(() => publicado(2, (c) => void (c.pairs = [])));
+    await content.refresh();
+    expect((await content.loadLocal()).pairs).toEqual([]);
   });
 });
